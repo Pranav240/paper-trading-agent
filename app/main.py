@@ -25,7 +25,18 @@ needs.
 import os
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
+
+# Loaded here, at the top of the entrypoint, before anything else reads
+# an env var (create_pool() reads DATABASE_URL at call time inside
+# lifespan below, and the Phase 03 agent nodes read ALPACA_*/OPENAI_*
+# lazily when trigger_run() builds the graph) — so a plain
+# `uvicorn app.main:app` picks up .env automatically instead of needing
+# it manually exported into the shell first. Harmless in tests: nothing
+# here overrides a variable the shell/OS already set, and .env simply
+# won't exist in most CI environments.
+load_dotenv()
 
 from app.db import create_pool
 from app.routers import decisions, health, positions, run
