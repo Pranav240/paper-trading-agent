@@ -12,7 +12,8 @@ reportable outcome.
 
 ## Status
 
-Phase 01 (Control API) — in progress.
+Phase 02 (State & history) — done. Phase 01 (Control API) is now backed
+by real Postgres instead of a stub.
 
 ## Roadmap
 
@@ -96,4 +97,62 @@ Then open http://127.0.0.1:8000/docs for the interactive API docs.
 
 ```bash
 pytest -q
+```
+
+## Phase 02 — State & history (Postgres)
+
+Real schema, no ORM: tables are hand-written DDL in `db/migrations/*.sql`,
+applied by a ~60-line migration runner (`db/migrate.py`) that just tracks
+which files have already run — no autogeneration, no model-to-schema
+diffing. Queries in `app/repository/postgres.py` are raw parameterized
+SQL via `psycopg` (async), not a query builder.
+
+### Schema
+
+- `watchlist` — symbols being tracked
+- `price_snapshots` — OHLCV market data per symbol per timestamp
+- `runs` — one row per agent decision cycle
+- `decisions` — the final call per symbol per run (action, confidence,
+  reasoning, technicals/sentiment snapshots as JSONB)
+- `agent_opinions` — one row per specialist agent's opinion per decision
+  (added for the Phase 03 multi-agent design — see decisions log above);
+  FK to `decisions`
+- `outcomes` — how a decision actually performed (entry/exit price,
+  realized P&L); FK to `decisions`
+- `positions` — a VIEW (not a table) computed by joining open `outcomes`
+  against the latest `price_snapshots` row per symbol. Deliberately not
+  stored, so it can never drift out of sync with the data it's derived
+  from.
+
+### The seam paying off
+
+Phase 01's `get_store()` FastAPI dependency now returns a
+`PostgresRepository` instead of an `InMemoryStore` — both implement the
+same `Repository` protocol (`app/repository/base.py`), so none of
+`app/routers/*.py` changed except becoming `async def` (real I/O now
+happens, so routes await it). `InMemoryStore` still exists, used only by
+the test suite for fast, database-independent tests.
+
+### Run it
+
+Requires a local Postgres reachable via `DATABASE_URL` (defaults to
+`postgresql://pta:pta_dev_password@127.0.0.1:5432/paper_trading_agent`).
+
+```bash
+python db/migrate.py                              # apply schema
+psql "$DATABASE_URL" -f db/seed.sql                # seed at least one watchlist symbol
+uvicorn app.main:app --reload
+```
+
+(`db/seed.sql` isn't a migration — `decisions` and `outcomes` have a
+foreign key into `watchlist`, so `POST /run/trigger` fails with a foreign
+key violation until at least one symbol exists there.)
+
+Restart the server and hit `/decisions` again — the data is still there.
+That's the actual proof this phase solved Phase 01's core limitation.
+
+### Test it
+
+```bash
+pytest -q   # runs with SKIP_DB_STARTUP=1 — no Postgres needed
 ```
