@@ -12,8 +12,9 @@ reportable outcome.
 
 ## Status
 
-Phase 02 (State & history) — done. Phase 01 (Control API) is now backed
-by real Postgres instead of a stub.
+Phase 03 (Decision agent) — built and unit-tested against fakes (no live
+API calls yet; waiting on OpenAI + Alpaca API keys before the first real
+run). Phase 02 (State & history) and Phase 01 (Control API) — done.
 
 ## Roadmap
 
@@ -66,6 +67,26 @@ walk-forward validation), before V2 begins.
   Phase 01/02 are solid, not instead of them. Not required for the
   multi-agent redesign above; LangGraph's supervisor pattern doesn't need
   MCP to work.
+- **Sentiment Analyst uses GPT-4o-mini via API, not a locally fine-tuned
+  FinBERT, for now.** The original plan (and still the Phase 04 plan) is
+  a LoRA-fine-tuned local model. The dev sandbox this project is being
+  built in blocks `huggingface.co` at the network level, so model weights
+  can't be downloaded there — this is an environment limitation, not a
+  design change. `app/agent/sentiment_analyst.py` is written against the
+  same `AgentOpinion` contract either way, so swapping in a local model
+  later only touches that one file.
+- **US markets (Alpaca) only, for now — Indian markets considered and
+  deliberately deferred.** Checked what an NSE/BSE version would need:
+  Zerodha/Upstox/Angel One/Fyers all offer free order-execution APIs, but
+  none offer a paper-trading sandbox, and there's no free equivalent to
+  Alpaca's News API or to the FNSPID historical-headline dataset for
+  Indian equities — the Sentiment Analyst and the backtest data plan
+  would both need new, currently-unresearched sourcing. Since this
+  project's own paper trading is simulated in Postgres (not through a
+  broker's paper-money account), the `PriceDataSource`/`HeadlineSource`
+  protocols in `app/agent/data_sources.py` make an Indian data source a
+  future swap-in, not a rewrite — worth revisiting as a V3 extension,
+  not a Phase 03 blocker.
 
 ## Phase 01 — Control API
 
@@ -165,4 +186,107 @@ That's the actual proof this phase solved Phase 01's core limitation.
 
 ```bash
 pytest -q   # runs with SKIP_DB_STARTUP=1 — no Postgres needed
+```
+
+## Phase 03 — Decision agent (LangGraph multi-agent flow)
+
+`POST /run/trigger` now runs a real LangGraph flow per active watchlist
+symbol instead of writing stubbed rows. Shape (fan-out, then fan-in, then
+a gate):
+
+```
+START --> technical_analyst --\
+                                +--> portfolio_manager --> risk_manager --> END
+START --> sentiment_analyst --/
+```
+
+### The four nodes
+
+- **Technical Analyst** (`app/agent/technical_analyst.py`) — rule-based,
+  no LLM call. Pulls ~40 days of daily bars, computes RSI-14/SMA-20
+  (`app/agent/indicators.py`, plain Python, no ta-lib), applies a small
+  explainable if/elif chain. RSI/SMA are numbers, not judgment calls —
+  paying for an LLM to reason about arithmetic isn't worth it.
+- **Sentiment Analyst** (`app/agent/sentiment_analyst.py`) — LLM-backed
+  (GPT-4o-mini via `langchain-openai`'s `with_structured_output`), reads
+  up to 3 days of headlines and judges tone. If there are zero headlines,
+  it returns HOLD **without calling the LLM at all** — cost control:
+  nothing to read means nothing to pay for.
+- **Portfolio Manager** (`app/agent/portfolio_manager.py`) — LLM-backed
+  (GPT-4o), synthesizes both specialists' opinions (weighing reasoning
+  and confidence, not just labels) into a `TentativeDecision`. This is
+  the one node that's genuinely a judgment call, so it gets the frontier
+  model.
+- **Risk Manager** (`app/agent/risk_manager.py`) — rule-based, no LLM.
+  Reads the current position via `repository.list_positions()` and
+  enforces a hard position-size cap (`MAX_POSITION_QTY`, currently 20
+  shares) plus "can't sell more than you hold" — approving, vetoing, or
+  scaling the tentative decision. This node has final authority:
+  `final_action`/`final_quantity` (what actually gets paper-traded) are
+  set here, not by the Portfolio Manager.
+
+Every node factory takes its dependencies (`PriceDataSource`,
+`HeadlineSource`, `Repository`, an optional LLM) as arguments rather than
+constructing them internally — same seam pattern as Phase 01/02's
+`Repository` protocol, applied to market data
+(`app/agent/data_sources.py`) and now to the agent nodes themselves. It's
+what makes every node (and the full graph, `app/agent/graph.py`)
+unit-testable with fakes and no network access at all — see
+`tests/agent_fakes.py` and `tests/test_*.py` for `risk_manager`,
+`technical_analyst`, `sentiment_analyst`, `portfolio_manager`, and a
+full `test_graph.py` pipeline test with everything faked.
+
+### Orchestration and persistence (`app/agent/runner.py`)
+
+The graph itself handles exactly one symbol per call. `runner.py` is one
+level up: it loops over every active `watchlist` symbol, and — inside a
+single Postgres transaction, same all-or-nothing guarantee Phase 02's
+stub already had — writes one `runs` row, one `decisions` row and four
+`agent_opinions` rows per symbol, then executes the paper trade against
+`outcomes`:
+
+- **BUY** always opens a new lot (its own entry price, its own
+  `opened_at`) rather than merging into an existing open position for
+  that symbol — that's what keeps the positions view's quantity-weighted
+  average entry price correct.
+- **SELL** closes open lots oldest-first (FIFO) until the sold quantity
+  is accounted for; a partial-lot sale shrinks the existing open row and
+  inserts a new `CLOSED` row for the sold portion.
+- If a SELL ever exceeds what's actually held, that's treated as a bug
+  in `risk_manager` (which should always have caught it first) and
+  raises loudly, rather than silently modeling a short position — this
+  system is long-only by design.
+
+`PostgresRepository.trigger_run()` is now a thin wrapper: build the live
+data sources, build the graph, call `run_decision_cycle()`. Keeping the
+actual logic in `graph.py`/`runner.py` rather than inline in the
+repository is what makes it testable without a FastAPI app or a live
+database.
+
+### Known gap (flagged honestly, not fixed yet)
+
+`runner.py` prices paper trades from the Technical Analyst's own
+`current_price` (captured while computing RSI/SMA), **not** from
+`price_snapshots` — because nothing in Phase 03 writes to that table
+yet. The `positions` view's `current_price`/`unrealized_pnl` will
+therefore show `NULL` until something (a natural small addition: write
+one row per symbol per run, right after the Technical Analyst node runs)
+actually populates `price_snapshots`. Not fixed here to avoid silently
+expanding this phase's scope.
+
+### Run it
+
+Requires `OPENAI_API_KEY`, `ALPACA_API_KEY`, and `ALPACA_SECRET_KEY` in
+`.env` (see `.env.example`) — not yet live-tested against real API calls
+in this environment.
+
+```bash
+uvicorn app.main:app --reload
+curl -X POST http://127.0.0.1:8000/run/trigger
+```
+
+### Test it
+
+```bash
+pytest -q   # 30 tests, all against fakes — no API keys or network needed
 ```

@@ -25,13 +25,13 @@ Notes on the SQL itself:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
-import psycopg
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
-from app.models import Action, Decision, Position, RunResult, RunStatus
+from app.agent.data_sources import build_live_data_sources
+from app.agent.graph import build_decision_graph
+from app.agent.runner import run_decision_cycle
+from app.models import Decision, Position, RunResult
 
 
 class PostgresRepository:
@@ -75,87 +75,23 @@ class PostgresRepository:
         return [Decision(**row) for row in rows]
 
     async def trigger_run(self) -> RunResult:
-        """Run one (still stubbed) agent cycle, but for real this time:
-        it writes a `runs` row, a `decisions` row, and four
-        `agent_opinions` rows inside a single transaction, so a failure
-        partway through leaves no partial data behind.
+        """Runs one real multi-agent decision cycle (Phase 03) across every
+        active watchlist symbol and persists it.
 
-        Phase 03 replaces the hardcoded values below with actual
-        LangGraph agent output. The shape being written — one decision,
-        several opinions feeding it — doesn't change; only where the
-        values come from does.
+        This method is now thin on purpose: building the graph and doing
+        the actual work lives in app/agent/graph.py and
+        app/agent/runner.py, which is what makes those testable without a
+        FastAPI app or a live Postgres pool. Rebuilding the graph (and its
+        two ChatOpenAI clients) on every call is a known simplification —
+        cheap enough for a once-a-day V1 cycle, worth revisiting only when
+        Phase 07's continuous-intraday loop makes per-call setup cost
+        matter.
         """
-        started_at = datetime.now(timezone.utc)
-
-        async with self._pool.connection() as conn:
-            async with conn.transaction():
-                async with conn.cursor(row_factory=dict_row) as cur:
-                    # mode defaults to 'LIVE' (see 003_backtest_support.sql).
-                    # as_of == started_at here because a live run's decision
-                    # is "for" the moment it actually runs. A future backtest
-                    # runner writes a different as_of (the simulated date)
-                    # from started_at (when the backtest actually executed).
-                    await cur.execute(
-                        "INSERT INTO runs (status, started_at, as_of) "
-                        "VALUES ('RUNNING', %s, %s) RETURNING id",
-                        (started_at, started_at),
-                    )
-                    run_row = await cur.fetchone()
-                    run_id = run_row["id"]
-
-                    technicals_snapshot = {"rsi_14": 51.0, "sma_20": 191.40}
-                    sentiment_snapshot = {"headline_score": 0.02, "n_headlines": 1}
-
-                    await cur.execute(
-                        """
-                        INSERT INTO decisions
-                            (run_id, symbol, action, confidence, reasoning,
-                             technicals_snapshot, sentiment_snapshot)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
-                        RETURNING id, symbol, action, confidence, reasoning,
-                                  technicals_snapshot, sentiment_snapshot, created_at
-                        """,
-                        (
-                            run_id,
-                            "AAPL",
-                            Action.HOLD.value,
-                            0.55,
-                            "Stub run — Phase 03 will replace this with a real "
-                            "LangGraph decision flow.",
-                            psycopg.types.json.Json(technicals_snapshot),
-                            psycopg.types.json.Json(sentiment_snapshot),
-                        ),
-                    )
-                    decision_row = await cur.fetchone()
-                    decision = Decision(**decision_row)
-
-                    opinions = [
-                        ("technical_analyst", "HOLD", 0.55, "RSI near neutral, no clear edge."),
-                        ("sentiment_analyst", "HOLD", 0.50, "Sparse headlines, low signal."),
-                        ("risk_manager", "APPROVE", None, "Within all position/loss limits."),
-                        ("portfolio_manager", "HOLD", 0.55, "No specialist showed conviction."),
-                    ]
-                    for agent_name, opinion, confidence, reasoning in opinions:
-                        await cur.execute(
-                            """
-                            INSERT INTO agent_opinions
-                                (decision_id, agent_name, opinion, confidence, reasoning)
-                            VALUES (%s, %s, %s, %s, %s)
-                            """,
-                            (decision.id, agent_name, opinion, confidence, reasoning),
-                        )
-
-                    finished_at = datetime.now(timezone.utc)
-                    await cur.execute(
-                        "UPDATE runs SET status = 'SUCCESS', finished_at = %s WHERE id = %s",
-                        (finished_at, run_id),
-                    )
-
-        return RunResult(
-            run_id=run_id,
-            started_at=started_at,
-            finished_at=finished_at,
-            status=RunStatus.SUCCESS,
-            decisions=[decision],
+        price_source, headline_source = build_live_data_sources()
+        graph = build_decision_graph(
+            price_source=price_source,
+            headline_source=headline_source,
+            repository=self,
         )
+        return await run_decision_cycle(self._pool, graph)
 
