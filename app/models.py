@@ -60,8 +60,19 @@ class Position(BaseModel):
     symbol: str
     quantity: int = Field(ge=0, description="Shares held, paper-trading only")
     avg_entry_price: Decimal
-    current_price: Decimal
-    unrealized_pnl: Decimal
+    # Optional, not a Decimal: the `positions` VIEW LEFT JOINs against
+    # price_snapshots on purpose (see 002_positions_view.sql) precisely
+    # so an open position with no recorded price yet still shows up
+    # instead of vanishing from the query — a symbol's very first trade
+    # is priced before that cycle's own price_snapshots row is written
+    # (risk_manager checks current holdings mid-cycle, price gets
+    # recorded after the cycle completes), so NULL here is a real,
+    # legitimate state, not just missing data. Declaring these as
+    # required Decimal fields was the actual bug behind a 500 on
+    # GET /positions the first time this ran live — the view was always
+    # allowed to return NULL, the model just never admitted it.
+    current_price: Decimal | None = None
+    unrealized_pnl: Decimal | None = None
     opened_at: datetime
 
 
