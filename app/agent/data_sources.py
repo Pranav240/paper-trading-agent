@@ -27,6 +27,7 @@ from typing import Protocol
 
 from alpaca.data.historical.news import NewsClient
 from alpaca.data.historical.stock import StockHistoricalDataClient
+from alpaca.data.enums import DataFeed
 from alpaca.data.requests import NewsRequest, StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
 from pydantic import BaseModel
@@ -77,6 +78,15 @@ class AlpacaPriceSource:
             timeframe=TimeFrame.Day,
             start=as_of - timedelta(days=lookback_days),
             end=as_of,
+            # alpaca-py defaults to the SIP (consolidated) feed, which the
+            # free "Basic" market data plan this project uses cannot query
+            # for recent data — confirmed via a live 403 during Phase 03
+            # testing ("subscription does not permit querying recent SIP
+            # data"). IEX is the single-exchange feed Basic accounts DO get
+            # for free; daily-bar technical analysis doesn't need
+            # consolidated-tape precision, so this isn't a real accuracy
+            # tradeoff for what this node uses it for.
+            feed=DataFeed.IEX,
         )
         # alpaca-py's client methods are synchronous; run_in_executor
         # would be the "proper" async wrapper, but for a once-a-day
