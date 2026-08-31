@@ -12,9 +12,11 @@ reportable outcome.
 
 ## Status
 
-Phase 03 (Decision agent) — built and unit-tested against fakes (no live
-API calls yet; waiting on OpenAI + Alpaca API keys before the first real
-run). Phase 02 (State & history) and Phase 01 (Control API) — done.
+Phase 03 (Decision agent) — done. Unit-tested against fakes, and the two
+live integrations (Alpaca market data + news, OpenAI chat completions)
+are now confirmed working against real API calls. Not yet run end-to-end
+against a live Postgres database. Phase 02 (State & history) and Phase 01
+(Control API) — done.
 
 ## Roadmap
 
@@ -274,11 +276,30 @@ one row per symbol per run, right after the Technical Analyst node runs)
 actually populates `price_snapshots`. Not fixed here to avoid silently
 expanding this phase's scope.
 
+### Live verification
+
+Both external integrations have been confirmed against real API calls
+(not just the fakes the test suite uses) — Alpaca price bars, Alpaca
+news, and an OpenAI chat completion all returned real data. This had to
+happen outside the usual dev environment: that sandbox's network policy
+blocks `data.alpaca.markets` and `api.openai.com` entirely (same
+category of restriction as the earlier Hugging Face/Docker Hub blocks),
+so the actual verification ran on a Windows machine instead.
+
+One real bug turned up and got fixed: `alpaca-py` defaults bar requests
+to the SIP (consolidated) feed, which the free "Basic" market data plan
+this project uses isn't allowed to query for recent data — it returned
+`{"message":"subscription does not permit querying recent SIP data"}`.
+Fixed by explicitly requesting `feed=DataFeed.IEX` in
+`AlpacaPriceSource.get_recent_bars` (`app/agent/data_sources.py`), which
+Basic accounts do get for free. The news endpoint's response shape
+(`NewsSet.data["news"]`) needed no changes — the original assumption was
+correct.
+
 ### Run it
 
 Requires `OPENAI_API_KEY`, `ALPACA_API_KEY`, and `ALPACA_SECRET_KEY` in
-`.env` (see `.env.example`) — not yet live-tested against real API calls
-in this environment.
+`.env` (see `.env.example`).
 
 ```bash
 uvicorn app.main:app --reload
