@@ -265,16 +265,18 @@ actual logic in `graph.py`/`runner.py` rather than inline in the
 repository is what makes it testable without a FastAPI app or a live
 database.
 
-### Known gap (flagged honestly, not fixed yet)
+### Fixed gap: price_snapshots wasn't being written
 
-`runner.py` prices paper trades from the Technical Analyst's own
-`current_price` (captured while computing RSI/SMA), **not** from
-`price_snapshots` — because nothing in Phase 03 writes to that table
-yet. The `positions` view's `current_price`/`unrealized_pnl` will
-therefore show `NULL` until something (a natural small addition: write
-one row per symbol per run, right after the Technical Analyst node runs)
-actually populates `price_snapshots`. Not fixed here to avoid silently
-expanding this phase's scope.
+Originally shipped with a known gap: nothing wrote to `price_snapshots`,
+so the `positions` view's `current_price`/`unrealized_pnl` would be
+`NULL`. That turned out worse in practice than "shows NULL" — during the
+first live end-to-end run, `Position.current_price` isn't `Optional`, so
+`GET /positions` after a real trade crashed with a 500 instead of just
+displaying an empty field. Fixed by having `runner.py` write one
+`price_snapshots` row per symbol per run (`_record_price_snapshot()`,
+right after pricing the paper trade) — `open`/`high`/`low`/`volume` stay
+`NULL` since this is a "last known price" record, not a real OHLCV bar,
+and the schema already allows that.
 
 ### Live verification
 

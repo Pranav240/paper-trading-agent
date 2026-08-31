@@ -49,6 +49,36 @@ async def _active_symbols(conn: psycopg.AsyncConnection) -> list[str]:
     return [row["symbol"] for row in rows]
 
 
+async def _record_price_snapshot(
+    conn: psycopg.AsyncConnection, *, symbol: str, price: Decimal, as_of: datetime
+) -> None:
+    """Writes the one price_snapshots row _latest_close() above depends
+    on, and that the `positions` view's current_price/unrealized_pnl are
+    computed from.
+
+    This was a known, deliberately-left gap when Phase 03 first shipped
+    (documented in the README) — confirmed as a real bug, not just a
+    cosmetic one, the first time GET /positions ran after a live trade:
+    Position.current_price isn't Optional, so the view returning NULL
+    (nothing had ever written to price_snapshots) crashed the endpoint
+    with a 500 instead of just showing an empty field. That's worse than
+    the gap description assumed, so it's fixed here rather than left for
+    later. Only `close` and `source` are set — open/high/low/volume stay
+    NULL, which the schema already allows (see 001_init.sql); this is a
+    "last known price" record for the positions view, not a real OHLCV
+    bar, so there's nothing honest to put in those columns.
+    """
+    async with conn.cursor() as cur:
+        await cur.execute(
+            """
+            INSERT INTO price_snapshots (symbol, captured_at, close, source)
+            VALUES (%s, %s, %s, 'alpaca')
+            ON CONFLICT (symbol, captured_at) DO NOTHING
+            """,
+            (symbol, as_of, price),
+        )
+
+
 async def _latest_close(conn: psycopg.AsyncConnection, symbol: str) -> Decimal | None:
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(
@@ -249,6 +279,9 @@ async def run_decision_cycle(
                     price = Decimal(str(raw_price)) if raw_price is not None else None
 
                 if price is not None:
+                    await _record_price_snapshot(
+                        conn, symbol=symbol, price=price, as_of=started_at
+                    )
                     await _record_paper_trade(
                         conn,
                         decision_id=decision.id,
