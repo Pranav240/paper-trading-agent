@@ -123,6 +123,16 @@ SQL via `psycopg` (async), not a query builder.
   against the latest `price_snapshots` row per symbol. Deliberately not
   stored, so it can never drift out of sync with the data it's derived
   from.
+- `backtests` — one row per backtest execution (name, date window,
+  config); `runs.mode` (`LIVE`/`BACKTEST`) and `runs.backtest_id` tie a
+  decision cycle to a specific backtest, enforced by a CHECK constraint
+  so the two can never point at each other inconsistently.
+  `runs.as_of` is the date a run's decision is *for*, separate from
+  `started_at` (when it actually executed) — for a live run they're the
+  same moment; for a backtest run, `as_of` is the simulated historical
+  date while `started_at` is whenever the backtest was actually run.
+  Added ahead of Phase 03 specifically so backtesting doesn't require a
+  schema migration later — see `docs/backtesting-plan.md`.
 
 ### The seam paying off
 

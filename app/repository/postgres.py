@@ -90,10 +90,15 @@ class PostgresRepository:
         async with self._pool.connection() as conn:
             async with conn.transaction():
                 async with conn.cursor(row_factory=dict_row) as cur:
+                    # mode defaults to 'LIVE' (see 003_backtest_support.sql).
+                    # as_of == started_at here because a live run's decision
+                    # is "for" the moment it actually runs. A future backtest
+                    # runner writes a different as_of (the simulated date)
+                    # from started_at (when the backtest actually executed).
                     await cur.execute(
-                        "INSERT INTO runs (status, started_at) "
-                        "VALUES ('RUNNING', %s) RETURNING id",
-                        (started_at,),
+                        "INSERT INTO runs (status, started_at, as_of) "
+                        "VALUES ('RUNNING', %s, %s) RETURNING id",
+                        (started_at, started_at),
                     )
                     run_row = await cur.fetchone()
                     run_id = run_row["id"]
