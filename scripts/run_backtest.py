@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import sys
 from datetime import date
 from decimal import Decimal
 
@@ -35,6 +36,16 @@ from psycopg_pool import AsyncConnectionPool
 load_dotenv()
 
 import os
+
+# Windows defaults asyncio to ProactorEventLoop, which psycopg's async
+# driver can't run under (confirmed live: "Psycopg cannot use the
+# 'ProactorEventLoop' to run in async mode" on the first real Windows
+# run of this script). FastAPI/uvicorn apparently sidesteps this on its
+# own — app/main.py never hit it — but a plain `asyncio.run(main())`
+# script like this one needs the selector loop policy set explicitly,
+# before any event loop is created.
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from app.agent.backtest import DEFAULT_SLIPPAGE_BPS, compute_backtest_metrics, run_backtest
 from app.agent.data_sources import build_historical_data_sources
