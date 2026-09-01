@@ -12,11 +12,17 @@ reportable outcome.
 
 ## Status
 
-Phase 03 (Decision agent) — done. Unit-tested against fakes, and the two
-live integrations (Alpaca market data + news, OpenAI chat completions)
-are now confirmed working against real API calls. Not yet run end-to-end
-against a live Postgres database. Phase 02 (State & history) and Phase 01
-(Control API) — done.
+Phase 03 (Decision agent) — done, including a full live end-to-end run
+against a real Postgres database (real Alpaca market data + news, real
+OpenAI reasoning from both LLM nodes, a correctly tracked real paper
+position). Phase 02 (State & history) and Phase 01 (Control API) — done.
+
+Backtesting infrastructure (the gate before Phase 04/V2, per the roadmap
+below) — schema, historical headline source, backtest-scoped repository,
+and the backtest runner itself are built and integration-tested; see
+[Backtesting infrastructure](#backtesting-infrastructure). Not yet run
+against real data — the FNSPID historical-headlines dataset hasn't been
+imported yet, so there are no actual backtest *results* to report.
 
 ## Roadmap
 
@@ -311,5 +317,76 @@ curl -X POST http://127.0.0.1:8000/run/trigger
 ### Test it
 
 ```bash
-pytest -q   # 30 tests, all against fakes — no API keys or network needed
+pytest -q   # 36 tests. 31 run against fakes with zero services needed.
+            # 5 (historical headlines + backtest runner) talk to a real
+            # local Postgres and skip themselves if none is reachable —
+            # see "Backtesting infrastructure" below for why those two
+            # specifically need a real database instead of a fake.
 ```
+
+## Backtesting infrastructure
+
+The project's own gate ("the strategy logic must be honestly backtested
+... before V2 begins") needs more than a for-loop over historical dates —
+it needs backtest data and execution kept structurally separate from
+live paper-trading state, or a backtest run would corrupt real positions.
+Built so far:
+
+- **`historical_headlines` table** (`004_historical_headlines.sql`) —
+  imported once from the [FNSPID
+  dataset](https://github.com/Zdong104/FNSPID_Financial_News_Dataset)
+  (15.7M time-aligned news records, 1999-2023), not called as a live API
+  during a backtest run. `HistoricalHeadlineSource`
+  (`app/agent/data_sources.py`) reads from it with a strict
+  `published_at < as_of` filter — look-ahead-bias safety, per
+  `docs/backtesting-plan.md`'s checklist — and mirrors
+  `AlpacaHeadlineSource`'s exact method signature, so agent nodes can't
+  tell which one is active. Historical *prices* need no separate class:
+  `AlpacaPriceSource` already accepts arbitrary historical `start`/`end`
+  dates, so a backtest still makes real (rate-limited) Alpaca calls for
+  price data — only headlines are local.
+
+- **The live-table isolation decision.** `outcomes` and `price_snapshots`
+  have no `mode`/`backtest_id` column, and the `positions` view
+  (`002_positions_view.sql`) reads both directly with zero filtering. If
+  backtest trades were written there the same way live trades are, every
+  simulated fill would show up as a real open position, and every
+  simulated historical price would be eligible to win "most recent
+  price" — a backtest would silently corrupt real paper-trading state.
+  So backtest fills get their own ledger, `backtest_outcomes`
+  (`005_backtest_outcomes.sql`, same FIFO lot-accounting shape as
+  `outcomes`), and their own risk-check repository, `BacktestRepository`
+  (`app/repository/backtest.py`), scoped to one `backtest_id`. `runs` /
+  `decisions` / `agent_opinions` stay shared with the live path (already
+  tagged via `runs.mode`/`backtest_id`, `003_backtest_support.sql`) since
+  nothing reads those without going through a specific `run_id`.
+
+- **`app/agent/backtest.py`** — `run_backtest()` walks trading days
+  (Mon-Fri, no market-holiday calendar yet — a documented simplification,
+  not an oversight) across a date window, running one decision cycle per
+  symbol per day and persisting it. Slippage is modeled as a basis-point
+  cost against the decision price (default 5 bps; the plan's alternative
+  — fill at the next bar's open — would need a second price fetch per
+  symbol per day for comparatively little extra realism at this scale).
+  Commission is modeled as $0, matching Alpaca's real pricing, stated
+  explicitly rather than silently assumed. `compute_backtest_metrics()`
+  reports realized P&L, trade count, and win rate from closed lots; it
+  deliberately does *not* compute a buy-and-hold comparison itself (that
+  needs a price-history lookup the caller already has via
+  `PriceDataSource`) or mark-to-market open lots at window end (reported
+  separately as `open_trades_at_window_end`, not folded into P&L).
+
+- **`scripts/run_backtest.py`** — CLI entry point. Defaults to fixed
+  always-HOLD LLM stand-ins (no `OPENAI_API_KEY` needed) so the pipeline
+  itself — does it run, does it persist correctly — can be smoke-tested
+  before spending real API budget; `--use-real-llms` switches to actual
+  `ChatOpenAI` calls for an evaluation that means something.
+
+**Open risk, not yet checked empirically:** the plan's in-sample window
+starts at 2015, but `AlpacaPriceSource` is pinned to the `IEX` feed (the
+free-tier fix from Phase 03's live verification) — and the IEX exchange
+itself only launched in 2016. Whether IEX has usable daily bars back to
+2015 for this project's symbols is unverified. If it doesn't, the
+Technical Analyst's existing "not enough history" HOLD fallback means
+this would fail quietly (a narrower effective in-sample window) rather
+than loudly — worth a direct check before trusting 2015-2016 results.
