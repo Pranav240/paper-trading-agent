@@ -200,3 +200,112 @@ async def test_run_backtest_persists_without_touching_live_tables(pool):
                 "DELETE FROM backtests WHERE name = 'test backtest'"
             )
             await conn.execute("DELETE FROM watchlist WHERE symbol = %s", (symbol,))
+
+
+@pytest.mark.asyncio
+async def test_position_cap_is_enforced_across_days(pool):
+    """Regression test for a real bug found via a live pilot run, not by
+    any test: risk_manager's MAX_POSITION_QTY cap (app/agent/risk_manager.py)
+    never engaged during a backtest, because run_backtest()'s first write
+    (the `backtests` row) executed directly on the connection instead of
+    inside a `conn.transaction()` block. On a non-autocommit connection
+    that implicitly opens a transaction that's never closed, so every
+    later `async with conn.transaction():` in the day loop downgraded to
+    a SAVEPOINT instead of a real commit — no day's writes became visible
+    to BacktestRepository.list_positions()'s own connection until the
+    whole function returned. Symptom in the wild: a real Q1 2022 AAPL
+    pilot bought 25 times for 93 total shares against a 20-share cap,
+    with risk_manager reporting current_qty=0 on every single day.
+
+    This test proves the fix holds: a FakeLLM that always proposes BUY 10
+    (regardless of what it's told) run across 4 trading days must be
+    capped at exactly MAX_POSITION_QTY (20) shares open, with the 3rd and
+    4th day's buys VETOed — not silently exceed it.
+    """
+    from app.agent.risk_manager import MAX_POSITION_QTY
+
+    symbol = "CAPTEST"
+    async with pool.connection() as conn:
+        await conn.execute(
+            "INSERT INTO watchlist (symbol, active) VALUES (%s, false) "
+            "ON CONFLICT (symbol) DO NOTHING",
+            (symbol,),
+        )
+
+    try:
+        bars = [
+            PriceBar(
+                symbol=symbol,
+                timestamp=datetime(2022, 1, 1, tzinfo=timezone.utc) + timedelta(days=i),
+                open=Decimal("100") + i,
+                high=Decimal("101") + i,
+                low=Decimal("99") + i,
+                close=Decimal("100") + i,
+                volume=1_000_000,
+            )
+            for i in range(40)
+        ]
+        price_source = FakePriceSource(bars)
+        headline_source = HistoricalHeadlineSource(pool)  # no headlines inserted -> HOLD short-circuit
+        portfolio_llm = FakeLLM(
+            TentativeDecision(
+                action="BUY", quantity=10, confidence=0.9, reasoning="always buy 10"
+            )
+        )
+
+        def make_graph(backtest_id: int):
+            return build_decision_graph(
+                price_source=price_source,
+                headline_source=headline_source,
+                repository=BacktestRepository(pool, backtest_id),
+                portfolio_llm=portfolio_llm,
+            )
+
+        backtest_id = await run_backtest(
+            pool,
+            make_graph,
+            name="test cap enforcement",
+            symbols=[symbol],
+            window_start=date(2022, 1, 3),
+            window_end=date(2022, 1, 6),  # 4 trading days (Mon-Thu)
+        )
+
+        async with pool.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    "SELECT COALESCE(SUM(quantity), 0) FROM backtest_outcomes "
+                    "WHERE backtest_id = %s AND status = 'OPEN'",
+                    (backtest_id,),
+                )
+                total_open_qty = (await cur.fetchone())[0]
+
+                await cur.execute(
+                    "SELECT ao.opinion FROM agent_opinions ao "
+                    "JOIN decisions d ON ao.decision_id = d.id "
+                    "JOIN runs r ON d.run_id = r.id "
+                    "WHERE r.backtest_id = %s AND ao.agent_name = 'risk_manager' "
+                    "ORDER BY r.as_of",
+                    (backtest_id,),
+                )
+                opinions = [row[0] for row in await cur.fetchall()]
+
+        # The actual bug: without the fix, this would be 40 (4 days x 10
+        # shares, cap never enforced) instead of capping at 20.
+        assert total_open_qty == MAX_POSITION_QTY
+        assert opinions == ["APPROVE", "APPROVE", "VETO", "VETO"]
+
+    finally:
+        async with pool.connection() as conn:
+            await conn.execute(
+                "DELETE FROM decisions WHERE run_id IN "
+                "(SELECT id FROM runs WHERE backtest_id IN "
+                "(SELECT id FROM backtests WHERE name = 'test cap enforcement'))"
+            )
+            await conn.execute(
+                "DELETE FROM runs WHERE backtest_id IN "
+                "(SELECT id FROM backtests WHERE name = 'test cap enforcement')"
+            )
+            await conn.execute(
+                "DELETE FROM backtests WHERE name = 'test cap enforcement'"
+            )
+            await conn.execute("DELETE FROM watchlist WHERE symbol = %s", (symbol,))
