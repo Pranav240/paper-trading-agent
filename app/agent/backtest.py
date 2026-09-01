@@ -223,16 +223,34 @@ async def run_backtest(
     trading_days = _trading_days(window_start, window_end)
 
     async with pool.connection() as conn:
-        async with conn.cursor(row_factory=dict_row) as cur:
-            await cur.execute(
-                """
-                INSERT INTO backtests (name, window_start, window_end, config)
-                VALUES (%s, %s, %s, %s)
-                RETURNING id
-                """,
-                (name, window_start, window_end, psycopg.types.json.Json(config or {})),
-            )
-            backtest_id = (await cur.fetchone())["id"]
+        # This insert must commit for real before the day loop starts —
+        # a REAL bug, caught only by a live pilot run, not by testing:
+        # without this explicit transaction block, executing it directly
+        # on `conn` (non-autocommit by default) opens an implicit
+        # transaction that's never closed. Every subsequent
+        # `async with conn.transaction():` below then finds itself
+        # already inside an open transaction and downgrades to a
+        # SAVEPOINT instead of a real BEGIN/COMMIT — so no day's writes
+        # become visible to any OTHER connection (including
+        # BacktestRepository.list_positions()'s own connection) until
+        # the whole function finally returns this connection to the
+        # pool. Symptom: risk_manager saw current_qty=0 on every single
+        # day of a real pilot run, so the position cap never engaged —
+        # 25 BUYs over one quarter, 93 shares total, no VETO/SCALE ever
+        # fired. Wrapping this insert in its own transaction closes that
+        # window: it's fully committed before any node ever reads
+        # positions.
+        async with conn.transaction():
+            async with conn.cursor(row_factory=dict_row) as cur:
+                await cur.execute(
+                    """
+                    INSERT INTO backtests (name, window_start, window_end, config)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING id
+                    """,
+                    (name, window_start, window_end, psycopg.types.json.Json(config or {})),
+                )
+                backtest_id = (await cur.fetchone())["id"]
 
         graph = graph_factory(backtest_id)
 
