@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# A second push to the same branch cancels the first run's jobs — no
+# point paying for CI on a commit that's already been superseded.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: tests (with real Postgres)
+    runs-on: ubuntu-latest
+
+    # A real database, not a mock. Six of the tests
+    # (test_backtest.py, test_historical_headline_source.py) exist
+    # specifically to prove multi-table transactional writes land
+    # correctly and that a backtest never touches the live `outcomes` /
+    # `price_snapshots` tables — properties a fake pool cannot check.
+    # They skip themselves when no database is reachable, so without this
+    # service block CI would report a green suite while silently running
+    # 33 of the 39 tests.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pta
+          POSTGRES_PASSWORD: pta_dev_password
+          POSTGRES_DB: paper_trading_agent
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pta -d paper_trading_agent"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 15
+
+    env:
+      DATABASE_URL: postgresql://pta:pta_dev_password@127.0.0.1:5432/paper_trading_agent
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Apply schema and seed
+        run: python db/bootstrap.py
+
+      - name: Run tests
+        # PYTHONPATH=. because there's no setup.py/pyproject making this
+        # an installed package — same reason the README tells you to set
+        # it when running scripts locally.
+        #
+        # The skip check is the point of running against a real database:
+        # every test must actually run here. A skip means the DB guard
+        # swallowed something — exactly the bug that hid on Windows for
+        # the whole of Phase 03/04, where the six DB tests reported "no
+        # reachable Postgres" while Postgres was up and reachable. A green
+        # tick over a silently shortened suite is worse than a red one.
+        #
+        # `shell: bash` rather than the default so pipefail is set and
+        # pytest's exit code survives the pipe into tee.
+        shell: bash
+        env:
+          PYTHONPATH: .
+        run: |
+          pytest -q -rs 2>&1 | tee result.txt
+          if grep -qE "[0-9]+ skipped" result.txt; then
+            echo "::error::Tests were skipped in CI — see the summary above."
+            exit 1
+          fi
+
+  docker:
+    name: docker image builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the API image
+        # Just proving the Dockerfile is valid and the dependency install
+        # resolves on Linux — requirements.txt was frozen on Windows, so
+        # this is the thing most likely to rot silently.
+        run: docker build -t paper-trading-agent:ci .
+
+      - name: Smoke-test the image
+        # Imports the app the same way uvicorn would. Catches a broken
+        # import or a missing dependency without needing a database.
+        run: |
+          docker run --rm -e SKIP_DB_STARTUP=1 paper-trading-agent:ci \
+            python -c "from app.main import app; print(app.title)"

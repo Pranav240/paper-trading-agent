@@ -1,0 +1,75 @@
+# One-command local stack for the Control API (Phase 05).
+#
+# Until now Postgres ran as a hand-started bare container and the API ran
+# on the host — reproducible only if you'd read the README carefully and
+# typed the right `docker run` by hand. This makes `docker compose up`
+# the whole setup.
+#
+#   docker compose up --build          # start API + a fresh Postgres
+#   docker compose down                # stop, keep the data volume
+#   docker compose down -v             # stop and DELETE the data volume
+#
+# IMPORTANT, on the development machine this was written on: the existing
+# bare `pta-postgres` container holds every backtest, decision and the
+# imported FNSPID headlines. This compose stack deliberately does NOT
+# adopt it — different container name, its own `pgdata` volume, so
+# `docker compose down -v` can never destroy that work. The two cannot
+# both bind host port 5432 though, so either stop the bare container
+# first, or start this one on another port:
+#
+#   POSTGRES_PORT=5433 docker compose up --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pta-postgres-compose
+    environment:
+      POSTGRES_USER: pta
+      POSTGRES_PASSWORD: pta_dev_password
+      POSTGRES_DB: paper_trading_agent
+    ports:
+      # Host port only — everything inside the compose network talks to
+      # postgres:5432 regardless of what this is mapped to.
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # The api service waits on this rather than on the container merely
+      # existing. Postgres accepts TCP connections for a second or two
+      # before it will actually answer queries, and without the wait the
+      # first `docker compose up` loses a race with the migration step.
+      test: ["CMD-SHELL", "pg_isready -U pta -d paper_trading_agent"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  api:
+    build: .
+    container_name: pta-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Overrides the 127.0.0.1 default baked into app/db.py — inside the
+      # compose network the database is reachable by service name.
+      DATABASE_URL: postgresql://pta:pta_dev_password@postgres:5432/paper_trading_agent
+      # Interpolated from .env if present, empty otherwise. The API starts
+      # and serves /health, /positions and /decisions without any of
+      # these; only POST /run/trigger needs them, and it fails with a
+      # clear error rather than a confusing one (see
+      # build_live_data_sources()).
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      ALPACA_API_KEY: "${ALPACA_API_KEY:-}"
+      ALPACA_SECRET_KEY: "${ALPACA_SECRET_KEY:-}"
+    ports:
+      - "8000:8000"
+    # Schema and seed applied here rather than in the Dockerfile: the
+    # image shouldn't assume a database exists at build time, and this is
+    # the only place that can order it after the healthcheck above. Both
+    # halves are idempotent, so restarts are safe.
+    command: >
+      sh -c "python db/bootstrap.py &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+volumes:
+  pgdata:
