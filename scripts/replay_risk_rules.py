@@ -43,6 +43,7 @@ from __future__ import annotations
 import os
 import sys
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 from decimal import Decimal
 
 import psycopg
@@ -140,6 +141,52 @@ def _avg_entry(lots: list[Lot]) -> Decimal:
     return sum(lot.entry_price * lot.quantity for lot in lots) / qty
 
 
+def blocked_by_spacing(
+    today: date,
+    last_buy_day: date | None,
+    min_days_between_buys: int | None,
+) -> bool:
+    """Should today's BUY be refused because the last one was too recent?
+
+    This is the one rule in this file aimed at *stacking* rather than
+    drawdown. Backtest 6 opened three lots on 2023-12-19/20/21 — three
+    consecutive trading days — and those three lots carry 43% of that
+    window's loss. Every drawdown rule tested missed them, because the
+    decline across those three days was only ~1.1%, shallower than any
+    sane drawdown threshold. Spacing is a different lever: it doesn't ask
+    how far price has fallen, only how recently the system last added.
+
+    Returns True to block the buy, False to allow it.
+
+    Three decisions worth naming, since each changes the answer:
+
+    - The gap is counted in TRADING days, not calendar days. That matches
+      how the backtest itself defines a day (`_trading_days()` in
+      app/agent/backtest.py walks weekdays), and it stops the rule from
+      being silently toothless across weekends: a 3-calendar-day gap
+      spanning Fri->Mon is one trading day, so a calendar version of this
+      rule would have let the Dec 19/20/21 cluster through untouched.
+      Holidays are ignored here for the same reason the simulation ignores
+      them — matching the simulation matters more than matching the NYSE.
+    - The FIRST buy of a position is always allowed. Spacing constrains
+      how fast a position is built, not whether one may be opened at all;
+      blocking the opener would make this a "trade less" rule rather than
+      a "stack slower" one, and those are different hypotheses.
+    - `elapsed < min` rather than `<=`: with min=3, a buy three trading
+      days after the last one is allowed. Reading "minimum 3 days between
+      buys" as permitting a 3-day gap is the least surprising choice.
+    """
+    if min_days_between_buys is None or last_buy_day is None:
+        return False
+
+    elapsed = sum(
+        1
+        for i in range(1, (today - last_buy_day).days + 1)
+        if (last_buy_day + timedelta(days=i)).weekday() < 5
+    )
+    return elapsed < min_days_between_buys
+
+
 def _sell_fifo(lots: list[Lot], quantity: int, price: Decimal) -> tuple[Decimal, int]:
     """Oldest lot first, splitting partial lots — the same algorithm as
     `_record_backtest_trade`, in memory. Returns (realized, lots closed)."""
@@ -168,6 +215,7 @@ def replay(
     max_drawdown_pct: Decimal | None = None,
     stop_loss_pct: Decimal | None = None,
     trailing_stop_pct: Decimal | None = None,
+    min_days_between_buys: int | None = None,
 ) -> Result:
     """Re-gate each recorded Portfolio Manager proposal.
 
@@ -182,10 +230,14 @@ def replay(
       much against its average entry.
     - trailing_stop_pct: force a full close when price falls this far from
       the highest price seen since the position was opened.
+    - min_days_between_buys: refuse to open a new lot within this many days
+      of the last one. Targets stacking rather than drawdown — see
+      blocked_by_spacing().
     """
     res = Result(name=name)
     lots: list[Lot] = []
     peak_since_open: Decimal | None = None
+    last_buy_day: date | None = None
 
     for row in tape:
         price = row["price"]
@@ -231,9 +283,15 @@ def replay(
                 if avg > 0 and (avg - price) / avg * 100 >= max_drawdown_pct:
                     res.blocked += 1
                     continue
+            if blocked_by_spacing(
+                row["as_of"].date(), last_buy_day, min_days_between_buys
+            ):
+                res.blocked += 1
+                continue
             allowed = min(qty, MAX_POSITION_QTY - held)
             fill = _slip(price, "BUY", slippage_bps)
             lots.append(Lot(quantity=allowed, entry_price=fill))
+            last_buy_day = row["as_of"].date()
             res.buys += 1
 
         elif action == "SELL":
@@ -325,6 +383,10 @@ def main() -> None:
                trailing_stop_pct=Decimal("5")),
         replay(tape, name="no-add 2% + stop 5%", slippage_bps=DEFAULT_SLIPPAGE_BPS,
                max_drawdown_pct=Decimal("2"), stop_loss_pct=Decimal("5")),
+        replay(tape, name="min 3 days between buys", slippage_bps=DEFAULT_SLIPPAGE_BPS,
+               min_days_between_buys=3),
+        replay(tape, name="min 10 days between buys", slippage_bps=DEFAULT_SLIPPAGE_BPS,
+               min_days_between_buys=10),
     ]
 
     buy_hold = (last_price - first_price) * MAX_POSITION_QTY

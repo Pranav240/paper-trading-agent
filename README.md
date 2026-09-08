@@ -541,10 +541,15 @@ drawdown-based de-risking rule would have avoided most of the loss:
 | stop-loss 3% | -49.03 | +14.06 |
 | trailing stop 5% | -64.94 | -1.84 |
 | no-add 2% + stop 5% | -64.94 | -1.84 |
+| min 3 trading days between buys | -49.24 | +13.86 |
+| min 10 trading days between buys | -49.24 | +13.86 |
 
 **The hypothesis is wrong, and the recorded diagnosis was half right.**
 The best rule recovers $14 of a $63 loss; two rules make it worse; every
-row is still ~$50 behind simply holding. The per-lot breakdown says why:
+row is still ~$50 behind simply holding. Note that the two spacing rules
+and the 1% drawdown rule all land on exactly -49.24: they block the same
+two December buys by three different mechanisms, and $13.86 is simply
+what those two lots were worth. The per-lot breakdown says why:
 
 | lot | entry | P&L |
 |-----|-------|-----|
