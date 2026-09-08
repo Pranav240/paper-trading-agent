@@ -101,12 +101,12 @@ async def test_run_backtest_persists_without_touching_live_tables(pool):
         )
 
     try:
-        from app.agent.sentiment_analyst import SentimentCall
+        from app.agent.sentiment_analyst import SentimentScore
 
         price_source = FakePriceSource(_rising_bars(symbol))
         headline_source = HistoricalHeadlineSource(pool)
         sentiment_llm = FakeLLM(
-            SentimentCall(opinion="HOLD", confidence=0.5, reasoning="test fixture")
+            SentimentScore(score=0.0, confidence=0.5, reasoning="test fixture")
         )
         portfolio_llm = FakeLLM(
             TentativeDecision(
