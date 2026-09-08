@@ -346,6 +346,61 @@ produces real variance on real headlines. Two caveats recorded honestly:
   "everything is bullish" failure -- both signs are well represented --
   but worth watching in the full run.
 
+### RESULT, 2026-09-08: the score node MISSED the bar, badly (n=1)
+
+`backtest_id=14`, "score node run 1", AAPL, 2022-06-03 .. 2023-06-30,
+real LLMs, new sentiment node + new Portfolio Manager prompt.
+
+| config              | run | closed | open | mark-to-market | BUY | SELL | HOLD |
+|---------------------|-----|--------|------|----------------|-----|------|------|
+| old categorical ON  | 4   | 32     | 0    | +864.62        | 22  | 20   | 241  |
+| old categorical ON  | 9   | 31     | 0    | +840.45        | 18  | 18   | 245  |
+| neutral stand-in    | 8   | 33     | 1    | +896.15        | 29  | 25   | 227  |
+| neutral stand-in    | 7   | 33     | 1    | +929.84        | 30  | 25   | 226  |
+| **score node**      | 14  | **62** | 4    | **+745.86**    | 41  | 38   | 202  |
+
+Buy & hold: +903.80.
+
+**It is the worst configuration tested.** The bar was "at or above the OFF
+runs (+896 / +930)". It landed 150-184 below that, and below even the old
+categorical runs it was meant to replace. The measured within-config noise
+floor was 24.2 and 33.7, so the gap is roughly 5x noise — n=1, but not a
+coin flip.
+
+**The prompt rewrite succeeded; the trading result got worse. Both are
+true and they are separate facts.** Score distribution over all 281 days:
+range -0.50..+0.50, mean +0.057, stddev 0.235, **zero exact zeros**, 184
+positive / 97 negative, 10 distinct values. No collapse. It is a genuinely
+varying, trainable regression target. It just doesn't make money.
+
+**Mechanism: churn.** 62 closed trades against 32-33 for every other
+config, 41 BUY / 38 SELL against 22/20 and 30/25. Win rate 32.3%. Realized
+P&L is only +120.49 — nearly all the final +745.86 is unrealized gain on
+four lots it happened to still be holding (entries 151.66, 153.93, 165.70,
+179.77). The system traded roughly twice as much and its realized trading
+was poor.
+
+**CONFOUND — do not skip this.** Two things changed at once: the sentiment
+node AND the Portfolio Manager prompt. The PM prompt change ("a near-zero
+score is silence, not opposition") was specifically designed to stop the
+node's abstentions suppressing trades. It worked, and then some. So the
+extra trading may be the PM prompt rather than the score, and this run
+cannot separate them.
+
+The disambiguating run is one `--no-sentiment` run with the NEW PM prompt
+(score forced to 0.00). If that also churns and loses, the PM prompt is the
+culprit and the score node is off the hook; if it behaves like backtests
+7/8 did, the score itself is what caused the churn. ~$0.87, one run. It is
+the single most informative thing to spend the next dollar on.
+
+**Where this leaves the decision.** Under this document's own stated rule
+-- "if it lands between the old ON runs and the OFF runs, it is still a net
+negative and the honest move is to drop the node" -- landing *below* the
+old ON runs is a clear fail. The caveat is the confound above, which is
+mine, not the node's. Sequence: run the disambiguation first, then decide.
+Dropping the node from the graph entirely remains the leading option, and
+the ablation plus this run would then be Phase 04's honest finding.
+
 ### Only after the node survives that
 
 Re-export training data (`scripts/export_sentiment_eval.sql`, adjusted for
