@@ -25,9 +25,11 @@ never engaged) and a three-window walk-forward was run against real data.
 In-sample the system landed slightly *behind* buy-and-hold; out-of-sample,
 run once with no changes made after seeing the in-sample result, it lost
 $63 marked-to-market in a market that was essentially flat. Full numbers
-in [Backtesting infrastructure](#backtesting-infrastructure). Per this
-project's own stated rule, that is the correct outcome to report, not a
-failure to hide.
+in [Backtest results](#backtest-results--walk-forward-and-the-verdict),
+including an offline replay showing that the drawdown rule everyone
+assumes would have fixed it recovers only $14 of the $63. Per this
+project's own stated rule, a negative result is the correct outcome to
+report, not a failure to hide.
 
 **Phase 04 (sentiment fine-tune) is where the interesting findings are.**
 Two LoRA adapters were trained and both are unusable — each scored at or
@@ -143,6 +145,20 @@ walk-forward validation), before V2 begins.
   is also written to `raw_output->>'score'`. Rows from backtests 3-9
   still hold BUY/HOLD/SELL, so anything grouping on that column has to
   handle both shapes — `scripts/inventory_sentiment.py` does.
+- **Replay recorded decisions offline before running anything new.** The
+  Risk Manager is rule-based and every input it consumed is already in the
+  database — the Portfolio Manager's proposals in `agent_opinions`, the
+  price the agent saw in `decisions.technicals_snapshot`. So "what would a
+  different risk rule have done?" is arithmetic over recorded data, not a
+  new backtest: `scripts/replay_risk_rules.py`, zero API calls. Its
+  baseline row replays the *existing* rules and must reproduce the recorded
+  run or it refuses to print anything else — a replay that can't reproduce
+  the past can't be trusted about hypotheticals. Applied to backtest 6 it
+  killed the standing "a drawdown rule would have fixed it" hypothesis for
+  free, and corrected the recorded diagnosis: the December
+  buying-into-a-decline pattern is 43% of that loss, while 54% is a single
+  September lot hit by a two-day 6.4% gap down that no add-to-position rule
+  can see coming.
 - **Any accuracy/agreement number gets compared to the majority-class
   baseline before it is believed.** Phase 04 produced two results — 84.0%
   and 90.9% — that both look like successes and are both *at or below*
@@ -472,6 +488,84 @@ itself only launched in 2016. Whether IEX has usable daily bars back to
 Technical Analyst's existing "not enough history" HOLD fallback means
 this would fail quietly (a narrower effective in-sample window) rather
 than loudly — worth a direct check before trusting 2015-2016 results.
+
+## Backtest results — walk-forward, and the verdict
+
+Three real-LLM runs inside the dense-coverage window FNSPID actually
+provides for AAPL (Jun 2022 - Dec 2023), in chronological order:
+
+| id | window | closed | open @ end | realized | mark-to-market | buy & hold (20sh) | vs. B&H |
+|----|--------|--------|------------|----------|----------------|-------------------|---------|
+| 3 | Q3 2022 (pilot) | 4 | 1 | +92.74 | **+6.21** | -15.40 | +21.61 |
+| 4 | in-sample (Jun 22 - Jun 23) | 32 | 0 | +864.62 | **+864.62** | +903.80 | -39.18 |
+| 6 | **out-of-sample (Jul - Dec 23)** | 2 | 3 | -36.01 | **-63.10** | +2.20 | -65.30 |
+
+**Mark-to-market, not realized P&L, is the number to read.** Realized
+alone made run 3 look like a clean 100% win rate and made run 6 look
+better than it was — both had open lots sitting on unrealized moves.
+`scripts/compare_ablation.py` computes this for any set of backtest ids.
+
+**The verdict: no edge.** In-sample the system landed slightly behind
+buy-and-hold — close enough to be noise either way with 32 trades on one
+symbol. Out-of-sample, run once with no code, prompt or parameter changes
+made after seeing the in-sample result, it lost $63 marked-to-market in a
+market that was essentially flat. That out-of-sample discipline is what
+makes the negative result trustworthy rather than another
+adjust-and-re-run cycle.
+
+The pipeline was verified as genuinely working across all three runs
+before the result was believed (design decision 9): every agent produced
+varied output, the Portfolio Manager visibly synthesized rather than
+copying the Technical Analyst, and the Risk Manager's VETO/SCALE fired
+sensibly. The negative result is about the strategy, not broken plumbing.
+
+### Replaying the losses through different risk rules
+
+`scripts/replay_risk_rules.py` re-gates every recorded Portfolio Manager
+proposal through alternative Risk Manager rules. It costs nothing to run:
+the Risk Manager is rule-based, the PM's proposals are in `agent_opinions`
+and the price the agent saw is in `decisions.technicals_snapshot`, so the
+whole thing is arithmetic over recorded data. Its baseline row replays the
+*existing* rules and must reproduce the recorded run exactly, or it stops
+— on backtest 6 it matches to $0.0003.
+
+Run against backtest 6, to test the standing hypothesis that a
+drawdown-based de-risking rule would have avoided most of the loss:
+
+| rule | mark-to-market | vs. baseline |
+|------|----------------|--------------|
+| baseline (current rules) | -63.10 | +0.00 |
+| no adding when down 2% | -63.10 | +0.00 |
+| no adding when down 1% | -49.24 | +13.86 |
+| stop-loss 5% | -64.94 | -1.84 |
+| stop-loss 3% | -49.03 | +14.06 |
+| trailing stop 5% | -64.94 | -1.84 |
+| no-add 2% + stop 5% | -64.94 | -1.84 |
+
+**The hypothesis is wrong, and the recorded diagnosis was half right.**
+The best rule recovers $14 of a $63 loss; two rules make it worse; every
+row is still ~$50 behind simply holding. The per-lot breakdown says why:
+
+| lot | entry | P&L |
+|-----|-------|-----|
+| 2023-09-04 | 189.57 | **-34.39** |
+| 2023-11-27 | 189.88 | -1.62 |
+| 2023-12-19 | 197.02 | -13.23 |
+| 2023-12-20 | 195.04 | -7.30 |
+| 2023-12-21 | 194.80 | -6.56 |
+
+The three straight December BUYs into a decline — the pattern originally
+named as the cause — are 43% of the loss. The single largest contributor,
+54%, is one September lot caught by a two-day 6.4% gap down (189.73 →
+182.89 → 177.59) that no add-to-position rule can see coming. And the
+December decline was only ~1.1% from the first buy to the third, which is
+why a 2% no-add threshold changes literally nothing.
+
+**These numbers are in-sample by construction** — the rules were chosen
+after seeing this window's losses, on one symbol. A row that beats the
+baseline has been *selected*, not validated. The honest use of the table
+is to pick one hypothesis to test on a window it wasn't fitted to, and
+the table's actual message is that none of these is worth that test.
 
 ## Phase 05 — Build pipeline (Docker + GitHub Actions)
 
