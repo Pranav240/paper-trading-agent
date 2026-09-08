@@ -9,10 +9,14 @@ Replace `sentiment_analyst`'s GPT-4o-mini API call with a locally-run,
 LoRA-fine-tuned Qwen2.5-1.5B-Instruct. Closes the "LLM fine-tuning"
 resume gap the project was built to close.
 
-The node's contract does not change: `HeadlineSource` in, `AgentOpinion`
-out, same `SentimentCall` JSON shape
-(`{"opinion": "BUY"|"HOLD"|"SELL", "confidence": float, "reasoning": str}`).
-Only the backend behind it changes.
+The node's outer contract does not change: `HeadlineSource` in,
+`AgentOpinion` out. Only the backend behind it changes.
+
+NOTE: the inner JSON shape DID change on 2026-09-08 — it is now
+`SentimentScore` (`{"score": float in [-1,1], "confidence": float,
+"reasoning": str}`), not the old `SentimentCall` BUY/HOLD/SELL literal.
+The fine-tune is therefore a REGRESSION task, not classification. See
+"DECIDED" below.
 
 ## Status: blocked on training data, not on modelling
 
@@ -146,6 +150,26 @@ Two routes to those headlines:
    already exist from earlier work. This covers many symbols without new
    Alpaca calls. Labelling still needs GPT-4o-mini runs, but the headline
    supply problem is already solved here. **Check this route first.**
+
+   **CHECKED, 2026-09-08 — the route is open.** `scripts/fnspid_symbol_census.py`
+   streams the whole file once and counts headlines per symbol per MONTH
+   (per design decision 8 — year totals are what hid the gap that ruined
+   `backtest_id=2`). Result: 15,549,299 rows scanned, 4,508 symbols appear
+   in Jun 2022 - Dec 2023, and **108 of them cover all 19 months at >= 15
+   headlines/month**. Densest: AAPL 8,865, MSFT 8,331, TSLA 8,250, NVDA
+   6,801, then BRK / GOOG / DIS / AMD / XOM / CVX all continuous.
+
+   Headline supply is therefore NOT the blocker for either open question
+   (multi-symbol backtesting, or ~6k labelling calls for training data).
+   Three caveats before acting on it:
+   - The list contains ETFs (SPY, QQQ) and crypto (ETH). Filter to actual
+     equities for a stock strategy.
+   - Headline coverage is not price coverage — each symbol still needs
+     Alpaca IEX daily bars over the same window.
+   - **This is not free in API terms.** A backtest costs roughly one
+     gpt-4o Portfolio Manager call per symbol per trading day, ~$0.87 per
+     symbol over this window. A 15-symbol run is ~$13, not pocket change
+     at the current budget.
 
 Either way GPT-4o-mini must label the new headline blocks — a few dollars
 for ~6k short calls.

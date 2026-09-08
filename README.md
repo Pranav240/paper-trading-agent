@@ -567,6 +567,27 @@ baseline has been *selected*, not validated. The honest use of the table
 is to pick one hypothesis to test on a window it wasn't fitted to, and
 the table's actual message is that none of these is worth that test.
 
+### Is "no edge" a fact about the strategy, or about AAPL?
+
+One symbol is not a result. Testing a second needs headlines, and
+`scripts/fnspid_symbol_census.py` answers whether the 23GB FNSPID file on
+disk can supply them — one streaming pass over the whole file, counting
+per symbol **per month** rather than per year. That granularity is the
+point: year totals are exactly what hid the five-month gap that made
+`backtest_id=2` uninformative (design decision 8).
+
+15,549,299 rows scanned. 4,508 symbols appear in Jun 2022 - Dec 2023, and
+**108 cover all 19 months at >= 15 headlines/month** — AAPL 8,865, MSFT
+8,331, TSLA 8,250, NVDA 6,801, then BRK / GOOG / DIS / AMD / XOM / CVX all
+continuous. Headline supply is not the blocker.
+
+Three things that list does not mean: it includes ETFs (SPY, QQQ) and
+crypto (ETH), so it needs filtering to actual equities; headline coverage
+is not price coverage, and each symbol still needs Alpaca IEX bars over
+the same window; and a multi-symbol backtest is not free — roughly one
+gpt-4o Portfolio Manager call per symbol per trading day, about $0.87 per
+symbol over this window.
+
 ## Phase 05 — Build pipeline (Docker + GitHub Actions)
 
 Until this phase the project was reproducible only by reading the README
