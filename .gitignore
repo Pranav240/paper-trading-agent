@@ -7,3 +7,4 @@ papertrading/
 *.egg-info/
 .DS_Store
 smoke_test.py
+data/

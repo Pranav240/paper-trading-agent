@@ -33,17 +33,35 @@ DEFAULT_TRADE_QTY = 10
 
 SYSTEM_PROMPT = f"""You are the Portfolio Manager in a paper-trading \
 decision system. You will be given two specialist opinions on one stock: \
-a Technical Analyst (price/indicator based) and a Sentiment Analyst \
-(news based). Synthesize them into ONE tentative trading decision.
+a Technical Analyst (price/indicator based, who votes BUY/SELL/HOLD) and \
+a Sentiment Analyst (news based, who returns a numeric tone score rather \
+than a vote). Synthesize them into ONE tentative trading decision.
+
+How to read the sentiment score:
+- It runs from -1.0 (clearly bearish headlines) to +1.0 (clearly bullish \
+headlines). The sign is the direction; the magnitude is how strongly the \
+news leans that way.
+- A score near 0.0 means the news carried NO directional information. \
+That is not a vote against trading and not an argument for HOLD — it \
+simply means this decision rests on the technical read alone. Treat it as \
+silence, not as opposition.
+- Magnitudes around 0.1-0.3 are normal for routine news and are real, \
+mild evidence — weak, but pointing somewhere.
+- The Sentiment Analyst's confidence is a separate axis from the score: \
+it says how sure the read is, not how strong the tone is. A small score \
+with high confidence is a reliable weak signal; a large score with low \
+confidence is a loud but unreliable one.
 
 Rules:
-- Weigh both opinions' reasoning and confidence, not just their labels. \
-Two weak/uncertain opinions pointing the same direction do not \
-automatically outweigh one strong, well-reasoned opinion pointing the \
-other way.
-- If the two specialists clearly conflict with similar confidence, \
-prefer HOLD — this system's whole point is honest evaluation, not \
-forcing a trade out of two mediocre signals.
+- Weigh both specialists' reasoning, magnitude and confidence, not just \
+their headline numbers. Two weak/uncertain signals pointing the same \
+direction do not automatically outweigh one strong, well-reasoned signal \
+pointing the other way.
+- If the two specialists genuinely conflict — the sentiment score is \
+meaningfully non-zero, points the opposite way to the Technical \
+Analyst's vote, and both are similarly confident — prefer HOLD. This \
+system's whole point is honest evaluation, not forcing a trade out of two \
+mediocre signals. A near-zero sentiment score is NOT such a conflict.
 - action must be BUY, SELL, or HOLD.
 - quantity must be 0 if action is HOLD, otherwise a whole number of \
 shares between 1 and {DEFAULT_TRADE_QTY} (this system trades in a fixed \
@@ -72,8 +90,8 @@ def make_portfolio_manager_node(
             f"Technical Analyst opinion: {technical.opinion} "
             f"(confidence={technical.confidence})\n"
             f"Technical Analyst reasoning: {technical.reasoning}\n\n"
-            f"Sentiment Analyst opinion: {sentiment.opinion} "
-            f"(confidence={sentiment.confidence})\n"
+            f"Sentiment Analyst score: {sentiment.opinion} "
+            f"(on the -1.0 to +1.0 scale; confidence={sentiment.confidence})\n"
             f"Sentiment Analyst reasoning: {sentiment.reasoning}"
         )
 
@@ -96,7 +114,13 @@ def make_portfolio_manager_node(
             raw_output={
                 "quantity": decision.quantity,
                 "technical_opinion": technical.opinion,
+                # Kept under the same key as before the score rewrite so
+                # existing dashboard/export queries don't break; it now
+                # holds a signed decimal string ("+0.30") rather than
+                # BUY/HOLD/SELL. `sentiment_score` is the numeric form,
+                # for anything that wants to do arithmetic on it.
                 "sentiment_opinion": sentiment.opinion,
+                "sentiment_score": sentiment.raw_output.get("score"),
             },
         )
 

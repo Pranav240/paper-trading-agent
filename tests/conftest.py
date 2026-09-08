@@ -19,11 +19,26 @@ Two mechanisms working together here, doing two different jobs:
 
 Together, these mean this test suite runs with zero Postgres
 involvement — no server needs to be up for `pytest` to pass.
+
+Separately, the Windows event-loop policy is set here for the same reason
+scripts/run_backtest.py sets it (see that file's comment, commit 2eb1b6f):
+psycopg's async driver refuses to run under Windows' default
+ProactorEventLoop. Without this, the DB integration tests in
+test_backtest.py / test_historical_headline_source.py don't fail — their
+pool fixture times out, PoolTimeout subclasses psycopg.OperationalError,
+and they SKIP with the misleading message "no reachable Postgres" even
+when Postgres is up and reachable. Silent skips on Windows are worse than
+a loud failure, hence fixing it here rather than widening the skip.
 """
 
+import asyncio
 import os
+import sys
 
 os.environ["SKIP_DB_STARTUP"] = "1"
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 import pytest
 from fastapi.testclient import TestClient

@@ -83,6 +83,57 @@ walk-forward validation), before V2 begins.
   design change. `app/agent/sentiment_analyst.py` is written against the
   same `AgentOpinion` contract either way, so swapping in a local model
   later only touches that one file.
+- **Ablate a component before investing in improving it.** Phase 04 was
+  about to spend ~6,000 labelling calls collecting training data for the
+  Sentiment Analyst. Ablating the node first — `run_backtest.py
+  --no-sentiment` replaces its content with a fixed neutral stand-in
+  while leaving the graph structure and the Portfolio Manager's real LLM
+  calls untouched — cost four backtest runs and under a dollar, and
+  showed the node was a net *negative*: mark-to-market P&L over a
+  13-month AAPL window was ~60 better without it (with-node runs +864.62
+  / +840.45, without-node +896.15 / +929.84, buy & hold +903.80). Running
+  two replicates per configuration in the same exercise is what made that
+  readable — it measured the run-to-run noise floor (24.2 and 33.7)
+  instead of assuming one. With n=2 per group this is directionally
+  clear, not statistically strong; what it does rule out is "the gap is
+  pure noise."
+- **An agent that abstains most of the time is not automatically
+  harmless.** The categorical Sentiment Analyst said HOLD on 96.8% of 557
+  calls, which is exactly why it looked safe to keep. The action counts
+  from the ablation show what it was really doing: removing it produced
+  ~9 more BUYs, ~6 more SELLs and ~18 fewer HOLDs, consistently across
+  both runs. Its constant HOLD votes read to the Portfolio Manager as a
+  vote *against* trading, and over that window the trades it suppressed
+  were profitable.
+- **The sentiment node emits a continuous score (-1.0 to +1.0), not a
+  BUY/HOLD/SELL vote.** Chosen over rewording the prompt while keeping
+  the categorical shape, and over dropping the node outright, because it
+  fixes the root cause of three separate failures at once:
+  - Two LoRA fine-tunes (Financial PhraseBank, then distillation from
+    GPT-4o-mini itself) both collapsed to a constant. On a ~96%-one-class
+    target that IS the loss minimum — the data, not the hyperparameters,
+    was the problem. A score has real variance even on routine news, so
+    it is a trainable regression target and the Phase 04 fine-tuning goal
+    survives.
+  - The old prompt's *"prefer HOLD with lower confidence over guessing a
+    direction"* line is what made the teacher near-constant. It is gone.
+  - A near-zero score means "no directional information", which is
+    honestly different from "I recommend not trading" — and
+    `portfolio_manager.py`'s prompt is written to read it that way,
+    explicitly, so the abstention-as-veto effect above can't come back.
+
+  `agent_opinions.opinion` is free TEXT (no CHECK constraint), so the
+  signed decimal string ("+0.30") needed no migration; the numeric value
+  is also written to `raw_output->>'score'`. Rows from backtests 3-9
+  still hold BUY/HOLD/SELL, so anything grouping on that column has to
+  handle both shapes — `scripts/inventory_sentiment.py` does.
+- **Any accuracy/agreement number gets compared to the majority-class
+  baseline before it is believed.** Phase 04 produced two results — 84.0%
+  and 90.9% — that both look like successes and are both *at or below*
+  the trivial always-HOLD baseline for their datasets. On a ~96%
+  single-class problem, headline accuracy is close to meaningless. For
+  the regression version the equivalent is MAE against a
+  predict-the-mean baseline, plus a sign-agreement rate.
 - **US markets (Alpaca) only, for now — Indian markets considered and
   deliberately deferred.** Checked what an NSE/BSE version would need:
   Zerodha/Upstox/Angel One/Fyers all offer free order-execution APIs, but
@@ -217,9 +268,12 @@ START --> sentiment_analyst --/
   paying for an LLM to reason about arithmetic isn't worth it.
 - **Sentiment Analyst** (`app/agent/sentiment_analyst.py`) — LLM-backed
   (GPT-4o-mini via `langchain-openai`'s `with_structured_output`), reads
-  up to 3 days of headlines and judges tone. If there are zero headlines,
-  it returns HOLD **without calling the LLM at all** — cost control:
-  nothing to read means nothing to pay for.
+  up to 3 days of headlines and rates their tone on a **continuous
+  -1.0 to +1.0 score** (bearish to bullish). If there are zero headlines,
+  it returns a neutral 0.00 **without calling the LLM at all** — cost
+  control: nothing to read means nothing to pay for. It used to emit a
+  BUY/HOLD/SELL vote — see "the sentiment node emits a continuous score"
+  in the design decisions log for why that changed.
 - **Portfolio Manager** (`app/agent/portfolio_manager.py`) — LLM-backed
   (GPT-4o), synthesizes both specialists' opinions (weighing reasoning
   and confidence, not just labels) into a `TentativeDecision`. This is
@@ -377,10 +431,22 @@ Built so far:
   separately as `open_trades_at_window_end`, not folded into P&L).
 
 - **`scripts/run_backtest.py`** — CLI entry point. Defaults to fixed
-  always-HOLD LLM stand-ins (no `OPENAI_API_KEY` needed) so the pipeline
-  itself — does it run, does it persist correctly — can be smoke-tested
-  before spending real API budget; `--use-real-llms` switches to actual
-  `ChatOpenAI` calls for an evaluation that means something.
+  neutral LLM stand-ins (sentiment score 0.00, Portfolio Manager HOLD; no
+  `OPENAI_API_KEY` needed) so the pipeline itself — does it run, does it
+  persist correctly — can be smoke-tested before spending real API
+  budget; `--use-real-llms` switches to actual `ChatOpenAI` calls for an
+  evaluation that means something. `--no-sentiment` is the ablation
+  switch: it keeps the Portfolio Manager on real LLM calls but forces the
+  Sentiment Analyst to a fixed neutral score, holding the graph structure
+  constant while removing only the node's content.
+
+- **`scripts/probe_sentiment_scores.py`** — pre-flight check on the
+  sentiment node's score spread. Runs the real node over a sample of real
+  headline days (default 25 gpt-4o-mini calls, a fraction of a cent) and
+  prints the distribution plus a blunt verdict. Worth running before
+  every set of paid backtest runs: if the scores cluster at 0.0 the node
+  has collapsed to a constant again, and the P&L comparison those runs
+  would produce isn't worth paying for.
 
 **Open risk, not yet checked empirically:** the plan's in-sample window
 starts at 2015, but `AlpacaPriceSource` is pinned to the `IEX` feed (the

@@ -16,10 +16,10 @@ async def test_synthesizes_both_opinions_into_tentative_decision_and_logs_it():
     )
     sentiment = AgentOpinion(
         agent_name="sentiment_analyst",
-        opinion="BUY",
+        opinion="+0.45",
         confidence=0.6,
         reasoning="Headlines lean positive.",
-        raw_output={"n_headlines": 3},
+        raw_output={"score": 0.45, "n_headlines": 3},
     )
     fake_decision = TentativeDecision(
         action="BUY", quantity=10, confidence=0.7, reasoning="Both specialists agree."
@@ -42,4 +42,5 @@ async def test_synthesizes_both_opinions_into_tentative_decision_and_logs_it():
     assert logged.confidence == 0.7
     assert logged.raw_output["quantity"] == 10
     assert logged.raw_output["technical_opinion"] == "BUY"
-    assert logged.raw_output["sentiment_opinion"] == "BUY"
+    assert logged.raw_output["sentiment_opinion"] == "+0.45"
+    assert logged.raw_output["sentiment_score"] == 0.45

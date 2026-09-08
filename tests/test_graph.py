@@ -19,7 +19,7 @@ import app.agent.technical_analyst as ta_module
 from app.agent.data_sources import Headline, PriceBar
 from app.agent.graph import build_decision_graph
 from app.agent.portfolio_manager import DEFAULT_TRADE_QTY
-from app.agent.sentiment_analyst import SentimentCall
+from app.agent.sentiment_analyst import SentimentScore
 from app.agent.state import TentativeDecision
 from app.agent.risk_manager import MAX_POSITION_QTY
 from tests.agent_fakes import (
@@ -62,7 +62,7 @@ async def test_full_pipeline_approves_buy_when_within_position_limit(monkeypatch
         headline_source=FakeHeadlineSource([_headline()]),
         repository=FakeRepository(),  # no existing position
         sentiment_llm=FakeLLM(
-            SentimentCall(opinion="BUY", confidence=0.6, reasoning="Positive news.")
+            SentimentScore(score=0.6, confidence=0.6, reasoning="Positive news.")
         ),
         portfolio_llm=FakeLLM(
             TentativeDecision(
@@ -77,7 +77,7 @@ async def test_full_pipeline_approves_buy_when_within_position_limit(monkeypatch
     result = await graph.ainvoke({"symbol": "AAPL", "as_of": datetime(2026, 1, 1)})
 
     assert result["technical_opinion"].opinion == "BUY"
-    assert result["sentiment_opinion"].opinion == "BUY"
+    assert result["sentiment_opinion"].opinion == "+0.60"
     assert result["tentative_decision"].action == "BUY"
     assert result["risk_verdict"].opinion == "APPROVE"
     assert result["final_action"] == "BUY"
@@ -94,7 +94,7 @@ async def test_full_pipeline_vetoes_buy_when_position_already_at_cap(monkeypatch
         headline_source=FakeHeadlineSource([_headline()]),
         repository=FakeRepository([make_position("AAPL", quantity=MAX_POSITION_QTY)]),
         sentiment_llm=FakeLLM(
-            SentimentCall(opinion="BUY", confidence=0.6, reasoning="Positive news.")
+            SentimentScore(score=0.6, confidence=0.6, reasoning="Positive news.")
         ),
         portfolio_llm=FakeLLM(
             TentativeDecision(

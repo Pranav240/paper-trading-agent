@@ -84,25 +84,39 @@ def _parse_args() -> argparse.Namespace:
             "Use real ChatOpenAI calls for the Sentiment Analyst and "
             "Portfolio Manager (needs OPENAI_API_KEY, costs real money, "
             "one call per node per symbol per simulated day). Without "
-            "this flag, both nodes use a fixed HOLD test double instead "
+            "this flag, both nodes use fixed neutral test doubles instead "
             "— enough to verify the pipeline runs and persists correctly, "
             "not to evaluate the actual strategy."
+        ),
+    )
+    parser.add_argument(
+        "--no-sentiment",
+        action="store_true",
+        help=(
+            "ABLATION: force the Sentiment Analyst to a fixed neutral "
+            "score (0.0) stand-in while leaving the Portfolio Manager on "
+            "real LLM calls. Combine with --use-real-llms. Answers 'is the "
+            "sentiment node's actual content worth anything?' by holding "
+            "the graph structure constant and removing only the signal. "
+            "Compare the resulting metrics against the equivalent full "
+            "run over the same window."
         ),
     )
     return parser.parse_args()
 
 
 def _fake_llms():
-    """A fixed always-HOLD stand-in, imported from the test suite rather
-    than redefined here — one definition of "what a fake LLM response
-    looks like," not two that can drift apart. Only meant for a dry-run
+    """Fixed neutral stand-ins (sentiment score 0.00, Portfolio Manager
+    action HOLD), imported from the test suite rather than redefined
+    here — one definition of "what a fake LLM response looks like," not
+    two that can drift apart. Only meant for a dry-run
     smoke test of the pipeline; --use-real-llms is what actually
     evaluates the strategy."""
-    from app.agent.sentiment_analyst import SentimentCall
+    from app.agent.sentiment_analyst import SentimentScore
     from tests.agent_fakes import FakeLLM
 
     sentiment_llm = FakeLLM(
-        SentimentCall(opinion="HOLD", confidence=0.5, reasoning="dry run — no real LLM")
+        SentimentScore(score=0.0, confidence=0.5, reasoning="dry run — no real LLM")
     )
     portfolio_llm = FakeLLM(
         TentativeDecision(
@@ -125,9 +139,18 @@ async def main() -> None:
         sentiment_llm, portfolio_llm = _fake_llms()
         print(
             "NOTE: --use-real-llms not passed — running with fixed "
-            "always-HOLD LLM stand-ins. This verifies the pipeline runs "
+            "neutral LLM stand-ins. This verifies the pipeline runs "
             "end-to-end, it does NOT evaluate the strategy. Pass "
             "--use-real-llms for a result worth reading."
+        )
+
+    if args.no_sentiment:
+        sentiment_llm, _ = _fake_llms()
+        print(
+            "ABLATION MODE: sentiment node forced to a neutral score of "
+            "0.00 (confidence 0.5). The node still runs and the Portfolio "
+            "Manager still sees its score — only the content is removed. "
+            "Compare against the equivalent full run over the same window."
         )
 
     def make_graph(backtest_id: int):
