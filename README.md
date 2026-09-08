@@ -12,29 +12,45 @@ reportable outcome.
 
 ## Status
 
-Phase 03 (Decision agent) — done, including a full live end-to-end run
-against a real Postgres database (real Alpaca market data + news, real
+Phases 01 (Control API), 02 (State & history), 03 (Decision agent) and 05
+(Build pipeline) — done. Phase 03 includes a full live end-to-end run
+against a real Postgres database: real Alpaca market data + news, real
 OpenAI reasoning from both LLM nodes, a correctly tracked real paper
-position). Phase 02 (State & history) and Phase 01 (Control API) — done.
+position.
 
-Backtesting infrastructure (the gate before Phase 04/V2, per the roadmap
-below) — schema, historical headline source, backtest-scoped repository,
-and the backtest runner itself are built and integration-tested; see
-[Backtesting infrastructure](#backtesting-infrastructure). Not yet run
-against real data — the FNSPID historical-headlines dataset hasn't been
-imported yet, so there are no actual backtest *results* to report.
+**Backtesting is done, and the headline result is negative: V1 has no
+edge on AAPL.** FNSPID was imported, the runner was fixed (a psycopg
+transaction bug meant no day's writes were visible, so the position cap
+never engaged) and a three-window walk-forward was run against real data.
+In-sample the system landed slightly *behind* buy-and-hold; out-of-sample,
+run once with no changes made after seeing the in-sample result, it lost
+$63 marked-to-market in a market that was essentially flat. Full numbers
+in [Backtesting infrastructure](#backtesting-infrastructure). Per this
+project's own stated rule, that is the correct outcome to report, not a
+failure to hide.
+
+**Phase 04 (sentiment fine-tune) is where the interesting findings are.**
+Two LoRA adapters were trained and both are unusable — each scored at or
+*below* the trivial majority-class baseline, which is only visible if you
+check the baseline. Ablating the sentiment node then showed it was making
+the system actively worse. It has been rewritten to emit a continuous
+score instead of a BUY/HOLD/SELL vote; that rewrite is committed and
+tested, and the re-measurement is pending. See the design decisions log
+and `docs/phase04-handoff.md`.
 
 ## Roadmap
 
 **V1 — daily decision-support agent**
 
-1. Control API — FastAPI endpoints for positions/decisions/trigger-run *(this phase)*
-2. State & history — Postgres schema (watchlist, price snapshots, decisions, outcomes)
+1. Control API — FastAPI endpoints for positions/decisions/trigger-run *(done)*
+2. State & history — Postgres schema (watchlist, price snapshots, decisions, outcomes) *(done)*
 3. Decision agent — LangGraph **multi-agent** flow (supervisor pattern):
    Technical Analyst + Sentiment Analyst report to a Portfolio Manager,
-   with a Risk Manager able to veto/scale any trade → paper-trade → log
+   with a Risk Manager able to veto/scale any trade → paper-trade → log *(done)*
 4. Sentiment model — LoRA fine-tune on financial headlines (Hugging Face PEFT)
-5. Build pipeline — Dockerfile + GitHub Actions
+   *(in progress — two failed adapters, node rewritten to a continuous
+   score, re-measurement pending)*
+5. Build pipeline — Dockerfile + GitHub Actions *(done)*
 6. Scheduled run — deployed on AWS (EC2 + RDS), triggered once per session
 
 **Gate:** V1 must be deployed and running end-to-end on paper, and the
@@ -456,3 +472,75 @@ itself only launched in 2016. Whether IEX has usable daily bars back to
 Technical Analyst's existing "not enough history" HOLD fallback means
 this would fail quietly (a narrower effective in-sample window) rather
 than loudly — worth a direct check before trusting 2015-2016 results.
+
+## Phase 05 — Build pipeline (Docker + GitHub Actions)
+
+Until this phase the project was reproducible only by reading the README
+carefully: start a bare `pta-postgres` container with the right flags,
+create a venv, `python db/migrate.py`, apply `db/seed.sql` by hand, then
+`uvicorn`. Five manual steps, each with its own way to be wrong.
+
+```bash
+docker compose up --build     # API + a fresh Postgres, schema and seed applied
+docker compose down           # stop, keep the data
+docker compose down -v        # stop and delete the data volume
+```
+
+Then http://127.0.0.1:8000/docs.
+
+### What's in it
+
+- **`Dockerfile`** — `python:3.13-slim` (matching the version developed
+  against), runs as a non-root user, and copies `requirements.txt` on its
+  own layer before the source so editing a `.py` file doesn't invalidate
+  the pip-install layer. Slim rather than alpine because `psycopg-binary`,
+  `numpy` and `pandas` all ship glibc wheels — musl would force a source
+  build of all three for no benefit.
+- **`.dockerignore`** — `data/` first and foremost. It holds the 23GB
+  FNSPID CSV and the LoRA adapter zips; without excluding it every build
+  ships 22GB to the daemon before running an instruction.
+- **`docker-compose.yml`** — Postgres with a `pg_isready` healthcheck, and
+  an API service that waits on `service_healthy` before running
+  migrations. Postgres accepts TCP connections a second or two before it
+  will answer queries, so without the wait the first `up` loses a race
+  with the migration step.
+- **`db/bootstrap.py`** — migrations then seed, both idempotent, so it can
+  run on every container start. Kept out of `db/migrate.py` for the same
+  reason `db/seed.sql` is kept out of `db/migrations/`: migrations define
+  structure, seeding decides what data to start with.
+- **`.github/workflows/ci.yml`** — the test suite against a **real
+  Postgres service container**, plus a job that builds the image and
+  imports the app inside it.
+
+### The compose stack does not adopt the existing container
+
+On the development machine, the bare `pta-postgres` container holds every
+backtest, decision and the imported FNSPID headlines. The compose stack
+uses a different container name and its own volume, deliberately, so
+`docker compose down -v` can never destroy that work. The two can't both
+bind host port 5432, so either stop the bare container first or run:
+
+```bash
+POSTGRES_PORT=5433 docker compose up --build
+```
+
+### Why CI runs a real database, and fails on a skip
+
+Six tests (`test_backtest.py`, `test_historical_headline_source.py`) exist
+to prove multi-table transactional writes land correctly and that a
+backtest never touches the live `outcomes` / `price_snapshots` tables —
+properties a fake pool cannot check. They skip themselves when no database
+is reachable, so CI without a service container would report a green suite
+while silently running 33 of 39 tests.
+
+That isn't hypothetical. Those six tests had been **silently skipping on
+Windows for the whole of Phase 03 and 04**, reporting "no reachable
+Postgres" while Postgres was up and reachable. The cause was the
+`ProactorEventLoop` incompatibility already fixed in `scripts/run_backtest.py`
+(`2eb1b6f`) but never applied to the test suite: psycopg's pool raises
+`PoolTimeout`, which subclasses `psycopg.OperationalError`, which the
+skip guard caught. One line in `tests/conftest.py` fixed it.
+
+So the CI job greps its own output and **fails if any test skipped**. A
+green tick over a silently shortened suite is worse than a red one — that
+is the entire lesson of the bug above, encoded so it can't recur.

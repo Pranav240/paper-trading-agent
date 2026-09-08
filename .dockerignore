@@ -1,0 +1,21 @@
+# Keeps the build context small and keeps secrets out of the image.
+#
+# data/ is the big one: it holds the 23GB FNSPID CSV and the LoRA adapter
+# zips. Without this line every `docker build` would spend minutes
+# shipping 22GB to the daemon before running a single instruction.
+data/
+
+.env
+.git/
+.github/
+.gitignore
+
+papertrading/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+*.ipynb
+docs/
+README.md
