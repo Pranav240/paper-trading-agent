@@ -1,0 +1,500 @@
+<title>Paper Trading Agent Roadmap</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root{
+    --bg:      #F3F5F7;
+    --surface: #FFFFFF;
+    --ink:     #1B222C;
+    --muted:   #5B6672;
+    --line:    #D3D9DF;
+    --v1:      #1F8A82;
+    --v1-soft: #E4F2F0;
+    --v2:      #C97A1F;
+    --v2-soft: #FBEEDD;
+    --focus:   #2A6FDB;
+    --done:    #1F8A82;
+    --stopped: #B4462F;
+    --stopped-soft: #F7E7E2;
+    --pending: #98A2AE;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:      #0E141C;
+      --surface: #161D27;
+      --ink:     #DCE3EA;
+      --muted:   #8B96A3;
+      --line:    #2B3441;
+      --v1:      #3FB0A6;
+      --v1-soft: #17302D;
+      --v2:      #E0973A;
+      --v2-soft: #332310;
+      --done:    #3FB0A6;
+      --stopped: #E0765A;
+      --stopped-soft: #341A14;
+      --pending: #5D6874;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:      #0E141C;
+    --surface: #161D27;
+    --ink:     #DCE3EA;
+    --muted:   #8B96A3;
+    --line:    #2B3441;
+    --v1:      #3FB0A6;
+    --v1-soft: #17302D;
+    --v2:      #E0973A;
+    --v2-soft: #332310;
+    --done:    #3FB0A6;
+    --stopped: #E0765A;
+    --stopped-soft: #341A14;
+    --pending: #5D6874;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    font-size:15px;
+    line-height:1.55;
+  }
+  .mono{
+    font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:48px 28px 72px;
+  }
+
+  header.page{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-bottom:40px;
+    padding-bottom:28px;
+    border-bottom:1px solid var(--line);
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono";
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  h1{
+    margin:0;
+    font-size:clamp(26px,3.4vw,34px);
+    font-weight:700;
+    text-wrap:balance;
+    letter-spacing:-0.01em;
+  }
+  .dek{
+    max-width:62ch;
+    color:var(--muted);
+    font-size:15.5px;
+  }
+
+  .legend{
+    display:flex;
+    gap:22px;
+    flex-wrap:wrap;
+    margin-top:6px;
+  }
+  .legend-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .swatch{
+    width:11px; height:11px;
+    border-radius:2px;
+    flex:none;
+  }
+  .swatch.v1{ background:var(--v1); }
+  .swatch.v2{ background:var(--v2); }
+  .swatch.dash{
+    background:none;
+    border-top:2px dashed var(--muted);
+    height:0; width:16px;
+  }
+  .swatch.round{ border-radius:50%; }
+  .swatch.done{ background:var(--done); }
+  .swatch.stopped{ background:var(--stopped); }
+  .swatch.pending{ background:none; border:1.5px solid var(--pending); }
+
+  section{ margin-bottom:44px; }
+  h2{
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+
+  .diagram-frame{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:20px 20px 12px;
+    overflow-x:auto;
+  }
+  figure{ margin:0; }
+  svg{ display:block; width:100%; height:auto; min-width:760px; }
+  figcaption{
+    margin-top:14px;
+    font-size:13px;
+    color:var(--muted);
+    border-top:1px solid var(--line);
+    padding-top:12px;
+  }
+
+  /* ---- reference list ---- */
+  .tracks{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+  @media (max-width:760px){ .tracks{ grid-template-columns:1fr; } }
+
+  .track{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:18px 20px 20px;
+  }
+  .track-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .track-head .dot{
+    width:10px;height:10px;border-radius:50%;
+  }
+  .track.v1 .dot{ background:var(--v1); }
+  .track.v2 .dot{ background:var(--v2); }
+  .track-head h3{
+    margin:0;
+    font-size:15px;
+    font-weight:600;
+  }
+  .track-head .sub{
+    font-size:12px;
+    color:var(--muted);
+    font-family:"IBM Plex Mono";
+  }
+
+  ol.steps{
+    list-style:none;
+    margin:0; padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  ol.steps li{
+    display:grid;
+    grid-template-columns:28px 1fr;
+    gap:10px;
+    align-items:start;
+  }
+  ol.steps .num{
+    font-family:"IBM Plex Mono";
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+    padding-top:2px;
+  }
+  ol.steps .label{
+    font-weight:600;
+    font-size:13.5px;
+  }
+  ol.steps .desc{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .track.v1 ol.steps .num{ color:var(--v1); }
+  .track.v2 ol.steps .num{ color:var(--v2); }
+
+  .tag{
+    display:inline-block;
+    font-family:"IBM Plex Mono";
+    font-size:10.5px;
+    font-weight:600;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:1px 6px;
+    border-radius:3px;
+    margin-left:7px;
+    vertical-align:1.5px;
+  }
+  .tag.done{ background:var(--v1-soft); color:var(--done); }
+  .tag.stopped{ background:var(--stopped-soft); color:var(--stopped); }
+  .tag.pending{ border:1px solid var(--line); color:var(--pending); }
+
+  .gate-note{
+    margin-top:16px;
+    padding-top:14px;
+    border-top:1px dashed var(--line);
+    font-size:12.5px;
+    color:var(--muted);
+  }
+
+  .callout{
+    background:var(--stopped-soft);
+    border:1px solid var(--stopped);
+    border-radius:8px;
+    padding:18px 20px;
+    font-size:13.5px;
+    color:var(--ink);
+  }
+  .callout b{ color:var(--stopped); }
+  .callout p{ margin:0 0 10px; }
+  .callout p:last-child{ margin-bottom:0; }
+  .callout table{
+    border-collapse:collapse;
+    margin:12px 0;
+    font-family:"IBM Plex Mono";
+    font-size:12.5px;
+    font-variant-numeric:tabular-nums;
+  }
+  .callout td{ padding:3px 16px 3px 0; }
+  .callout td.n{ text-align:right; }
+
+  a{ color:var(--focus); }
+</style>
+
+<div class="wrap">
+
+  <header class="page">
+    <span class="eyebrow">Build sequence · paper trading only</span>
+    <h1>V1 first, V2 only if V1 earns it</h1>
+    <p class="dek">Six phases build the daily decision-support agent (V1). Six more extend it into a continuous intraday system (V2) — each one reusing or upgrading a specific V1 component, not starting over. <strong>Status as of 9 Sep 2026: five of the six V1 phases are settled, and the honest-backtest gate that stands between V1 and V2 has been reached and answered.</strong></p>
+    <div class="legend">
+      <span class="legend-item"><span class="swatch v1"></span>V1 — foundation</span>
+      <span class="legend-item"><span class="swatch v2"></span>V2 — extension</span>
+      <span class="legend-item"><span class="swatch dash"></span>extends this block</span>
+      <span class="legend-item"><span class="swatch round done"></span>done</span>
+      <span class="legend-item"><span class="swatch round stopped"></span>closed on a negative result</span>
+      <span class="legend-item"><span class="swatch round pending"></span>not started</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>Block diagram</h2>
+    <div class="diagram-frame">
+      <figure>
+        <svg viewBox="0 0 1240 400" role="img" aria-label="Roadmap showing six V1 blocks built in sequence with status markers, a shipped milestone gate, then six V2 blocks, with dashed lines showing which V1 block each V2 block extends. Phases 1, 2, 3 and 5 are done, phase 4 is closed on a negative result, phase 6 and all V2 phases are not started.">
+          <defs>
+            <marker id="arrowV1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--v1)"/>
+            </marker>
+            <!-- Grey rather than V2 amber: the row it belongs to is not
+                 started, and an amber arrowhead on a grey line reads as a
+                 half-finished state rather than a not-yet-begun one. -->
+            <marker id="arrowV2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--pending)"/>
+            </marker>
+          </defs>
+
+          <!-- ===== gate ribbon ===== -->
+          <rect x="20" y="112" width="1176" height="34" rx="17" fill="var(--stopped-soft)" stroke="var(--stopped)"/>
+          <text x="608" y="133" text-anchor="middle" class="mono" font-size="12" fill="var(--stopped)">GATE REACHED · BACKTESTED HONESTLY · NO EDGE FOUND → V2 NOT JUSTIFIED ON THIS EVIDENCE</text>
+
+          <!-- ===== row labels ===== -->
+          <text x="20" y="18" class="mono" font-size="12" font-weight="600" fill="var(--v1)">V1 — DAILY DECISION-SUPPORT AGENT</text>
+          <text x="20" y="238" class="mono" font-size="12" font-weight="600" fill="var(--v2)">V2 — CONTINUOUS INTRADAY EXTENSION</text>
+
+          <!-- ===== Row 1 sequential arrows ===== -->
+          <g stroke="var(--v1)" stroke-width="2" marker-end="url(#arrowV1)">
+            <line x1="196" y1="60" x2="218" y2="60"/>
+            <line x1="396" y1="60" x2="418" y2="60"/>
+            <line x1="596" y1="60" x2="618" y2="60"/>
+            <line x1="796" y1="60" x2="818" y2="60"/>
+            <line x1="996" y1="60" x2="1018" y2="60"/>
+          </g>
+
+          <!-- ===== Row 2 sequential arrows ===== -->
+          <g stroke="var(--pending)" stroke-width="2" marker-end="url(#arrowV2)">
+            <line x1="196" y1="280" x2="218" y2="280"/>
+            <line x1="396" y1="280" x2="418" y2="280"/>
+            <line x1="596" y1="280" x2="618" y2="280"/>
+            <line x1="796" y1="280" x2="818" y2="280"/>
+            <line x1="996" y1="280" x2="1018" y2="280"/>
+          </g>
+
+          <!-- ===== dashed extension connectors ===== -->
+          <g stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" fill="none">
+            <path d="M108,90 C108,160 108,190 108,250"/>
+            <path d="M308,90 C308,160 308,190 308,250"/>
+            <path d="M508,90 C508,160 508,190 508,250"/>
+            <path d="M908,90 C908,160 908,190 908,250"/>
+            <path d="M1108,90 C1108,160 1108,190 1108,250"/>
+          </g>
+          <text x="98"  y="180" class="mono" font-size="10" fill="var(--muted)">fetch→stream</text>
+          <text x="298" y="180" class="mono" font-size="10" fill="var(--muted)">adds hot state</text>
+          <text x="498" y="180" class="mono" font-size="10" fill="var(--muted)">one-shot→loop</text>
+          <text x="898" y="180" class="mono" font-size="10" fill="var(--muted)">adds uptime alerts</text>
+          <text x="1084" y="180" class="mono" font-size="10" fill="var(--muted)">cron→always-on</text>
+
+          <!-- ===== Row 1 boxes ===== -->
+          <!-- 01 Control API -->
+          <g>
+            <rect x="20" y="30" width="176" height="60" rx="6" fill="var(--v1-soft)" stroke="var(--v1)"/>
+            <text x="32" y="45" class="mono" font-size="10" fill="var(--v1)">01</text>
+            <text x="32" y="63" font-size="14" font-weight="600" fill="var(--ink)">Control API</text>
+            <text x="32" y="80" class="mono" font-size="11" fill="var(--muted)">FastAPI</text>
+            <circle cx="180" cy="44" r="5" fill="var(--done)"/>
+          </g>
+          <!-- 02 State & History -->
+          <g>
+            <rect x="220" y="30" width="176" height="60" rx="6" fill="var(--v1-soft)" stroke="var(--v1)"/>
+            <text x="232" y="45" class="mono" font-size="10" fill="var(--v1)">02</text>
+            <text x="232" y="63" font-size="14" font-weight="600" fill="var(--ink)">State &amp; History</text>
+            <text x="232" y="80" class="mono" font-size="11" fill="var(--muted)">Postgres</text>
+            <circle cx="380" cy="44" r="5" fill="var(--done)"/>
+          </g>
+          <!-- 03 Decision Agent -->
+          <g>
+            <rect x="420" y="30" width="176" height="60" rx="6" fill="var(--v1-soft)" stroke="var(--v1)"/>
+            <text x="432" y="45" class="mono" font-size="10" fill="var(--v1)">03</text>
+            <text x="432" y="63" font-size="14" font-weight="600" fill="var(--ink)">Decision Agent</text>
+            <text x="432" y="80" class="mono" font-size="11" fill="var(--muted)">LangGraph</text>
+            <circle cx="580" cy="44" r="5" fill="var(--done)"/>
+          </g>
+          <!-- 04 Sentiment Model — closed on a negative result -->
+          <g>
+            <rect x="620" y="30" width="176" height="60" rx="6" fill="var(--stopped-soft)" stroke="var(--stopped)"/>
+            <text x="632" y="45" class="mono" font-size="10" fill="var(--stopped)">04</text>
+            <text x="632" y="63" font-size="14" font-weight="600" fill="var(--ink)">Sentiment Model</text>
+            <text x="632" y="80" class="mono" font-size="11" fill="var(--stopped)">closed — no benefit</text>
+            <circle cx="780" cy="44" r="5" fill="var(--stopped)"/>
+          </g>
+          <!-- 05 Build Pipeline -->
+          <g>
+            <rect x="820" y="30" width="176" height="60" rx="6" fill="var(--v1-soft)" stroke="var(--v1)"/>
+            <text x="832" y="45" class="mono" font-size="10" fill="var(--v1)">05</text>
+            <text x="832" y="63" font-size="14" font-weight="600" fill="var(--ink)">Build Pipeline</text>
+            <text x="832" y="80" class="mono" font-size="11" fill="var(--muted)">Docker + CI</text>
+            <circle cx="980" cy="44" r="5" fill="var(--done)"/>
+          </g>
+          <!-- 06 Scheduled Run — not started -->
+          <g>
+            <rect x="1020" y="30" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="1032" y="45" class="mono" font-size="10" fill="var(--pending)">06</text>
+            <text x="1032" y="63" font-size="14" font-weight="600" fill="var(--ink)">Scheduled Run</text>
+            <text x="1032" y="80" class="mono" font-size="11" fill="var(--muted)">Cloud cron</text>
+            <circle cx="1180" cy="44" r="5" fill="none" stroke="var(--pending)" stroke-width="1.5"/>
+          </g>
+
+          <!-- ===== Row 2 boxes — all not started ===== -->
+          <!-- 07 Live Feed -->
+          <g>
+            <rect x="20" y="250" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="32" y="265" class="mono" font-size="10" fill="var(--pending)">07</text>
+            <text x="32" y="283" font-size="14" font-weight="600" fill="var(--ink)">Live Feed</text>
+            <text x="32" y="300" class="mono" font-size="11" fill="var(--muted)">WebSocket</text>
+          </g>
+          <!-- 08 Hot State -->
+          <g>
+            <rect x="220" y="250" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="232" y="265" class="mono" font-size="10" fill="var(--pending)">08</text>
+            <text x="232" y="283" font-size="14" font-weight="600" fill="var(--ink)">Hot State</text>
+            <text x="232" y="300" class="mono" font-size="11" fill="var(--muted)">Redis + queue</text>
+          </g>
+          <!-- 09 Continuous Loop -->
+          <g>
+            <rect x="420" y="250" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="432" y="265" class="mono" font-size="10" fill="var(--pending)">09</text>
+            <text x="432" y="283" font-size="14" font-weight="600" fill="var(--ink)">Continuous Loop</text>
+            <text x="432" y="300" class="mono" font-size="11" fill="var(--muted)">Worker process</text>
+          </g>
+          <!-- 10 Risk Guardrails -->
+          <g>
+            <rect x="620" y="250" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="632" y="265" class="mono" font-size="10" fill="var(--pending)">10</text>
+            <text x="632" y="283" font-size="14" font-weight="600" fill="var(--ink)">Risk Guardrails</text>
+            <text x="632" y="300" class="mono" font-size="11" fill="var(--muted)">new — no V1 origin</text>
+          </g>
+          <!-- 11 Ops Watch -->
+          <g>
+            <rect x="820" y="250" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="832" y="265" class="mono" font-size="10" fill="var(--pending)">11</text>
+            <text x="832" y="283" font-size="14" font-weight="600" fill="var(--ink)">Ops Watch</text>
+            <text x="832" y="300" class="mono" font-size="11" fill="var(--muted)">Alerts</text>
+          </g>
+          <!-- 12 Session Scheduler -->
+          <g>
+            <rect x="1020" y="250" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="1032" y="265" class="mono" font-size="10" fill="var(--pending)">12</text>
+            <text x="1032" y="283" font-size="14" font-weight="600" fill="var(--ink)">Session Scheduler</text>
+            <text x="1032" y="300" class="mono" font-size="11" fill="var(--muted)">Always-on</text>
+          </g>
+
+        </svg>
+        <figcaption>Solid arrows are build order within each phase. Dashed lines show which V2 block extends a specific V1 block — the one V2 block with no dashed line (Risk Guardrails) is genuinely new, not an upgrade of anything already built. Filled dots mark shipped phases; phase 04 is filled in red because it was completed as an investigation and closed on a negative result, which is different from being skipped.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Phase detail</h2>
+    <div class="tracks">
+      <div class="track v1">
+        <div class="track-head">
+          <span class="dot"></span>
+          <h3>V1 — build first</h3>
+          <span class="sub">ships as a daily paper-trading agent</span>
+        </div>
+        <ol class="steps">
+          <li><span class="num">01</span><div><div class="label">Control API<span class="tag done">done</span></div><div class="desc">FastAPI endpoints to view positions, decisions, and trigger a run manually.</div></div></li>
+          <li><span class="num">02</span><div><div class="label">State &amp; history<span class="tag done">done</span></div><div class="desc">Postgres: watchlist, price snapshots, decisions, outcomes — real schema, real joins.</div></div></li>
+          <li><span class="num">03</span><div><div class="label">Decision agent<span class="tag done">done</span></div><div class="desc">LangGraph multi-agent flow, verified end to end against real Alpaca data, real OpenAI calls and a real Postgres write.</div></div></li>
+          <li><span class="num">04</span><div><div class="label">Sentiment model<span class="tag stopped">closed</span></div><div class="desc">Two LoRA adapters trained; both landed at or below the majority-class baseline. Ablating the node outperformed keeping it, and rewriting it as a continuous score did worse still. Closed on the negative result rather than spending ~6,000 more labelling calls.</div></div></li>
+          <li><span class="num">05</span><div><div class="label">Build pipeline<span class="tag done">done</span></div><div class="desc">Dockerfile, compose stack, GitHub Actions running the suite against a real Postgres service — and failing if any test skips.</div></div></li>
+          <li><span class="num">06</span><div><div class="label">Scheduled run<span class="tag pending">not started</span></div><div class="desc">One deployed run per session on AWS — a cron trigger, not an always-on service yet.</div></div></li>
+        </ol>
+        <div class="gate-note">Five of six settled. Phase 06 is the only V1 block still to build, and it is unblocked.</div>
+      </div>
+
+      <div class="track v2">
+        <div class="track-head">
+          <span class="dot"></span>
+          <h3>V2 — extend, don't restart</h3>
+          <span class="sub">on hold — the gate below was not cleared</span>
+        </div>
+        <ol class="steps">
+          <li><span class="num">07</span><div><div class="label">Live feed<span class="tag pending">on hold</span></div><div class="desc">Replaces the daily fetch with a streamed WebSocket connection to market data.</div></div></li>
+          <li><span class="num">08</span><div><div class="label">Hot state<span class="tag pending">on hold</span></div><div class="desc">Redis in front of Postgres for state read and written every tick, plus a queue decoupling feed from decisions.</div></div></li>
+          <li><span class="num">09</span><div><div class="label">Continuous loop<span class="tag pending">on hold</span></div><div class="desc">The same agent logic as a long-running worker reacting to each bar instead of running once.</div></div></li>
+          <li><span class="num">10</span><div><div class="label">Risk guardrails<span class="tag pending">on hold</span></div><div class="desc">Max position size, daily loss limit, circuit breaker on stale data — built new, not an upgrade.</div></div></li>
+          <li><span class="num">11</span><div><div class="label">Ops watch<span class="tag pending">on hold</span></div><div class="desc">Crash and staleness alerts — mandatory once something runs unattended for hours.</div></div></li>
+          <li><span class="num">12</span><div><div class="label">Session scheduler<span class="tag pending">on hold</span></div><div class="desc">Starts at market open, flattens positions and stops at close, skips weekends and holidays.</div></div></li>
+        </ol>
+        <div class="gate-note">Every block here either upgrades a numbered V1 block or is explicitly new — nothing is rebuilt from scratch. None of it is started.</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-bottom:0;">
+    <div class="callout">
+      <p><b>The gate before phase 07 has been reached, and the answer is no.</b> The rule set at the start was: back-test the V1 strategy logic honestly first, because if it shows no real edge on historical data with realistic slippage, running it continuously in V2 won't create one — it will replay the same non-edge faster and with more moving parts to debug.</p>
+      <p>Seven real-LLM runs on AAPL, 5bps slippage, mark-to-market, each against buy-and-hold over its own window:</p>
+      <table>
+        <tr><td>#4 &nbsp;in-sample, 13 months</td><td class="n">−$39</td></tr>
+        <tr><td>#6 &nbsp;out-of-sample, 6 months</td><td class="n">−$65</td></tr>
+        <tr><td>#7, #8 &nbsp;sentiment ablated</td><td class="n">−$41, −$74</td></tr>
+        <tr><td>#9 &nbsp;replicate of #4</td><td class="n">−$130</td></tr>
+        <tr><td>#14 &nbsp;continuous score node</td><td class="n">−$225</td></tr>
+        <tr><td>#3 &nbsp;pilot quarter, 4 trades</td><td class="n">+$22</td></tr>
+      </table>
+      <p>Every run longer than a quarter underperformed. The single exception is a 3-month pilot with four closed trades, which beat the baseline mainly because AAPL fell over that window — buy-and-hold lost money and a largely idle system did not. The out-of-sample run was executed once, with no code, prompt or parameter changes made after seeing the in-sample result, which is what makes it worth believing.</p>
+      <p><b>So V2 is on hold, and that is the roadmap working as designed.</b> The gate existed precisely to catch this before six more phases were built on top of it. Phase 06 remains worth finishing — deployment is a real skill to demonstrate, and it does not depend on the strategy being profitable.</p>
+    </div>
+  </section>
+
+</div>
