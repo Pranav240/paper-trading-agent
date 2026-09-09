@@ -78,6 +78,126 @@ session doesn't have to re-derive them.
 
 ## Working record (everything below predates the closure)
 
+## PHASE 04 v2 RESULT (2026-09-09): FAIL — and Phase 04 is now ANSWERED, not just closed
+
+v1 failed because the labels were degenerate: GPT-4o-mini said HOLD 96.8%
+of the time, so the constant function was the loss minimum. v2 removed that
+problem entirely by labelling from price data instead — 41,701 examples,
+104 symbols, 19 months, labels with a standard deviation of ~1.0.
+
+The model still found nothing. That is a much stronger result than v1's,
+because this time the data was not the excuse.
+
+### The numbers
+
+Qwen2.5-0.5B-Instruct, 4-bit, LoRA r=16 with a regression head
+(`num_labels=1`, `problem_type="regression"`), 12,000 training examples,
+one epoch.
+
+| split | n | Spearman IC | R^2 | sign acc. | base rate |
+|-------|---|-------------|-----|-----------|-----------|
+| val_time — later dates, seen symbols | 9,336 | -0.0074 | -0.007 | 0.502 | 0.501 |
+| val_symbol — leaky, overlapping dates | 4,774 | +0.0104 | -0.005 | 0.499 | 0.509 |
+| **val_clean — unseen symbols AND dates** | **1,221** | **-0.0125** | **-0.011** | **0.477** | **0.524** |
+
+TF-IDF baseline on the same clean split: IC **+0.0024**. Pre-registered bar:
+IC **>= 0.03**. The fine-tuned model came in at **-0.0125** — below the bar,
+below the baseline, and below the always-guess-up sign accuracy.
+
+### What the prediction spread says, and why it is not v1's failure
+
+Predicted values had a standard deviation of **0.051** against labels with a
+standard deviation of ~1.0. The model collapsed to predicting approximately
+the mean for everything.
+
+That looks superficially like v1's always-HOLD collapse and is a completely
+different thing. In v1 the labels were constant, so the model reproduced a
+degenerate target. Here the labels have real variance and the model still
+predicts the mean — because **predicting the mean is the correct,
+loss-minimising answer when the input carries no information about the
+target.** A model that produced confident varied predictions on this data
+would be the broken one.
+
+Two further checks that it trained rather than failed to train: R^2 of
+-0.011 is only marginally worse than a constant, which is what
+near-mean prediction produces, whereas an untrained random head gives
+wildly negative R^2. And MAE 0.6916 against the constant predictor's 0.6861
+is the same story.
+
+### A flaw in my own pre-registration, worth recording
+
+The bar was set at IC >= 0.03 and `val_clean` was named the deciding split.
+`val_clean` has n=1,221, which gives a standard error on a Spearman
+correlation of about 1/sqrt(n-1) = **0.029**.
+
+The bar therefore sat at roughly **one standard error** of the split chosen
+to judge it. Its 95% confidence interval is [-0.069, +0.044] — which
+contains 0.03. That split could never have distinguished a true IC of 0.03
+from zero, whichever way the result landed. Resolving 0.03 at two standard
+errors needs about **4,400 rows**; the clean split had a quarter of that.
+
+The conclusion survives, but through a different split than the one
+advertised:
+
+| split | 95% CI on IC | rules out 0.03? |
+|-------|--------------|-----------------|
+| val_time (n=9,336) | [-0.028, +0.013] | **yes** |
+| val_symbol (n=4,774) | [-0.018, +0.039] | no |
+| val_clean (n=1,221) | [-0.069, +0.044] | no |
+
+`val_time` is adequately powered and excludes an IC of 0.03. It holds out
+later dates on symbols the model has seen, so it is not leak-free in the
+strictest sense — but the leak it permits (knowing a ticker's typical
+behaviour) would help a model, not hurt it, and it still found nothing.
+
+The fix for next time is a bigger clean split: hold out 30 symbols instead
+of 15, or extend the window past Dec 2023, and the strict test becomes
+adequately powered too.
+
+### What Phase 04 now says
+
+Across four attempts and two entirely different framings:
+
+1. PhraseBank adapter — 84.0% agreement, below a 96.8% baseline
+2. Distillation adapter — 90.9%, exactly the baseline, predicted HOLD on all 44
+3. Ablation — the system performed better with the node's content removed
+4. Rewrite to a continuous score — worst trading configuration tested
+5. **v2 regression on real forward returns — no detectable signal, on data
+   with none of v1's defects**
+
+The question "can a small local model read these headlines and say anything
+useful about this stock's next week" has been asked five ways and answered
+no every time. That is a finding, not a gap.
+
+**Phase 04 is answered.** Not "closed pending more data" — the data was the
+suspect in v1 and v2 removed it as a suspect.
+
+### Limits, stated rather than buried
+
+- 0.5B parameters, not 1.5B; 12,000 of 27,591 training examples; one epoch.
+  Chosen because a 1.5B full run was a six-hour job to confirm an expected
+  null. If any configuration had passed, the honest next step would have
+  been rerunning at 1.5B on the full set before believing it.
+- 5-day horizon only. Shorter horizons are noisier, longer ones are less
+  attributable to the headline; neither was tried.
+- Daily bars, US large caps, 19 months, one market regime.
+- The absence of a signal *this setup can detect* is not proof that no
+  signal exists.
+
+### Reproducing it
+
+```
+python scripts/fetch_bars.py --symbols data/fnspid_symbols.txt \
+    --start 2022-06-01 --end 2024-01-20
+python scripts/build_return_dataset.py
+python scripts/tfidf_baseline.py          # run this FIRST, always
+```
+
+Then `phase04_v2_return_regression.ipynb` on Kaggle with a GPU. The LoRA
+weights that produced the result above are saved from that notebook; a
+negative result is only reproducible while the weights that produced it
+still exist.
+
 ## Goal
 
 Replace `sentiment_analyst`'s GPT-4o-mini API call with a locally-run,

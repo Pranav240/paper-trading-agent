@@ -48,12 +48,20 @@ collapse — **and made trading worse**, +745.86 against a +896/+930 bar,
 the worst configuration tested. Those are two separate facts and both are
 reported.
 
-The node has now been improved twice and measured three times, and every
-measurement says to remove it. So the remaining ~6,000 labelling calls
-are **not** being spent: they would buy a better imitation of a component
-worth deleting. Full reasoning and what Phase 04 did demonstrate — QLoRA
-end to end, distillation, and an eval discipline that caught two
-degenerate models — in `docs/phase04-handoff.md`.
+**Phase 04 was then reframed and answered rather than abandoned.** The
+suspect in every v1 failure was the label: imitating a teacher that said
+HOLD 96.8% of the time. So v2 relabelled from price data — 41,701
+examples, 104 symbols, 19 months, labels with real variance — and asked
+whether headlines predict a stock's 5-day excess return at all. A TF-IDF
+baseline found nothing (IC +0.002). A LoRA-fine-tuned Qwen2.5 with a
+regression head found nothing either (IC -0.013 against a pre-registered
+bar of +0.03). The model collapsed to predicting the mean, which is the
+*correct* response to an input carrying no information — a different
+thing from v1's collapse, where the labels themselves were degenerate.
+
+Five attempts, two framings, one answer. That is a finding, not a gap.
+Full detail, including a flaw found in the pre-registration itself, in
+`docs/phase04-handoff.md`.
 
 ## Roadmap
 
@@ -65,8 +73,8 @@ degenerate models — in `docs/phase04-handoff.md`.
    Technical Analyst + Sentiment Analyst report to a Portfolio Manager,
    with a Risk Manager able to veto/scale any trade → paper-trade → log *(done)*
 4. Sentiment model — LoRA fine-tune on financial headlines (Hugging Face PEFT)
-   *(closed on a negative result — two failed adapters, an ablation, a
-   rewrite, and a measurement saying the node should be removed)*
+   *(answered, negatively — two failed adapters, an ablation, a rewrite, and
+   a return-prediction regression on 41k examples that found no signal)*
 5. Build pipeline — Dockerfile + GitHub Actions *(done)*
 6. Scheduled run — deployed on AWS (EC2 + RDS), triggered once per session
    *(done — applied, ran one live cycle on EC2, then destroyed; see `infra/`)*
