@@ -1,5 +1,7 @@
 # Paper Trading Agent
 
+[![CI](https://github.com/Pranav240/paper-trading-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Pranav240/paper-trading-agent/actions/workflows/ci.yml)
+
 A paper-trading decision-support agent, built in phases to learn backend
 API development, real database work, LLM fine-tuning, agentic
 orchestration, containerized deployment, and cloud deployment — end to

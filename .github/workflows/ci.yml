@@ -1,9 +1,18 @@
 name: CI
 
+# Every branch, not just master. The first version of this file ran only on
+# master and on pull_request, which meant pushing a feature branch produced
+# no CI at all — the workflow sat unexecuted and unverified for its whole
+# first day of existence. A build pipeline nobody has watched run is not a
+# build pipeline.
+#
+# pull_request is deliberately absent: every branch in this repo is pushed
+# here, so a PR would just run the same commit twice. The tradeoff is that
+# PRs from forks get no CI; acceptable for a personal project, and worth
+# revisiting if that ever changes.
 on:
   push:
-    branches: [master]
-  pull_request:
+  workflow_dispatch:
 
 # A second push to the same branch cancels the first run's jobs — no
 # point paying for CI on a commit that's already been superseded.
