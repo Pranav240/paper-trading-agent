@@ -33,16 +33,23 @@ assumes would have fixed it recovers only $14 of the $63. Per this
 project's own stated rule, a negative result is the correct outcome to
 report, not a failure to hide.
 
-**Phase 04 (sentiment fine-tune) is where the interesting findings are.**
-Two LoRA adapters were trained and both are unusable — each scored at or
-*below* the trivial majority-class baseline, which is only visible if you
-check the baseline. Ablating the sentiment node then showed it was making
-the system actively worse. It has been rewritten to emit a continuous
-score instead of a BUY/HOLD/SELL vote. That rewrite works as specified —
-real spread, no collapse — **and made trading worse**: +745.86 against a
-+896/+930 bar, the worst configuration tested. Those are two separate
-facts and both are reported. See the design decisions log and
-`docs/phase04-handoff.md`.
+**Phase 04 (sentiment fine-tune) is closed on a negative result, and it
+is where the interesting findings are.** Two LoRA adapters were trained
+and both are unusable — each scored at or *below* the trivial
+majority-class baseline, which is only visible if you check the baseline.
+Ablating the sentiment node then showed the system was better off without
+it. It was rewritten to emit a continuous score instead of a
+BUY/HOLD/SELL vote; that rewrite works as specified — real spread, no
+collapse — **and made trading worse**, +745.86 against a +896/+930 bar,
+the worst configuration tested. Those are two separate facts and both are
+reported.
+
+The node has now been improved twice and measured three times, and every
+measurement says to remove it. So the remaining ~6,000 labelling calls
+are **not** being spent: they would buy a better imitation of a component
+worth deleting. Full reasoning and what Phase 04 did demonstrate — QLoRA
+end to end, distillation, and an eval discipline that caught two
+degenerate models — in `docs/phase04-handoff.md`.
 
 ## Roadmap
 
@@ -54,8 +61,8 @@ facts and both are reported. See the design decisions log and
    Technical Analyst + Sentiment Analyst report to a Portfolio Manager,
    with a Risk Manager able to veto/scale any trade → paper-trade → log *(done)*
 4. Sentiment model — LoRA fine-tune on financial headlines (Hugging Face PEFT)
-   *(in progress — two failed adapters, node rewritten to a continuous
-   score, re-measurement pending)*
+   *(closed on a negative result — two failed adapters, an ablation, a
+   rewrite, and a measurement saying the node should be removed)*
 5. Build pipeline — Dockerfile + GitHub Actions *(done)*
 6. Scheduled run — deployed on AWS (EC2 + RDS), triggered once per session
 

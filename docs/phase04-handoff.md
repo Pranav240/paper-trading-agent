@@ -1,7 +1,82 @@
-# Phase 04 handoff — LoRA sentiment fine-tune
+# Phase 04 — LoRA sentiment fine-tune — CLOSED 2026-09-09
 
-Written 2026-09-08. Picks up where the Kaggle work stopped so a fresh
-session (Claude Code) can continue without re-deriving any of it.
+Written 2026-09-08 as a handoff, closed 2026-09-09. Everything below is
+kept as the working record; this section is the conclusion.
+
+## Outcome
+
+**Phase 04 is closed on a negative result, deliberately, with the work
+stopped rather than continued.** Four things were tried on the sentiment
+node and all four are measured:
+
+| attempt | result |
+|---------|--------|
+| PhraseBank LoRA adapter | 84.0% agreement — *below* the 96.8% always-HOLD baseline |
+| Distillation LoRA adapter | 90.9% — *exactly* that split's always-HOLD baseline; predicted HOLD on all 44 |
+| Ablating the node entirely | **better without it** (+896/+930 vs +864/+840) |
+| Rewriting it as a continuous score | **worse still** (+745.86) — the worst configuration tested |
+
+The node has now been improved twice and measured three times, and every
+measurement says the system is better off without it.
+
+## Why the work is being stopped rather than continued
+
+The next step would be ~6,000 GPT-4o-mini labelling calls to build a
+regression training set, then a fresh LoRA. The blocker was never the
+data — `scripts/fnspid_symbol_census.py` proved 108 symbols have
+continuous coverage, so the headlines are available. The reason to stop
+is that it would be **fine-tuning a local model to imitate a component
+that measurably hurts the system.** Better data would produce a better
+imitation of something worth removing.
+
+## What Phase 04 actually demonstrated
+
+The negative result is the deliverable, and it is not a small one:
+
+- **QLoRA fine-tuning end to end** — 4-bit base, r=16/alpha=32, on real
+  hardware, twice, including distillation from a teacher model.
+- **Eval discipline that caught two degenerate models.** Both adapters
+  produced headline numbers (84%, 90.9%) that a careless writeup would
+  have reported as successes. Both are at or below the majority-class
+  baseline. Catching that required checking the confusion matrix, not
+  the accuracy.
+- **Ablation before investment.** Four backtest runs and under a dollar
+  answered a question that ~6,000 labelling calls would otherwise have
+  been spent assuming the answer to.
+- **A measured noise floor.** Two replicates per configuration, so the
+  gap between configurations could be read against real run-to-run
+  variance (24.2 and 33.7) rather than an assumed one.
+- **A caught baseline error.** The buy-and-hold figure used across the
+  ablation writeups belonged to a different, two-day-longer window; the
+  ablation runs were $41–74 *below* their own baseline, not level with
+  it. Found by sanity-checking a number that looked slightly wrong.
+- **A confound named rather than buried.** The score-node run changed the
+  sentiment node *and* the Portfolio Manager prompt together, so it
+  cannot attribute the extra trading to either. That is recorded as a
+  flaw in the experiment, not smoothed over in the result.
+
+## The open decision this leaves
+
+The evidence says **remove the Sentiment Analyst from the graph.** That
+is not done, because it is a design decision with consequences beyond
+Phase 04 — it would drop the project from a two-specialist graph to one,
+and it removes the surface the fine-tuning work was attached to. The
+ablation path (`--no-sentiment`) already runs the system that way, so the
+change is small when it is wanted.
+
+Two runs, ~$1.74, would firm this up if the budget returns:
+
+1. `--no-sentiment` against the **new** Portfolio Manager prompt —
+   separates the score node's effect from the prompt's.
+2. Any second symbol from the 108 available — tests whether "no edge" is
+   a fact about the strategy or a fact about AAPL.
+
+Neither is required to close the phase. Both are recorded so the next
+session doesn't have to re-derive them.
+
+---
+
+## Working record (everything below predates the closure)
 
 ## Goal
 
