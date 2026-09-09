@@ -1,0 +1,20 @@
+# Normalise line endings. Without this, editing on Windows rewrites whole
+# files as CRLF and every one shows as fully modified -- `git status` listed
+# 23 files with 3,681 insertions and 3,681 deletions, and
+# `git diff --ignore-all-space` was empty. That noise makes diffs useless
+# and produces commits that touch everything while changing nothing.
+* text=auto eol=lf
+
+# Binary / generated -- never diffed, never normalised.
+*.png    binary
+*.jpg    binary
+*.pdf    binary
+*.docx   binary
+*.zip    binary
+*.safetensors binary
+
+# Notebooks are JSON: diffable in principle, unreadable in practice.
+*.ipynb  -diff linguist-documentation
+
+# Keep the language bar representative of the actual work.
+dashboard/*.html linguist-documentation
