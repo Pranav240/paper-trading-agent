@@ -99,10 +99,6 @@ jobs:
         with:
           terraform_version: 1.9.8
 
-      - name: Check formatting
-        working-directory: infra
-        run: terraform fmt -check -recursive -diff
-
       - name: Validate
         working-directory: infra
         # -backend=false because validation needs the provider schemas but no
@@ -111,6 +107,15 @@ jobs:
         run: |
           terraform init -backend=false
           terraform validate
+
+      - name: Check formatting
+        # Runs after validate, and `if: always()` so a formatting failure and
+        # a correctness failure are reported in the same run rather than one
+        # hiding the other. Formatting is the less important of the two, so
+        # it should not be the one that gets to skip the other.
+        if: always()
+        working-directory: infra
+        run: terraform fmt -check -recursive -diff
 
   docker:
     name: docker image builds

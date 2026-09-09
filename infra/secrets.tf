@@ -45,7 +45,8 @@ resource "aws_ssm_parameter" "secret" {
 resource "random_password" "db" {
   count = var.use_rds ? 1 : 0
 
+  # RDS rejects several punctuation characters in master passwords, and a
+  # 32-character alphanumeric is plenty of entropy without them.
   length  = 32
-  special = false # RDS rejects several punctuation characters in passwords,
-                  # and a 32-character alphanumeric is plenty of entropy.
+  special = false
 }

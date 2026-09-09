@@ -3,9 +3,11 @@
 # ---------------------------------------------------------------------------
 
 resource "aws_ecr_repository" "app" {
-  name                 = "paper-trading-agent"
-  image_tag_mutability = "MUTABLE" # CI moves `latest`; immutable tags would
-                                   # make that push fail every time.
+  name = "paper-trading-agent"
+
+  # MUTABLE because CI moves the `latest` tag on every deploy; IMMUTABLE
+  # would make that push fail every time.
+  image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -144,15 +146,15 @@ resource "aws_instance" "app" {
   key_name               = var.key_pair_name == "" ? null : var.key_pair_name
 
   user_data = templatefile("${path.module}/user_data.sh.tftpl", {
-    region          = var.region
-    account_id      = data.aws_caller_identity.current.account_id
-    image_uri       = local.image_uri
-    use_rds         = var.use_rds
-    db_name         = var.db_name
-    db_username     = var.db_username
-    ssm_prefix      = "/pta/${var.environment}"
-    ecr_registry    = split("/", aws_ecr_repository.app.repository_url)[0]
-    expose_api      = var.expose_api
+    region       = var.region
+    account_id   = data.aws_caller_identity.current.account_id
+    image_uri    = local.image_uri
+    use_rds      = var.use_rds
+    db_name      = var.db_name
+    db_username  = var.db_username
+    ssm_prefix   = "/pta/${var.environment}"
+    ecr_registry = split("/", aws_ecr_repository.app.repository_url)[0]
+    expose_api   = var.expose_api
   })
 
   # user_data changes rebuild the box rather than being silently ignored,
@@ -160,15 +162,17 @@ resource "aws_instance" "app" {
   user_data_replace_on_change = true
 
   root_block_device {
-    volume_size = 20 # 8GB is the AL2023 default and does not survive a few
-                     # image pulls; gp3 at 20GB is well inside free tier.
+    # 8GB is the AL2023 default and does not survive a few image pulls.
+    # 20GB of gp3 is well inside the free tier allowance.
+    volume_size = 20
     volume_type = "gp3"
     encrypted   = true
   }
 
   metadata_options {
-    http_tokens = "required" # IMDSv2 only. IMDSv1 is how instance
-                             # credentials get exfiltrated through SSRF.
+    # IMDSv2 only. IMDSv1 is how instance credentials get exfiltrated
+    # through an SSRF bug in whatever the instance is running.
+    http_tokens = "required"
   }
 
   tags = { Name = "pta-${var.environment}-app" }

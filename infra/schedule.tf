@@ -59,10 +59,10 @@ resource "aws_iam_role_policy" "scheduler_runcommand" {
 }
 
 resource "aws_cloudwatch_log_group" "runs" {
-  name              = "/pta/${var.environment}/runs"
-  retention_in_days = 30 # Never-expiring log groups are a slow leak. Thirty
-                         # days is longer than anyone has ever gone back to
-                         # look at a daily batch job.
+  name = "/pta/${var.environment}/runs"
+  # Never-expiring log groups are a slow leak. Thirty days is longer than
+  # anyone has ever gone back to look at a daily batch job.
+  retention_in_days = 30
 }
 
 resource "aws_scheduler_schedule" "daily_run" {
