@@ -311,12 +311,13 @@
     <p class="sec-note">Six phases · five built · one closed on a negative result</p>
 
     <p>The premise was to close six engineering gaps by building one real system rather than six disconnected exercises. Each phase produces something the next one depends on, and the sequence is real: nothing here is a numbered list of parallel tasks.</p>
+    <p>Five of the six shipped. The sixth — the fine-tuned sentiment model — was investigated to a conclusion, and the conclusion was negative. That is a different outcome from being skipped, and is marked as such below.</p>
 
     <div class="phases">
       <div class="phase"><span class="n">01</span><span class="what">Control API<span>FastAPI: positions, decisions, trigger a run</span></span><span class="badge done">done</span></div>
       <div class="phase"><span class="n">02</span><span class="what">State &amp; history<span>Postgres, raw SQL, hand-rolled migration runner — no ORM</span></span><span class="badge done">done</span></div>
       <div class="phase"><span class="n">03</span><span class="what">Decision agent<span>LangGraph: two analysts → portfolio manager → risk manager</span></span><span class="badge done">done</span></div>
-      <div class="phase"><span class="n">04</span><span class="what">Sentiment fine-tune<span>Two LoRA adapters, an ablation, a rewrite — all negative</span></span><span class="badge closed">closed</span></div>
+      <div class="phase"><span class="n">04</span><span class="what">Sentiment fine-tune<span>Five attempts, two framings, one answer: no signal</span></span><span class="badge closed">answered</span></div>
       <div class="phase"><span class="n">05</span><span class="what">Build pipeline<span>Docker, compose, GitHub Actions against a real Postgres</span></span><span class="badge done">done</span></div>
       <div class="phase"><span class="n">06</span><span class="what">Scheduled run<span>Terraform on AWS — applied, ran live, destroyed same day</span></span><span class="badge done">done</span></div>
     </div>
@@ -396,7 +397,34 @@
       <p>That run changed two things at once: the sentiment node and the Portfolio Manager prompt that reads it. The prompt change was designed to stop abstentions suppressing trades — and it worked, possibly too well. This run cannot attribute the extra trading to either cause. One further ablation would separate them; it has not been run.</p>
     </div>
 
-    <p>Phase 04 was then closed rather than continued. The remaining labelling calls would have bought a better imitation of a component every measurement says to delete.</p>
+    <p>Phase 04 was then reframed rather than continued down the same road. The remaining labelling calls would have bought a better imitation of a component every measurement says to delete &mdash; so the question changed.</p>
+
+    <h3>v2: stop imitating the teacher, predict the outcome</h3>
+    <p>Every v1 failure had the same suspect: the label. Imitating a teacher that said HOLD 96.8% of the time makes the constant function the loss minimum, and two independent training runs found it. So v2 threw the teacher away and labelled from price data instead &mdash; each headline block tagged with the stock&rsquo;s actual 5-day excess return, market move subtracted, z-scored per symbol. <strong>41,701 examples across 104 symbols over 19 months, with labels whose standard deviation is ~1.0.</strong> Free labels, real variance, none of v1&rsquo;s defects.</p>
+    <p>A TF-IDF and ridge baseline was run first, before any GPU time, because a low error on a centred label means nothing on its own. It found an information coefficient of <span class="mono">+0.002</span>. The bar for the fine-tuned model was then written down &mdash; IC &ge; 0.03 &mdash; before training started.</p>
+
+    <div class="scroll">
+      <table>
+        <caption>Qwen2.5-0.5B, LoRA regression head, 12k examples, one epoch</caption>
+        <thead><tr><th>Validation split</th><th>n</th><th>Spearman IC</th><th>R&sup2;</th><th>Sign acc.</th><th>Base rate</th></tr></thead>
+        <tbody>
+          <tr><td class="label">later dates, seen symbols</td><td>9,336</td><td>&minus;0.0074</td><td>&minus;0.007</td><td>0.502</td><td>0.501</td></tr>
+          <tr><td class="label">unseen symbols, overlapping dates</td><td>4,774</td><td>+0.0104</td><td>&minus;0.005</td><td>0.499</td><td>0.509</td></tr>
+          <tr class="hi"><td class="label"><strong>unseen symbols and dates</strong></td><td>1,221</td><td class="neg">&minus;0.0125</td><td>&minus;0.011</td><td class="neg">0.477</td><td>0.524</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fig">Below the bar, below the TF-IDF baseline, and below the accuracy of simply always guessing &ldquo;up&rdquo;.</p>
+
+    <p><strong>The prediction spread is the number that matters.</strong> Predictions had a standard deviation of <span class="mono">0.051</span> against labels at ~1.0 &mdash; the model collapsed to predicting the mean. That superficially resembles v1&rsquo;s always-HOLD collapse and is the opposite thing. In v1 the labels were constant and the model reproduced a degenerate target. Here the labels vary and the model still predicts the mean, because <em>predicting the mean is the correct loss-minimising answer when the input carries no information about the target.</em> A model making confident, varied predictions on this data would be the broken one.</p>
+
+    <div class="note">
+      <p class="lede">A flaw in the pre-registration itself, found afterwards and recorded rather than dropped.</p>
+      <p>The bar was IC &ge; 0.03 and the 1,221-row clean split was named as deciding. A Spearman correlation on 1,221 rows has a standard error of about 0.029 &mdash; so <strong>the bar sat at roughly one standard error of the split chosen to judge it</strong>, with a 95% interval of [&minus;0.069, +0.044] that contains 0.03. That split could never have separated a true 0.03 from zero, whichever way it landed. Resolving 0.03 at two standard errors needs about 4,400 rows.</p>
+      <p>The conclusion survives, but through the larger split: 9,336 rows, interval [&minus;0.028, +0.013], which does exclude 0.03. Its weaker isolation permits only a leak that would help a model, and it still found nothing. The fix next time is holding out thirty symbols instead of fifteen.</p>
+    </div>
+
+    <p>Five attempts, two entirely different framings, one answer. <strong>Phase 04 is answered, not abandoned</strong> &mdash; the data was the suspect in v1, and v2 removed it as a suspect. Stated limits: 0.5B parameters rather than 1.5B, 12,000 of 27,591 examples, one epoch, a single five-day horizon, one market regime. Absence of a signal this setup can detect is not proof that none exists.</p>
   </section>
 
   <section>
@@ -457,7 +485,7 @@
     <h2 class="sec">What this demonstrates</h2>
     <p class="sec-note">And what it deliberately does not</p>
 
-    <p>A working FastAPI service over Postgres with hand-written SQL and a hand-rolled migration runner. A four-node LangGraph agent where each node's model choice is justified by whether judgment is required. QLoRA fine-tuning end to end, including distillation from a teacher model. Containerisation, CI against a real database, and infrastructure-as-code applied to a live cloud account.</p>
+    <p>A working FastAPI service over Postgres with hand-written SQL and a hand-rolled migration runner. A four-node LangGraph agent where each node's model choice is justified by whether judgment is required. QLoRA fine-tuning end to end — classification, distillation from a teacher, and a regression head trained on a 41,000-example dataset built from scratch with leak-free splits. Containerisation, CI against a real database, and infrastructure-as-code applied to a live cloud account.</p>
 
     <p>More usefully, it demonstrates an evaluation discipline: out-of-sample runs executed once and never re-tuned; accuracy numbers checked against the majority-class baseline before being believed; components ablated before being improved; noise floors measured rather than assumed; and a confound named in the writeup instead of smoothed over.</p>
 
@@ -466,6 +494,7 @@
     <h3>Left open, honestly</h3>
     <ul>
       <li>One further ablation would separate the score node's effect from the prompt change. It costs under a dollar and has not been run.</li>
+      <li>The strict validation split was underpowered for the threshold it was meant to test — 1,221 rows against a bar needing roughly 4,400. Holding out thirty symbols instead of fifteen would fix it, and the pipeline is free to re-run.</li>
       <li>Every result is AAPL. A census of the headline dataset found 108 symbols with continuous coverage over the same window, so a second symbol is affordable and would test whether "no edge" is about the strategy or about one stock.</li>
       <li>The evidence says remove the Sentiment Analyst from the graph. That is a design decision with consequences beyond this phase, so it was recorded rather than executed.</li>
     </ul>
