@@ -36,6 +36,16 @@ use_rds = false
 # github_repository = "Pranav240/paper-trading-agent"
 
 # ---------------------------------------------------------------------------
+# Cost alerting
+# ---------------------------------------------------------------------------
+# This account has no credits and no free-tier cover, so everything bills
+# from hour one. AWS Budgets is free (two per account) and is the only thing
+# here that will tell you a forgotten stack is still running. You have to
+# click the confirmation email before alerts actually arrive.
+# alert_email        = "you@example.com"
+# monthly_budget_usd = 20
+
+# ---------------------------------------------------------------------------
 # Schedule
 # ---------------------------------------------------------------------------
 # LEAVE THIS FALSE until you have run the job manually once and seen it

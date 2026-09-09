@@ -16,3 +16,8 @@ infra/*.tfstate.*
 infra/terraform.tfvars
 # NOTE: .terraform.lock.hcl is deliberately NOT ignored. It pins provider
 # hashes, which is what makes an apply reproducible across machines.
+
+# Console screenshots kept locally as portfolio evidence. They carry the AWS
+# account id, instance ids and role ARNs — not credentials, but not worth
+# publishing on a public repo either.
+AWS_Screenshots/

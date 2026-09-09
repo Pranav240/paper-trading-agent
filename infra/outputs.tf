@@ -53,12 +53,12 @@ output "next_steps" {
 
     2. Push an image (GitHub Actions "Deploy to AWS", or by hand - see infra/README.md).
 
-    3. Reboot so bootstrap re-runs with the real secrets:
+    3. Replace the instance so bootstrap re-runs with the real secrets.
+       NOT a reboot: cloud-init runs user_data on an instance's first boot
+       only, so rebooting re-runs nothing and /opt/pta/app.env keeps the
+       placeholder values it was launched with.
 
-         aws ssm send-command --region ${var.region} \
-           --instance-ids ${aws_instance.app.id} \
-           --document-name AWS-RunShellScript \
-           --parameters 'commands=["reboot"]'
+         terraform apply -replace=aws_instance.app
 
     4. Test one run manually before arming the schedule:
 

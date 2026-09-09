@@ -4,10 +4,49 @@ Terraform for the deployed version of the agent: one EC2 instance running
 the container image, a Postgres to write to, secrets in SSM, and an
 EventBridge schedule that fires one decision cycle per weekday.
 
-**Nothing here has been applied.** It is written, formatted and validated in
-CI, and has never been run against a real AWS account. That is stated
-plainly rather than implied, because "the Terraform exists" and "the stack
-works" are different claims and only the first one is currently true.
+**Applied and verified on 2026-09-09, then destroyed.** A t3.micro in
+ap-south-1 ran one full decision cycle against real Alpaca prices, real
+OpenAI calls and a real Postgres write, triggered through SSM exactly as
+the schedule would:
+
+```
+run_id      1
+status      SUCCESS
+decisions   1
+  AAPL   BUY  conf=0.65
+```
+
+The stack was torn down the same day. Leaving it up costs ~$13/month to
+run a strategy already measured as having no edge; the point was to prove
+the deployment works, and it does.
+
+### Three bugs that only appeared on a real apply
+
+Worth recording, because every one of them passed `terraform validate` and
+would have passed any amount of re-reading:
+
+1. **`DATABASE_URL` pointed at `127.0.0.1`.** Correct for a process on the
+   host, wrong for a container: inside a container that address is the
+   container's own loopback. `db/bootstrap.py` failed with "Connection
+   refused" while `docker ps` showed Postgres up and healthy — both true at
+   once. The fix is the container name, `pta-postgres:5432`, resolved by
+   Docker's embedded DNS on the shared network.
+2. **`most_recent = true` on the AMI data source churned the instance.**
+   Amazon published a new AL2023 image an hour after the first apply and
+   the next plan proposed destroying and recreating a running instance
+   (`ami-0942...49d` -> `ami-090d...756`). Fixed with
+   `lifecycle { ignore_changes = [ami] }`: newest AMI at creation, no
+   surprise replacements after. A plan you cannot trust is a plan you stop
+   reading.
+3. **GitHub's OIDC subject claim carries immutable numeric IDs.** The
+   documented form is `repo:owner/name:ref:...`; this repository actually
+   presents
+   `repo:Pranav240@130759083/paper-trading-agent@1350596187:ref:refs/heads/master`.
+   A trust policy written against the documented form never matches, and
+   STS says only "Not authorized to perform sts:AssumeRoleWithWebIdentity"
+   — deliberately uninformative, since naming the failed condition would
+   let an attacker probe the policy. CloudTrail carries the actual claim
+   and is the intended debugging path. The policy now allows both forms.
 
 ## What it creates
 
@@ -64,8 +103,10 @@ Storage still bills, compute does not.
 ## Applying it
 
 Needs the [AWS CLI](https://aws.amazon.com/cli/) and
-[Terraform](https://developer.hashicorp.com/terraform/install), neither of
-which is installed on the development machine yet.
+[Terraform](https://developer.hashicorp.com/terraform/install). On Windows:
+`winget install --id Amazon.AWSCLI -e` and
+`winget install --id Hashicorp.Terraform -e`, then reopen the terminal so
+PATH refreshes.
 
 ```bash
 aws configure                 # credentials for your account
@@ -77,15 +118,26 @@ terraform apply
 ```
 
 `terraform output next_steps` then prints the exact commands for the rest:
-set the four secrets, push an image, reboot so bootstrap picks the secrets
-up, run the job once by hand, and only then arm the schedule.
+set the four secrets, push an image, rebuild the instance, run the job once
+by hand, and only then arm the schedule.
 
-### Order matters
+### Order matters, and a reboot is not enough
 
 The first `apply` produces an instance whose bootstrap could not do very
 much: the SSM parameters still hold placeholders and ECR is empty. That is
-expected and the script says so in its log rather than failing. Set the
-secrets, push an image, then reboot.
+expected and the script says so in its log rather than failing.
+
+Set the secrets and push an image, then **replace** the instance:
+
+```bash
+terraform apply -replace=aws_instance.app
+```
+
+Not a reboot. `user_data` is executed by cloud-init on an instance's *first*
+boot only, so rebooting re-runs nothing and leaves `/opt/pta/app.env` full
+of whatever the secrets held at launch. Replacing gives a genuine first
+boot, which is also the only way to know the bootstrap path actually works
+end to end rather than having been hand-patched into place.
 
 ### Verifying before arming anything
 

@@ -132,7 +132,21 @@ data "aws_ami" "al2023" {
 }
 
 locals {
-  db_url = var.use_rds ? "postgresql://${var.db_username}:${random_password.db[0].result}@${aws_db_instance.main[0].address}:5432/${var.db_name}" : "postgresql://${var.db_username}:local_dev_password@127.0.0.1:5432/${var.db_name}"
+  # The host in the non-RDS case is the Postgres CONTAINER NAME, not
+  # 127.0.0.1.
+  #
+  # This was wrong on the first deploy and failed in a way worth recording:
+  # `db/bootstrap.py` died with "connection to server at 127.0.0.1 port 5432
+  # failed: Connection refused" while `docker ps` plainly showed
+  # pta-postgres up and healthy. Both facts were true. Inside a container,
+  # 127.0.0.1 is that container's own loopback — not the host's, and not the
+  # database's. The two containers share the user-defined `pta` network, on
+  # which Docker's embedded DNS resolves a container by name, so
+  # pta-postgres:5432 is the address that actually works.
+  #
+  # 127.0.0.1 would be correct for a process running directly on the host,
+  # which is exactly why it looks right and is easy to write.
+  db_url = var.use_rds ? "postgresql://${var.db_username}:${random_password.db[0].result}@${aws_db_instance.main[0].address}:5432/${var.db_name}" : "postgresql://${var.db_username}:local_dev_password@pta-postgres:5432/${var.db_name}"
 
   image_uri = "${aws_ecr_repository.app.repository_url}:${var.image_tag}"
 }
@@ -160,6 +174,24 @@ resource "aws_instance" "app" {
   # user_data changes rebuild the box rather than being silently ignored,
   # which is what makes this stack reproducible instead of a pet.
   user_data_replace_on_change = true
+
+  lifecycle {
+    # `most_recent = true` on the AMI data source above means the id it
+    # resolves to changes whenever Amazon publishes a patched image — and
+    # the AMI is a replacement-forcing attribute. Without this, a plan run
+    # on a random Tuesday proposes destroying and recreating a running
+    # instance for no reason the operator asked for. That happened here
+    # within an hour of the first apply: ami-0942...49d -> ami-090d...756.
+    #
+    # Ignoring it keeps "newest AMI at creation time" while making later
+    # publications a no-op. Picking up a newer AMI then becomes deliberate:
+    #
+    #     terraform apply -replace=aws_instance.app
+    #
+    # Non-deterministic plans are worse than slightly stale ones, because a
+    # plan you cannot trust is a plan you stop reading.
+    ignore_changes = [ami]
+  }
 
   root_block_device {
     # 8GB is the AL2023 default and does not survive a few image pulls.

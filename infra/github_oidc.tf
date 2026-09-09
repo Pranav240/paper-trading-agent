@@ -23,6 +23,33 @@ variable "create_github_oidc_provider" {
 
 locals {
   oidc_enabled = var.github_repository != ""
+
+  gh_owner = local.oidc_enabled ? split("/", var.github_repository)[0] : ""
+  gh_repo  = local.oidc_enabled ? split("/", var.github_repository)[1] : ""
+
+  # GitHub issues the OIDC `sub` claim in two shapes, and which one you get
+  # depends on the repository. The documented form everyone writes policies
+  # against is:
+  #
+  #     repo:owner/name:ref:refs/heads/master
+  #
+  # This repository actually issues the newer ID-qualified form, confirmed
+  # from the CloudTrail record of the first failed assume-role:
+  #
+  #     repo:Pranav240@130759083/paper-trading-agent@1350596187:ref:refs/heads/master
+  #
+  # The numeric suffixes are GitHub's immutable account and repository IDs.
+  # A policy written only against the name form fails with a bare
+  # "Not authorized to perform sts:AssumeRoleWithWebIdentity" that says
+  # nothing about why — the claim is simply not what the condition expects.
+  #
+  # Both patterns are allowed so this works either way. The `@*` wildcard is
+  # not a real loosening: GitHub usernames cannot contain "@", so nothing
+  # other than an ID can appear there.
+  gh_sub_patterns = [
+    "repo:${var.github_repository}:*",
+    "repo:${local.gh_owner}@*/${local.gh_repo}@*:*",
+  ]
 }
 
 resource "aws_iam_openid_connect_provider" "github" {
@@ -59,11 +86,12 @@ resource "aws_iam_role" "github_deploy" {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
         }
-        # `repo:owner/name:*` and not a bare wildcard. Without a `sub`
+        # Pinned to this repository and not a bare wildcard. Without a `sub`
         # condition, ANY GitHub repository on the internet could assume this
-        # role — the single most common way OIDC gets misconfigured.
+        # role — the single most common way OIDC gets misconfigured. A list
+        # here is an OR; see local.gh_sub_patterns for why there are two.
         StringLike = {
-          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repository}:*"
+          "token.actions.githubusercontent.com:sub" = local.gh_sub_patterns
         }
       }
     }]
