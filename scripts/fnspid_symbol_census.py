@@ -64,6 +64,15 @@ def _parse_args() -> argparse.Namespace:
         "--top", type=int, default=40, help="How many symbols to print."
     )
     parser.add_argument("--csv", default=CSV_PATH)
+    parser.add_argument(
+        "--out",
+        default="",
+        help=(
+            "Write the fully-covered symbols, one per line, to this path. The "
+            "scan takes ~10 minutes over 23GB, so anything downstream should "
+            "read the file rather than re-deriving the list."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -137,6 +146,15 @@ def main() -> None:
     )
     if full:
         print("  " + " ".join(r[3] for r in full[:30]))
+
+    if args.out:
+        # Sorted by coverage then volume, which is the order they were ranked
+        # in — so truncating the file to the first N gives the N best-covered
+        # symbols rather than an arbitrary subset.
+        with open(args.out, "w", encoding="utf-8", newline="\n") as fh:
+            for _, _, _, symbol in full:
+                fh.write(f"{symbol}\n")
+        print(f"wrote {len(full)} symbols to {args.out}")
 
 
 if __name__ == "__main__":

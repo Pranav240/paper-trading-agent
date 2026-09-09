@@ -8,6 +8,9 @@ papertrading/
 .DS_Store
 smoke_test.py
 data/
+# ...except the symbol list: 108 lines, but regenerating it means a
+# ten-minute scan of a 23GB CSV, so it belongs in version control.
+!data/fnspid_symbols.txt
 
 # Terraform
 infra/.terraform/
