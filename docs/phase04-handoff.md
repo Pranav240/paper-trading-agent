@@ -97,8 +97,13 @@ Analyst to a fixed always-HOLD stand-in while the Portfolio Manager keeps
 making real LLM calls. The node still runs and still votes -- only its
 *content* is removed, so the graph structure is held constant.
 
-Same window as backtest 4 (2022-06-03 .. 2023-06-30), AAPL, two runs per
-configuration. Mark-to-market, per design decision 9d:
+AAPL, two runs per configuration, mark-to-market per design decision 9d.
+
+**CORRECTED 2026-09-09 — read the CORRECTION section below before using
+these numbers.** Backtest 4 ran 2022-06-01..2023-06-30 (283 days); runs
+7/8/9 ran 2022-06-03..2023-06-30 (281 days). They are NOT the same window,
+and the +903.80 baseline quoted below belongs to backtest 4 only. The
+281-day window's buy & hold is +970.60.
 
 | config       | run | closed | open | mark-to-market | BUY | SELL | HOLD |
 |--------------|-----|--------|------|----------------|-----|------|------|
@@ -107,11 +112,15 @@ configuration. Mark-to-market, per design decision 9d:
 | sentiment OFF| 8   | 33     | 1    | **+896.15**    | 29  | 25   | 227  |
 | sentiment OFF| 7   | 33     | 1    | **+929.84**    | 30  | 25   | 226  |
 
-Buy & hold over the same window: **+903.80**.
+Buy & hold: **+903.80** for backtest 4's 283-day window, **+970.60** for
+the 281-day window runs 7/8/9 actually used.
 
-- Both sentiment-ON runs land **below** buy & hold (-39, -63)
-- Sentiment-OFF runs average **+913**, i.e. at or slightly above buy & hold
+- ~~Sentiment-OFF runs average +913, i.e. at or slightly above buy & hold~~
+  **WRONG** — against their own window they are $41-74 *below* it. No
+  configuration has ever beaten buy and hold here.
 - Mean gap between configurations: **+60.5 in favour of removing the node**
+  — this comparison is run-to-run, not against a baseline, so it survives
+  the correction intact
 - Within-configuration spread: 24.2 (ON) and 33.7 (OFF) -- so the gap is
   roughly 2x the noise floor, and the two groups do not overlap
 
@@ -400,6 +409,87 @@ old ON runs is a clear fail. The caveat is the confound above, which is
 mine, not the node's. Sequence: run the disambiguation first, then decide.
 Dropping the node from the graph entirely remains the leading option, and
 the ablation plus this run would then be Phase 04's honest finding.
+
+### CORRECTION, 2026-09-09: the ablation used the wrong buy & hold baseline
+
+Found while sanity-checking a number in the replay output. The windows are
+not all the same:
+
+| backtest | window_start | window_end | days | buy & hold (20sh) |
+|----------|--------------|------------|------|-------------------|
+| 4        | **2022-06-01** | 2023-06-30 | 283 | +903.80 |
+| 7, 8, 9, 14 | 2022-06-03 | 2023-06-30 | 281 | **+970.60** |
+
+Backtest 4 was run over two extra days. AAPL fell 148.73 -> 145.39 across
+them, so the 281-day window starts lower and its buy & hold is $66.80
+higher. Every writeup so far has compared runs 7/8/9 against **+903.80**,
+which is backtest 4's baseline, not theirs.
+
+Corrected, against each run's own window:
+
+| run | config             | mark-to-market | vs. its own buy & hold |
+|-----|--------------------|----------------|------------------------|
+| 4   | categorical ON     | +864.62        | -39.18  (B&H +903.80)  |
+| 9   | categorical ON     | +840.45        | -130.15 (B&H +970.60)  |
+| 8   | neutral stand-in   | +896.15        | -74.45  (B&H +970.60)  |
+| 7   | neutral stand-in   | +929.84        | -40.76  (B&H +970.60)  |
+| 14  | score node         | +745.86        | -224.74 (B&H +970.60)  |
+
+**What this changes.** The claim "sentiment-OFF runs average +913, i.e. at
+or slightly above buy & hold" is WRONG. Against their own window they are
+$41-74 *below* it. The ablation's direction still holds — removing the
+node still beat keeping it, and that comparison was run-to-run, not
+against a baseline — but the consoling "and it roughly matches buy & hold"
+half of that finding does not survive. **No configuration tested has ever
+beaten buy and hold on this window.** That strengthens the V1 "no edge"
+verdict rather than weakening it.
+
+**What this does not change.** The score node is still the worst
+configuration by a wide margin, and now by a wider one: -224.74 against
+its own baseline, versus -40.76 for the best OFF run.
+
+Lesson for the next comparison: assert the windows match before comparing
+runs. `scripts/compare_ablation.py` prints `window` per run and nobody
+read it.
+
+### RISK-RULE REPLAY OF BACKTEST 14, 2026-09-09: churn confirmed as the mechanism
+
+`scripts/replay_risk_rules.py 14` (free — no LLM calls). Baseline
+reproduces the recorded run to $0.0002.
+
+| rule                         | MtM      | vs base  | closed | buys | sells |
+|------------------------------|----------|----------|--------|------|-------|
+| baseline (current rules)     | +745.86  | +0.00    | 62     | 41   | 38    |
+| no adding when down 2%       | +843.87  | +98.00   | 52     | 33   | 35    |
+| no adding when down 1%       | +861.03  | +115.16  | 50     | 32   | 34    |
+| stop-loss 5%                 | +854.11  | +108.24  | 53     | 49   | 29    |
+| stop-loss 3%                 | +997.14  | +251.28  | 56     | 52   | 28    |
+| trailing stop 5%             | +1004.98 | +259.11  | 57     | 52   | 28    |
+| no-add 2% + stop 5%          | +851.47  | +105.60  | 53     | 49   | 29    |
+| **min 3 days between buys**  | **+1201.53** | **+455.67** | 47 | 34 | 32 |
+| min 10 days between buys     | +765.26  | +19.39   | 24     | 20   | 20    |
+
+Buy & hold on this window: +970.60.
+
+**Churn is confirmed as the mechanism.** Every single rule improves the
+result, which was not true on backtest 6 where two rules made things
+worse. Spacing entries three trading days apart recovers +455.67 and is
+the only configuration in this entire project ever to beat buy and hold.
+
+**Two reasons not to get excited.**
+
+1. **It is threshold-sensitive, which is the classic overfitting tell.**
+   3 days gives +455.67; 10 days gives +19.39. On backtest 6 those two
+   settings were *identical*, which is what a robust rule looks like. Here
+   they differ by 436, meaning the result is perched on a specific
+   threshold fitted to this specific window.
+2. **In-sample by construction**, on one symbol, on the window whose
+   losses motivated the rule.
+
+The honest reading: this locates the score node's problem (it trades too
+much, not that it trades wrongly) without validating any particular fix.
+It also does NOT resolve the score-vs-PM-prompt confound — spacing would
+cut clustered entries whichever component caused them.
 
 ### Only after the node survives that
 

@@ -36,9 +36,11 @@ Two LoRA adapters were trained and both are unusable — each scored at or
 *below* the trivial majority-class baseline, which is only visible if you
 check the baseline. Ablating the sentiment node then showed it was making
 the system actively worse. It has been rewritten to emit a continuous
-score instead of a BUY/HOLD/SELL vote; that rewrite is committed and
-tested, and the re-measurement is pending. See the design decisions log
-and `docs/phase04-handoff.md`.
+score instead of a BUY/HOLD/SELL vote. That rewrite works as specified —
+real spread, no collapse — **and made trading worse**: +745.86 against a
++896/+930 bar, the worst configuration tested. Those are two separate
+facts and both are reported. See the design decisions log and
+`docs/phase04-handoff.md`.
 
 ## Roadmap
 
@@ -109,7 +111,13 @@ walk-forward validation), before V2 begins.
   calls untouched — cost four backtest runs and under a dollar, and
   showed the node was a net *negative*: mark-to-market P&L over a
   13-month AAPL window was ~60 better without it (with-node runs +864.62
-  / +840.45, without-node +896.15 / +929.84, buy & hold +903.80). Running
+  / +840.45, without-node +896.15 / +929.84). Note the buy-and-hold
+  baseline is +970.60 for the 281-day window those runs used, not the
+  +903.80 originally quoted — that figure belongs to backtest 4's slightly
+  longer 283-day window, and mixing the two made the without-node runs
+  look like they matched buy and hold when they were $41-74 below it. The
+  ablation's own comparison is run-to-run rather than against a baseline,
+  so its direction is unaffected. Running
   two replicates per configuration in the same exercise is what made that
   readable — it measured the run-to-run noise floor (24.2 and 33.7)
   instead of assuming one. With n=2 per group this is directionally
@@ -159,6 +167,19 @@ walk-forward validation), before V2 begins.
   buying-into-a-decline pattern is 43% of that loss, while 54% is a single
   September lot hit by a two-day 6.4% gap down that no add-to-position rule
   can see coming.
+- **Assert two runs share a window before comparing their P&L.** Backtest
+  4 ran 2022-06-01..2023-06-30 (283 days); runs 7/8/9/14 ran
+  2022-06-03..2023-06-30 (281 days). AAPL fell 148.73 -> 145.39 across
+  those two days, moving buy & hold by $66.80 on a 20-share basis. Every
+  writeup compared the ablation runs against backtest 4's +903.80 and
+  concluded they "matched buy and hold" — against their own window's
+  +970.60 they were $41-74 below it, and **no configuration this project
+  has ever run has beaten buy and hold.** The ablation's own conclusion
+  survives, because that comparison was run-to-run rather than against a
+  baseline. `scripts/compare_ablation.py` had printed the window for every
+  run the entire time; it now prints a loud warning instead of trusting
+  anyone to read it. A number that is merely *displayed* is not a number
+  that has been *checked*.
 - **Any accuracy/agreement number gets compared to the majority-class
   baseline before it is believed.** Phase 04 produced two results — 84.0%
   and 90.9% — that both look like successes and are both *at or below*
@@ -565,6 +586,33 @@ named as the cause — are 43% of the loss. The single largest contributor,
 182.89 → 177.59) that no add-to-position rule can see coming. And the
 December decline was only ~1.1% from the first buy to the third, which is
 why a 2% no-add threshold changes literally nothing.
+
+#### The same replay on backtest 14 (the score-node run)
+
+Backtest 14's problem was churn — 62 closed trades against 32-33 for
+every other configuration. Re-gating it costs nothing, and every rule
+improves it, which was not true on backtest 6:
+
+| rule | mark-to-market | vs. baseline |
+|------|----------------|--------------|
+| baseline (current rules) | +745.86 | +0.00 |
+| no adding when down 1% | +861.03 | +115.16 |
+| stop-loss 3% | +997.14 | +251.28 |
+| trailing stop 5% | +1004.98 | +259.11 |
+| **min 3 trading days between buys** | **+1201.53** | **+455.67** |
+| min 10 trading days between buys | +765.26 | +19.39 |
+
+Buy & hold on this window: +970.60. Spacing entries three trading days
+apart is the only configuration in this project that has ever beaten it.
+
+Two reasons that is not a result. It is **threshold-sensitive**: 3 days
+gives +455.67 and 10 days gives +19.39, where on backtest 6 those two
+settings were *identical*. A rule whose value collapses when you move the
+knob has been fitted to a window, not discovered in it. And it does not
+resolve the score-vs-prompt confound — spacing cuts clustered entries
+whichever component caused them. What it does establish is the mechanism:
+the score node's problem is that it trades too *much*, not that it trades
+*wrongly*.
 
 **These numbers are in-sample by construction** — the rules were chosen
 after seeing this window's losses, on one symbol. A row that beats the
