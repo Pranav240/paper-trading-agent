@@ -1,0 +1,81 @@
+name: Deploy to AWS
+
+# Manual only, and on purpose. A deploy that fires on every push to master
+# would push a new image while the previous day's scheduled run might still
+# be mid-flight, and would make "what is actually deployed" a function of
+# commit history rather than a decision. This is a once-a-day batch job on a
+# personal account — pressing a button is the right amount of ceremony.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment suffix used in the infra (matches var.environment)
+        required: false
+        default: dev
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: paper-trading-agent
+
+permissions:
+  # `id-token: write` is what lets the job request a GitHub OIDC token to
+  # exchange for temporary AWS credentials. No access key is stored
+  # anywhere; see infra/github_oidc.tf for the trust policy that pins this
+  # to one repository.
+  id-token: write
+  contents: read
+
+jobs:
+  push-image:
+    name: build and push image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard against a missing role
+        # Without this the aws-actions step fails with an opaque credentials
+        # error. The repository variable has to be set from the Terraform
+        # output first, and saying so beats debugging STS.
+        run: |
+          if [ -z "${{ vars.AWS_DEPLOY_ROLE_ARN }}" ]; then
+            echo "::error::Repository variable AWS_DEPLOY_ROLE_ARN is not set."
+            echo "Run 'terraform output github_deploy_role_arn' in infra/ and add it under"
+            echo "Settings -> Secrets and variables -> Actions -> Variables."
+            exit 1
+          fi
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+
+      - name: Build and push
+        # Two tags on one build: the commit SHA so a deployed version can be
+        # traced back to exactly one commit, and `latest` so the instance's
+        # bootstrap has a stable default to pull. Pin image_tag to a SHA in
+        # tfvars when it matters which one is running.
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          IMAGE="$REGISTRY/$ECR_REPOSITORY"
+          docker build -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" .
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+          echo "### Pushed" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "$IMAGE:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: How to run it
+        run: |
+          echo "Image pushed. It is NOT running yet — the instance pulls on its"
+          echo "next scheduled run, or trigger one now:"
+          echo
+          echo "  aws ssm send-command --region $AWS_REGION \\"
+          echo "    --instance-ids <instance_id from terraform output> \\"
+          echo "    --document-name AWS-RunShellScript \\"
+          echo "    --parameters 'commands=[\"/opt/pta/run-agent.sh\"]'"

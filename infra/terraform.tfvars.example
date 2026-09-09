@@ -1,0 +1,52 @@
+# Copy to terraform.tfvars and edit. terraform.tfvars is gitignored.
+#
+# Every default in variables.tf is chosen to be safe rather than useful:
+# nothing is exposed, the schedule is disarmed, and the database is the free
+# one. This file is where you deliberately turn things on.
+
+region      = "ap-south-1"
+environment = "dev"
+
+# ---------------------------------------------------------------------------
+# Cost
+# ---------------------------------------------------------------------------
+# false: Postgres container on the EC2 box, $0 extra.
+# true:  managed RDS, roughly $12-15/month once free-tier credits are gone.
+use_rds = false
+
+# ---------------------------------------------------------------------------
+# Access
+# ---------------------------------------------------------------------------
+# Your public IP. Only needed if you set key_pair_name or expose_api below;
+# leave both off and reach the box with SSM Session Manager instead, which
+# needs no inbound rule at all:
+#     aws ssm start-session --target <instance_id>
+#
+# admin_cidr    = "203.0.113.4/32"
+# key_pair_name = "my-keypair"
+# expose_api    = false
+
+# ---------------------------------------------------------------------------
+# Deploys
+# ---------------------------------------------------------------------------
+# Enables the GitHub Actions OIDC role so CI can push to ECR without a
+# long-lived access key. Set create_github_oidc_provider = false if this AWS
+# account already has a GitHub OIDC provider — only one is allowed per
+# account and a second apply will fail on the duplicate.
+# github_repository = "Pranav240/paper-trading-agent"
+
+# ---------------------------------------------------------------------------
+# Schedule
+# ---------------------------------------------------------------------------
+# LEAVE THIS FALSE until you have run the job manually once and seen it
+# succeed. Every firing costs real OpenAI money: two LLM calls per watchlist
+# symbol, every weekday, whether or not anyone is looking at the results.
+schedule_enabled = false
+
+# 21:30 UTC on weekdays — 15 minutes after the US close during EDT. Note it
+# does not shift with daylight saving; during EST the close is 21:00 UTC and
+# this fires 30 minutes after instead of 15. Harmless for a daily bar.
+# schedule_expression = "cron(30 21 ? * MON-FRI *)"
+
+# Pin to a commit SHA to make the deployed version explicit.
+# image_tag = "latest"

@@ -8,3 +8,11 @@ papertrading/
 .DS_Store
 smoke_test.py
 data/
+
+# Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/terraform.tfvars
+# NOTE: .terraform.lock.hcl is deliberately NOT ignored. It pins provider
+# hashes, which is what makes an apply reproducible across machines.

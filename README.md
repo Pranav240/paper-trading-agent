@@ -15,7 +15,10 @@ reportable outcome.
 ## Status
 
 Phases 01 (Control API), 02 (State & history), 03 (Decision agent) and 05
-(Build pipeline) — done. Phase 03 includes a full live end-to-end run
+(Build pipeline) — done. Phase 06 (Scheduled run) has its Terraform written
+and validated in CI but **has never been applied** — `infra/` says so
+plainly, because "the infrastructure code exists" and "the stack works" are
+different claims. Phase 03 includes a full live end-to-end run
 against a real Postgres database: real Alpaca market data + news, real
 OpenAI reasoning from both LLM nodes, a correctly tracked real paper
 position.
@@ -65,6 +68,7 @@ degenerate models — in `docs/phase04-handoff.md`.
    rewrite, and a measurement saying the node should be removed)*
 5. Build pipeline — Dockerfile + GitHub Actions *(done)*
 6. Scheduled run — deployed on AWS (EC2 + RDS), triggered once per session
+   *(infrastructure written and CI-validated in `infra/`; not yet applied)*
 
 **Gate:** V1 must be deployed and running end-to-end on paper, and the
 strategy logic must be honestly backtested (realistic slippage/commissions,

@@ -89,6 +89,29 @@ jobs:
             exit 1
           fi
 
+  terraform:
+    name: terraform validates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Check formatting
+        working-directory: infra
+        run: terraform fmt -check -recursive -diff
+
+      - name: Validate
+        working-directory: infra
+        # -backend=false because validation needs the provider schemas but no
+        # remote state and, importantly, no AWS credentials — so this runs on
+        # every push without handing CI any access to the account.
+        run: |
+          terraform init -backend=false
+          terraform validate
+
   docker:
     name: docker image builds
     runs-on: ubuntu-latest

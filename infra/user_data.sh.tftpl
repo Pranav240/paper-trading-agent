@@ -1,0 +1,155 @@
+#!/bin/bash
+# Instance bootstrap. Runs once, as root, on first boot.
+#
+# `set -euo pipefail` matters more here than in an interactive script: this
+# runs unattended and nobody reads the output unless something has already
+# gone wrong. Without it, a failed docker install would be followed by a
+# "successful" boot and a machine that silently never runs the job.
+set -euo pipefail
+exec > >(tee /var/log/pta-bootstrap.log | logger -t pta-bootstrap) 2>&1
+
+echo "=== paper-trading-agent bootstrap starting ==="
+
+dnf update -y
+dnf install -y docker postgresql16 jq
+systemctl enable --now docker
+
+# The docker compose plugin is not in the AL2023 repos; installed by hand at
+# a pinned version so a rebuild six months from now gets the same one.
+DOCKER_CLI_PLUGINS=/usr/libexec/docker/cli-plugins
+mkdir -p "$DOCKER_CLI_PLUGINS"
+curl -fsSL -o "$DOCKER_CLI_PLUGINS/docker-compose" \
+  https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-x86_64
+chmod +x "$DOCKER_CLI_PLUGINS/docker-compose"
+
+install -d -m 0755 /opt/pta
+
+# ---------------------------------------------------------------------------
+# Secrets
+# ---------------------------------------------------------------------------
+# Fetched at boot from SSM rather than baked into the image or passed as
+# user_data. user_data is readable by anything that can reach the instance
+# metadata service, so a key placed there is a key handed to any SSRF bug in
+# the application.
+#
+# Written to a root-only file because docker --env-file needs a file, and
+# 0600 keeps it out of reach of any non-root process on the box.
+fetch_secret() {
+  aws ssm get-parameter \
+    --region "${region}" \
+    --name "${ssm_prefix}/$1" \
+    --with-decryption \
+    --query 'Parameter.Value' \
+    --output text
+}
+
+OPENAI_API_KEY="$(fetch_secret OPENAI_API_KEY)"
+ALPACA_API_KEY="$(fetch_secret ALPACA_API_KEY)"
+ALPACA_SECRET_KEY="$(fetch_secret ALPACA_SECRET_KEY)"
+DATABASE_URL="$(fetch_secret DATABASE_URL)"
+
+umask 077
+cat > /opt/pta/app.env <<EOF
+OPENAI_API_KEY=$OPENAI_API_KEY
+ALPACA_API_KEY=$ALPACA_API_KEY
+ALPACA_SECRET_KEY=$ALPACA_SECRET_KEY
+DATABASE_URL=$DATABASE_URL
+EOF
+chmod 600 /opt/pta/app.env
+umask 022
+
+# A shared docker network so the app container can reach Postgres by name in
+# the container-database mode below.
+docker network create pta 2>/dev/null || true
+
+%{ if !use_rds ~}
+# ---------------------------------------------------------------------------
+# Local Postgres (use_rds = false)
+# ---------------------------------------------------------------------------
+# Named volume, not a bind mount into the container's own filesystem: the
+# data has to survive `docker rm`, which is exactly what a redeploy does.
+docker volume create pta-pgdata
+
+docker run -d --name pta-postgres --restart unless-stopped \
+  --network pta \
+  -e POSTGRES_USER=${db_username} \
+  -e POSTGRES_PASSWORD=local_dev_password \
+  -e POSTGRES_DB=${db_name} \
+  -v pta-pgdata:/var/lib/postgresql/data \
+  -p 127.0.0.1:5432:5432 \
+  postgres:16-alpine
+
+# Published on 127.0.0.1 only. Binding 0.0.0.0 would expose Postgres to the
+# whole VPC and, because this is a public subnet, depend entirely on the
+# security group to not be reachable from the internet. One layer of
+# protection for a database password that is literally "local_dev_password"
+# is not enough layers.
+
+echo "waiting for postgres to accept connections"
+for i in $(seq 1 30); do
+  if docker exec pta-postgres pg_isready -U ${db_username} -d ${db_name} >/dev/null 2>&1; then
+    echo "postgres ready after $${i}s"
+    break
+  fi
+  sleep 1
+done
+%{ endif ~}
+
+# ---------------------------------------------------------------------------
+# Application image
+# ---------------------------------------------------------------------------
+aws ecr get-login-password --region ${region} \
+  | docker login --username AWS --password-stdin ${ecr_registry}
+
+# The first boot after `terraform apply` happens before CI has ever pushed
+# an image, so this must not be fatal. The scheduled run pulls again anyway.
+if docker pull ${image_uri}; then
+  echo "image pulled"
+  docker run --rm --network pta --env-file /opt/pta/app.env \
+    ${image_uri} python db/bootstrap.py || echo "bootstrap deferred - db not ready yet"
+else
+  echo "no image in ECR yet - push one with the deploy workflow, then re-run the schedule"
+fi
+
+%{ if expose_api ~}
+# ---------------------------------------------------------------------------
+# Control API (expose_api = true)
+# ---------------------------------------------------------------------------
+docker run -d --name pta-api --restart unless-stopped \
+  --network pta --env-file /opt/pta/app.env \
+  -p 8000:8000 \
+  ${image_uri} || echo "api container not started - no image yet"
+%{ endif ~}
+
+# ---------------------------------------------------------------------------
+# The daily run entry point
+# ---------------------------------------------------------------------------
+# A script on disk rather than a long docker command inside the EventBridge
+# target: the schedule then says "run the job" and this file says what the
+# job is, so changing the command doesn't mean changing the schedule.
+cat > /opt/pta/run-agent.sh <<'SCRIPT'
+#!/bin/bash
+set -euo pipefail
+IMAGE="__IMAGE__"
+REGION="__REGION__"
+REGISTRY="__REGISTRY__"
+
+aws ecr get-login-password --region "$REGION" \
+  | docker login --username AWS --password-stdin "$REGISTRY"
+docker pull "$IMAGE"
+
+# --rm because a daily job leaving a stopped container behind fills the disk
+# with 365 dead containers a year.
+#
+# run_once.py exits non-zero on a failed cycle, and that status propagates
+# out of docker run, out of this script, and into the SSM invocation — which
+# is what makes a failure visible in the console instead of silent.
+docker run --rm --network pta --env-file /opt/pta/app.env "$IMAGE" \
+  python scripts/run_once.py
+SCRIPT
+
+sed -i "s|__IMAGE__|${image_uri}|; s|__REGION__|${region}|; s|__REGISTRY__|${ecr_registry}|" \
+  /opt/pta/run-agent.sh
+chmod 755 /opt/pta/run-agent.sh
+
+echo "=== bootstrap complete ==="
