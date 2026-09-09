@@ -85,13 +85,15 @@ ORDER BY COUNT(*) DESC;
 """
 
 
-def report(cur, bid):
+def report(cur, bid, windows=None):
     cur.execute(SUMMARY, (bid,))
     row = cur.fetchone()
     if row is None:
         print(f"backtest {bid}: not found")
         return
     _id, name, start, end, closed, open_lots, realized = row
+    if windows is not None:
+        windows[bid] = (start, end)
 
     mtm = float(realized)
     detail = []
@@ -146,14 +148,33 @@ def report(cur, bid):
 
 def main():
     ids = [int(a) for a in sys.argv[1:]] or [4, 7]
+    windows = {}
     with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
         with conn.cursor() as cur:
-            results = {bid: report(cur, bid) for bid in ids}
+            results = {bid: report(cur, bid, windows) for bid in ids}
 
     vals = [v for v in results.values() if v is not None]
     if len(vals) == 2:
         a, b = vals
         print(f"\n=== difference (second minus first): {b - a:+.2f}")
+
+    # Loud, because a quiet version of this already cost a wrong published
+    # finding. Backtest 4 ran 2022-06-01..2023-06-30 while runs 7/8/9/14
+    # ran 2022-06-03..2023-06-30 — two days apart, over which AAPL fell
+    # 148.73 -> 145.39, moving buy & hold by $66.80 on a 20-share basis.
+    # Every writeup compared 7/8/9 against backtest 4's +903.80 baseline
+    # and concluded they "matched buy and hold" when they were $41-74
+    # below their own. The window line was printed for every run the whole
+    # time and nobody read it, so it now refuses to be ignored.
+    distinct = set(windows.values())
+    if len(distinct) > 1:
+        print("\n" + "!" * 70)
+        print("WARNING: these backtests DO NOT share a window. Their P&L is")
+        print("not comparable, and neither is a buy-and-hold baseline taken")
+        print("from any one of them.")
+        for bid, (start, end) in sorted(windows.items()):
+            print(f"  backtest {bid}: {start} .. {end}")
+        print("!" * 70)
 
 
 if __name__ == "__main__":
