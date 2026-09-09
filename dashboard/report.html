@@ -1,0 +1,478 @@
+<title>No Edge Found</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --ground:   #F4F6F8;
+    --surface:  #FFFFFF;
+    --sunken:   #EBEEF2;
+    --ink:      #131A21;
+    --ink-2:    #414E5B;
+    --muted:    #6B7784;
+    --rule:     #DCE1E7;
+    --hair:     #EDF0F3;
+    --accent:   #24446E;
+    --neg:      #A3372C;
+    --pos:      #1E6B4B;
+    --flag:     #8A5A16;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --ground:   #0C1116;
+      --surface:  #141B22;
+      --sunken:   #1B242D;
+      --ink:      #E6EBF0;
+      --ink-2:    #B4C0CC;
+      --muted:    #8794A1;
+      --rule:     #26313B;
+      --hair:     #1D2731;
+      --accent:   #7BA7DA;
+      --neg:      #E5877A;
+      --pos:      #56B98F;
+      --flag:     #D2A24E;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --ground:   #0C1116;
+    --surface:  #141B22;
+    --sunken:   #1B242D;
+    --ink:      #E6EBF0;
+    --ink-2:    #B4C0CC;
+    --muted:    #8794A1;
+    --rule:     #26313B;
+    --hair:     #1D2731;
+    --accent:   #7BA7DA;
+    --neg:      #E5877A;
+    --pos:      #56B98F;
+    --flag:     #D2A24E;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:16px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{ font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace; font-variant-numeric:tabular-nums; }
+
+  .sheet{
+    max-width:900px;
+    margin:0 auto;
+    padding:0 28px 96px;
+  }
+  .col{ max-width:68ch; }
+
+  /* ---------- masthead ---------- */
+  header.mast{
+    padding:56px 0 30px;
+    border-bottom:2px solid var(--ink);
+    margin-bottom:38px;
+  }
+  .kicker{
+    font-family:"IBM Plex Mono";
+    font-size:11.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:18px;
+  }
+  h1{
+    font-family:"IBM Plex Serif";
+    font-weight:600;
+    font-size:clamp(38px,6vw,60px);
+    line-height:1.02;
+    letter-spacing:-0.02em;
+    margin:0 0 18px;
+    text-wrap:balance;
+  }
+  .standfirst{
+    font-family:"IBM Plex Serif";
+    font-size:clamp(17px,2.2vw,20px);
+    line-height:1.5;
+    color:var(--ink-2);
+    max-width:56ch;
+    margin:0 0 22px;
+  }
+  .byline{
+    font-family:"IBM Plex Mono";
+    font-size:12px;
+    color:var(--muted);
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 20px;
+  }
+
+  /* ---------- verdict ---------- */
+  .verdict{
+    background:var(--surface);
+    border:1px solid var(--rule);
+    border-left:4px solid var(--neg);
+    border-radius:3px;
+    padding:24px 26px;
+    margin:0 0 46px;
+  }
+  .verdict h2{
+    font-family:"IBM Plex Serif";
+    font-size:19px;
+    font-weight:600;
+    margin:0 0 10px;
+    color:var(--neg);
+  }
+  .verdict p{ margin:0 0 12px; max-width:66ch; }
+  .verdict p:last-child{ margin-bottom:0; }
+
+  /* ---------- sections ---------- */
+  section{ margin-bottom:52px; }
+  h2.sec{
+    font-family:"IBM Plex Serif";
+    font-size:27px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin:0 0 6px;
+    padding-top:14px;
+    border-top:1px solid var(--rule);
+  }
+  .sec-note{
+    font-family:"IBM Plex Mono";
+    font-size:11.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0 0 20px;
+  }
+  h3{
+    font-family:"IBM Plex Sans";
+    font-size:16px;
+    font-weight:600;
+    margin:30px 0 8px;
+  }
+  p{ margin:0 0 15px; max-width:68ch; }
+  a{ color:var(--accent); text-underline-offset:2px; }
+
+  ul{ margin:0 0 15px; padding-left:20px; max-width:68ch; }
+  li{ margin-bottom:7px; }
+
+  strong{ font-weight:600; }
+  em.term{ font-style:normal; font-family:"IBM Plex Mono"; font-size:.92em; background:var(--sunken); padding:1px 5px; border-radius:2px; }
+
+  /* ---------- phase ledger ---------- */
+  .phases{
+    display:grid;
+    gap:1px;
+    background:var(--rule);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .phase{
+    background:var(--surface);
+    display:grid;
+    grid-template-columns:44px 1fr auto;
+    gap:16px;
+    align-items:baseline;
+    padding:14px 18px;
+  }
+  .phase .n{
+    font-family:"IBM Plex Mono";
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+  }
+  .phase .what{ font-weight:600; font-size:15px; }
+  .phase .what span{ display:block; font-weight:400; font-size:13.5px; color:var(--muted); margin-top:2px; }
+  .badge{
+    font-family:"IBM Plex Mono";
+    font-size:10.5px;
+    font-weight:600;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    padding:3px 8px;
+    border-radius:2px;
+    white-space:nowrap;
+  }
+  .badge.done{ color:var(--pos); background:color-mix(in srgb, var(--pos) 12%, transparent); }
+  .badge.closed{ color:var(--neg); background:color-mix(in srgb, var(--neg) 12%, transparent); }
+
+  /* ---------- tables ---------- */
+  .scroll{ overflow-x:auto; margin:0 0 10px; }
+  table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:560px;
+    font-size:14px;
+  }
+  caption{
+    text-align:left;
+    font-family:"IBM Plex Mono";
+    font-size:11.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    padding-bottom:9px;
+  }
+  th{
+    text-align:right;
+    font-weight:600;
+    font-size:12px;
+    color:var(--muted);
+    padding:0 12px 8px;
+    border-bottom:1px solid var(--ink);
+    white-space:nowrap;
+  }
+  th:first-child, td:first-child{ text-align:left; }
+  td{
+    text-align:right;
+    padding:8px 12px;
+    border-bottom:1px solid var(--hair);
+    font-family:"IBM Plex Mono";
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
+  td.label{ font-family:"IBM Plex Sans"; white-space:normal; }
+  tr.hi td{ background:var(--sunken); }
+  .neg{ color:var(--neg); }
+  .pos{ color:var(--pos); }
+  .fig{ font-size:12.5px; color:var(--muted); margin:0 0 15px; max-width:68ch; }
+
+  /* ---------- callout ---------- */
+  .note{
+    background:var(--sunken);
+    border-radius:3px;
+    padding:16px 18px;
+    margin:0 0 18px;
+    font-size:14.5px;
+    max-width:68ch;
+  }
+  .note p{ margin:0 0 9px; }
+  .note p:last-child{ margin-bottom:0; }
+  .note .lede{ font-weight:600; }
+
+  /* ---------- bug list ---------- */
+  ol.bugs{ list-style:none; counter-reset:bug; margin:0; padding:0; }
+  ol.bugs li{
+    counter-increment:bug;
+    display:grid;
+    grid-template-columns:34px 1fr;
+    gap:14px;
+    padding:15px 0;
+    border-bottom:1px solid var(--hair);
+    max-width:none;
+  }
+  ol.bugs li::before{
+    content:counter(bug,decimal-leading-zero);
+    font-family:"IBM Plex Mono";
+    font-size:12px;
+    font-weight:600;
+    color:var(--flag);
+    padding-top:3px;
+  }
+  ol.bugs b{ display:block; margin-bottom:3px; }
+  ol.bugs p{ margin:0; font-size:14.5px; color:var(--ink-2); }
+
+  footer{
+    margin-top:60px;
+    padding-top:22px;
+    border-top:2px solid var(--ink);
+    font-size:13.5px;
+    color:var(--muted);
+  }
+  footer p{ max-width:68ch; }
+</style>
+
+<div class="sheet">
+
+  <header class="mast">
+    <div class="kicker">Project report · V1 · paper trading only</div>
+    <h1>No edge found.</h1>
+    <p class="standfirst">A multi-agent paper-trading system, built across six phases and evaluated honestly. It runs, it reasons, it deploys — and it does not beat buying the stock and holding it. This is the report of that result.</p>
+    <div class="byline">
+      <span>9 September 2026</span>
+      <span>AAPL · 7 real-LLM backtests</span>
+      <span>Never touched real capital</span>
+    </div>
+  </header>
+
+  <div class="verdict">
+    <h2>The finding</h2>
+    <p>Every backtest longer than a single quarter underperformed buy-and-hold, by <span class="mono">$39</span> to <span class="mono">$225</span> on a 20-share basis. The out-of-sample run — executed once, with no code, prompt or parameter changes made after seeing the in-sample result — lost <span class="mono">$63</span> in a market that was essentially flat.</p>
+    <p>The project's founding rule was that an honestly evaluated failure is the correct thing to report. So it is reported, and the machinery built to detect it is the actual deliverable.</p>
+  </div>
+
+  <section>
+    <h2 class="sec">What was built</h2>
+    <p class="sec-note">Six phases · five built · one closed on a negative result</p>
+
+    <p>The premise was to close six engineering gaps by building one real system rather than six disconnected exercises. Each phase produces something the next one depends on, and the sequence is real: nothing here is a numbered list of parallel tasks.</p>
+
+    <div class="phases">
+      <div class="phase"><span class="n">01</span><span class="what">Control API<span>FastAPI: positions, decisions, trigger a run</span></span><span class="badge done">done</span></div>
+      <div class="phase"><span class="n">02</span><span class="what">State &amp; history<span>Postgres, raw SQL, hand-rolled migration runner — no ORM</span></span><span class="badge done">done</span></div>
+      <div class="phase"><span class="n">03</span><span class="what">Decision agent<span>LangGraph: two analysts → portfolio manager → risk manager</span></span><span class="badge done">done</span></div>
+      <div class="phase"><span class="n">04</span><span class="what">Sentiment fine-tune<span>Two LoRA adapters, an ablation, a rewrite — all negative</span></span><span class="badge closed">closed</span></div>
+      <div class="phase"><span class="n">05</span><span class="what">Build pipeline<span>Docker, compose, GitHub Actions against a real Postgres</span></span><span class="badge done">done</span></div>
+      <div class="phase"><span class="n">06</span><span class="what">Scheduled run<span>Terraform on AWS — applied, ran live, destroyed same day</span></span><span class="badge done">done</span></div>
+    </div>
+
+    <h3>The agent graph</h3>
+    <p>Four nodes, deliberately split by whether judgment is actually required. A <strong>Technical Analyst</strong> computes RSI-14 and SMA-20 in plain Python — arithmetic is not worth an LLM. A <strong>Sentiment Analyst</strong> reads headlines through GPT-4o-mini. A <strong>Portfolio Manager</strong> (GPT-4o) synthesises both into a proposal. A <strong>Risk Manager</strong>, rule-based again, holds final authority and can veto or scale any trade.</p>
+    <p>That last split — propose versus gate — is what made most of this report possible. Because the Risk Manager is code and every input it consumed is stored, alternative risk rules could later be tested for free.</p>
+  </section>
+
+  <section>
+    <h2 class="sec">The backtests</h2>
+    <p class="sec-note">Seven runs · real Alpaca prices · real LLM calls · 5bps slippage</p>
+
+    <p>Headlines came from FNSPID, a 23&nbsp;GB historical dataset, imported locally. Prices came from Alpaca's IEX feed. Every run made genuine LLM calls; nothing here is simulated reasoning.</p>
+
+    <div class="scroll">
+      <table>
+        <caption>Mark-to-market, each against buy-and-hold over its own window</caption>
+        <thead>
+          <tr><th>Run</th><th>Configuration</th><th>Closed</th><th>Result</th><th>Buy &amp; hold</th><th>Difference</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>#3</td><td class="label">categorical sentiment · pilot quarter</td><td>4</td><td>+6.21</td><td>−15.40</td><td class="pos">+21.61</td></tr>
+          <tr><td>#4</td><td class="label">categorical sentiment · in-sample</td><td>32</td><td>+864.62</td><td>+903.80</td><td class="neg">−39.18</td></tr>
+          <tr><td>#6</td><td class="label">categorical sentiment · <strong>out-of-sample</strong></td><td>2</td><td>−63.10</td><td>+2.20</td><td class="neg">−65.30</td></tr>
+          <tr><td>#7</td><td class="label">sentiment ablated</td><td>33</td><td>+929.84</td><td>+970.60</td><td class="neg">−40.76</td></tr>
+          <tr><td>#8</td><td class="label">sentiment ablated</td><td>33</td><td>+896.15</td><td>+970.60</td><td class="neg">−74.45</td></tr>
+          <tr><td>#9</td><td class="label">categorical sentiment · replicate of #4</td><td>31</td><td>+840.45</td><td>+970.60</td><td class="neg">−130.15</td></tr>
+          <tr class="hi"><td>#14</td><td class="label">continuous score node</td><td>62</td><td>+745.86</td><td>+970.60</td><td class="neg">−224.74</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fig">The single positive row is a three-month pilot with four closed trades. It beat the baseline mainly because AAPL fell over that window — buy-and-hold lost money and a largely idle system did not. That is not evidence of skill.</p>
+
+    <h3>Why mark-to-market, not realized P&amp;L</h3>
+    <p>Realized P&amp;L alone made run #3 look like a clean 100% win rate and made run #14 look far worse than it was. Both had open lots carrying unrealized moves. Any run ending with open positions gets marked at the window's last price before being compared to anything.</p>
+
+    <div class="note">
+      <p class="lede">A baseline error, found by checking a number that looked slightly wrong.</p>
+      <p>Run #4 covered 2022-06-01 → 2023-06-30. Runs #7, #8, #9 and #14 covered 2022-06-03 → 2023-06-30. AAPL fell 148.73 → 145.39 across those two extra days, moving buy-and-hold by <span class="mono">$66.80</span>.</p>
+      <p>Every earlier writeup had compared the ablation runs against run #4's baseline and concluded they "matched buy and hold". Against their own window they were $41–74 <em>below</em> it. The comparison tool had been printing the window for every run the whole time; nobody read it. It now refuses to be ignored.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec">Phase 04, in detail</h2>
+    <p class="sec-note">The most instructive failure in the project</p>
+
+    <p>The goal was to replace the sentiment node's API call with a locally fine-tuned model. Four things were tried. All four are measured, and every measurement points the same way.</p>
+
+    <h3>Two adapters, both degenerate</h3>
+    <div class="scroll">
+      <table>
+        <caption>Both look like successes until the baseline is checked</caption>
+        <thead><tr><th>Attempt</th><th>Headline number</th><th>Majority-class baseline</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td class="label">Financial PhraseBank QLoRA</td><td>84.0%</td><td>96.8%</td><td class="neg">below baseline</td></tr>
+          <tr><td class="label">Distilled from GPT-4o-mini</td><td>90.9%</td><td>90.9%</td><td class="neg">exactly baseline</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fig">The second adapter predicted HOLD on all 44 held-out rows. It had learned the constant function. The first invented SELL calls on neutral headlines and reached 3.6% precision on BUY.</p>
+
+    <p>A database inventory explained both at once: across every backtest the teacher had produced <strong>17 BUY, 3 SELL and 537 HOLD</strong>, on one symbol, over overlapping date ranges. Distilling a teacher that says HOLD 96.8% of the time yields a student that always says HOLD. The problem was never the hyperparameters.</p>
+
+    <h3>Then the node itself was ablated</h3>
+    <p>Before spending roughly 6,000 labelling calls on more training data, the node was removed and the system re-run — same graph, same Portfolio Manager, only the sentiment content replaced by a neutral stand-in. Removing it <em>improved</em> results by about 60 on a 13-month window, consistently, at roughly twice the measured run-to-run noise.</p>
+    <p>The mechanism was visible in the action counts. The node's near-constant HOLD votes read to the Portfolio Manager as a vote against trading, suppressing around nine BUYs and six SELLs that would have been profitable. An agent that abstains most of the time is not automatically harmless.</p>
+
+    <h3>The rewrite worked, and traded worse</h3>
+    <p>The node was rewritten to emit a continuous −1.0 to +1.0 tone score instead of a categorical vote — fixing the root cause of both failed adapters, since a score has real variance even on boring news and is therefore a trainable regression target.</p>
+    <p>It succeeded at exactly that. Across 281 days: range −0.50 to +0.50, mean +0.057, standard deviation 0.235, <strong>zero exact zeros</strong>, 184 positive and 97 negative days. No collapse.</p>
+    <p>And it produced the worst trading result of any configuration tested: <span class="mono">+745.86</span> against a bar of <span class="mono">+896</span>/<span class="mono">+930</span>. It traded roughly twice as much — 62 closed trades against 32–33 everywhere else, at a 32% win rate. <strong>"The component works as specified" and "the system got better" are independent claims.</strong></p>
+
+    <div class="note">
+      <p class="lede">A confound, named rather than buried.</p>
+      <p>That run changed two things at once: the sentiment node and the Portfolio Manager prompt that reads it. The prompt change was designed to stop abstentions suppressing trades — and it worked, possibly too well. This run cannot attribute the extra trading to either cause. One further ablation would separate them; it has not been run.</p>
+    </div>
+
+    <p>Phase 04 was then closed rather than continued. The remaining labelling calls would have bought a better imitation of a component every measurement says to delete.</p>
+  </section>
+
+  <section>
+    <h2 class="sec">Testing rules without paying for them</h2>
+    <p class="sec-note">Offline replay · zero API cost</p>
+
+    <p>The Risk Manager is rule-based, the Portfolio Manager's proposals are stored, and the price the agent saw each day is stored. So "what would a different risk rule have done?" is arithmetic over recorded data, not a new backtest. A replay tool re-gates every recorded proposal — and refuses to print anything unless its baseline reproduces the recorded run first. On the out-of-sample window it matches to <span class="mono">$0.0003</span>.</p>
+
+    <p>It was used to test the standing assumption that a drawdown rule would have saved the losing run. It would not have.</p>
+
+    <div class="scroll">
+      <table>
+        <caption>Run #6 re-gated · best rule recovers $14 of a $63 loss</caption>
+        <thead><tr><th>Rule</th><th>Result</th><th>vs. baseline</th></tr></thead>
+        <tbody>
+          <tr><td class="label">baseline (position cap only)</td><td>−63.10</td><td>+0.00</td></tr>
+          <tr><td class="label">no adding when down 2%</td><td>−63.10</td><td>+0.00</td></tr>
+          <tr><td class="label">no adding when down 1%</td><td>−49.24</td><td class="pos">+13.86</td></tr>
+          <tr><td class="label">stop-loss 3%</td><td>−49.03</td><td class="pos">+14.06</td></tr>
+          <tr><td class="label">trailing stop 5%</td><td>−64.94</td><td class="neg">−1.84</td></tr>
+          <tr><td class="label">min 3 trading days between buys</td><td>−49.24</td><td class="pos">+13.86</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>It also corrected the project's own recorded diagnosis. Three consecutive December buys into a decline had been named as the cause; they are 43% of the loss. The largest single contributor, 54%, is one September lot caught by a two-day 6.4% gap down that no add-to-position rule can anticipate. And the December decline was only ~1.1% from the first buy to the third, which is why a 2% threshold changes literally nothing.</p>
+
+    <p class="fig">Note also that three "different" rules land on exactly −49.24. They block the same two trades by three mechanisms. A table of seven rules was really testing about three ideas — worth knowing before anyone reports "we evaluated seven risk rules".</p>
+  </section>
+
+  <section>
+    <h2 class="sec">Bugs worth recording</h2>
+    <p class="sec-note">Each one changed a conclusion or hid one</p>
+
+    <ol class="bugs">
+      <li><b>A transaction bug made every backtest meaningless</b><p>The first insert wasn't wrapped in its own transaction, so every later <em class="term">conn.transaction()</em> silently downgraded to a savepoint and no day's writes were visible to the next day. The symptom was the position cap never engaging. Found before any result was trusted.</p></li>
+      <li><b>Six database tests silently skipped for two entire phases</b><p>On Windows, psycopg's pool cannot run on the default event loop. It raises <em class="term">PoolTimeout</em>, which subclasses <em class="term">OperationalError</em>, which the "no database available" guard caught. The suite reported green while running 33 of 39 tests. CI now fails if any test skips.</p></li>
+      <li><b>A buy-and-hold baseline from the wrong window</b><p>Two days' difference between runs moved the baseline by $66.80 and turned "matched buy and hold" into "$41–74 below it".</p></li>
+      <li><b>A database URL pointing at 127.0.0.1</b><p>Correct for a process on the host, wrong inside a container where it is the container's own loopback. Migrations failed with "Connection refused" while <em class="term">docker ps</em> showed Postgres healthy — both true at once.</p></li>
+      <li><b>An AMI lookup that churned the server</b><p><em class="term">most_recent = true</em> meant a newly published image made Terraform propose destroying a running instance for no reason anyone asked for. A plan you cannot trust is a plan you stop reading.</p></li>
+      <li><b>GitHub's OIDC claim carries numeric IDs</b><p>The documented subject is <em class="term">repo:owner/name</em>; the real one appends immutable account and repository IDs. AWS returns only "Not authorized" — uninformative by design, since naming the failed condition would let an attacker probe the policy. CloudTrail carries the actual claim.</p></li>
+    </ol>
+    <p>Four of those six were only findable by running the thing for real. That is the argument for the deployment costing a few cents rather than being left as validated code.</p>
+  </section>
+
+  <section>
+    <h2 class="sec">The deployment</h2>
+    <p class="sec-note">Applied, verified, destroyed — same day</p>
+
+    <p>Terraform builds a purpose-made VPC, a <span class="mono">t3.micro</span> running the container image, an ECR registry, four encrypted parameters, scoped IAM roles, and an EventBridge schedule wired through SSM. Images reach the registry through GitHub OIDC — short-lived tokens, no access key stored anywhere.</p>
+
+    <p>Defaults are chosen to be safe rather than useful. The schedule ships disabled, because every firing spends real money. The managed database is off, because a container costs nothing and the trade-off belongs to whoever pays. There are no inbound rules at all; shell access is through SSM Session Manager, so there is no open port, no bastion and no key to lose.</p>
+
+    <p>It ran one real cycle on AWS — real prices, real LLM calls, a real database write — and returned <span class="mono">run_id 1 · SUCCESS · AAPL BUY conf=0.65</span>. Then it was destroyed. Keeping it running would cost about $13 a month to trade a strategy already measured as having no edge; proving the deployment works is worth a few cents, and running it indefinitely is not.</p>
+  </section>
+
+  <section>
+    <h2 class="sec">What this demonstrates</h2>
+    <p class="sec-note">And what it deliberately does not</p>
+
+    <p>A working FastAPI service over Postgres with hand-written SQL and a hand-rolled migration runner. A four-node LangGraph agent where each node's model choice is justified by whether judgment is required. QLoRA fine-tuning end to end, including distillation from a teacher model. Containerisation, CI against a real database, and infrastructure-as-code applied to a live cloud account.</p>
+
+    <p>More usefully, it demonstrates an evaluation discipline: out-of-sample runs executed once and never re-tuned; accuracy numbers checked against the majority-class baseline before being believed; components ablated before being improved; noise floors measured rather than assumed; and a confound named in the writeup instead of smoothed over.</p>
+
+    <p>It does not demonstrate a profitable trading strategy, and no part of this report should be read as investment advice. The system never touched real capital. Its own conclusion is that it should not.</p>
+
+    <h3>Left open, honestly</h3>
+    <ul>
+      <li>One further ablation would separate the score node's effect from the prompt change. It costs under a dollar and has not been run.</li>
+      <li>Every result is AAPL. A census of the headline dataset found 108 symbols with continuous coverage over the same window, so a second symbol is affordable and would test whether "no edge" is about the strategy or about one stock.</li>
+      <li>The evidence says remove the Sentiment Analyst from the graph. That is a design decision with consequences beyond this phase, so it was recorded rather than executed.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p><strong>Paper trading only.</strong> This project never touched real capital or a live brokerage account, and nothing in it constitutes financial advice. The goal was an honestly evaluated system, not a claim of profitability — and when the evaluation came back negative, that is what got written down.</p>
+  </footer>
+
+</div>
