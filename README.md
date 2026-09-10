@@ -16,6 +16,11 @@ changes made after seeing in-sample results — lost $63 in a flat market.
 
 **→ [`PROJECT.md`](PROJECT.md) is the complete record.** Start there.
 
+**Live pages** —
+[technical report](https://pranav240.github.io/paper-trading-agent/dashboard/report.html) ·
+[interactive results dashboard](https://pranav240.github.io/paper-trading-agent/dashboard/backtest_dashboard.html) ·
+[roadmap](https://pranav240.github.io/paper-trading-agent/dashboard/roadmap.html)
+
 ---
 
 ## The result

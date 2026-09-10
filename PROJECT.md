@@ -24,9 +24,10 @@ The project's founding rule was that an honestly evaluated failure is the correc
 
 | What | Link |
 |---|---|
-| **Technical report** (read this first) | [claude.ai/code/artifact/56b5890d…](https://claude.ai/code/artifact/56b5890d-b6dc-4804-aff7-f5a4c8b28fb0) |
-| **Interactive results dashboard** — 7 backtests, charts, trade tables | [claude.ai/code/artifact/bcb1dfc4…](https://claude.ai/code/artifact/bcb1dfc4-9f09-4f31-8555-64e37a62a267) |
-| **Roadmap** — 12 phases, status, why V2 is on hold | [claude.ai/code/artifact/fe73f832…](https://claude.ai/code/artifact/fe73f832-58dc-454e-85df-e9fe0e09fc71) |
+| **Project site** — start here | [pranav240.github.io/paper-trading-agent](https://pranav240.github.io/paper-trading-agent/) |
+| **Technical report** | [pranav240.github.io/…/report.html](https://pranav240.github.io/paper-trading-agent/dashboard/report.html) |
+| **Interactive results dashboard** — 7 backtests, charts, trade tables | [pranav240.github.io/…/backtest_dashboard.html](https://pranav240.github.io/paper-trading-agent/dashboard/backtest_dashboard.html) |
+| **Roadmap** — 12 phases, status, why V2 is on hold | [pranav240.github.io/…/roadmap.html](https://pranav240.github.io/paper-trading-agent/dashboard/roadmap.html) |
 
 ### Code and data
 
@@ -42,11 +43,10 @@ The project's founding rule was that an honestly evaluated failure is the correc
 
 | Document | Purpose |
 |---|---|
-| [`README.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/README.md) | Design decisions log, phase-by-phase writeup |
-| [`docs/phase04-handoff.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/docs/phase04-handoff.md) | Complete fine-tuning record, both framings |
+| [`README.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/README.md) | Start here — result, architecture, how to run |
+| [`docs/engineering-log.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/docs/engineering-log.md) | Design decisions log, phase-by-phase writeup |
 | [`docs/backtesting-plan.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/docs/backtesting-plan.md) | Backtest requirements, written before the code |
 | [`infra/README.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/infra/README.md) | Deployment, cost breakdown, deliberate omissions |
-| `docs/*.docx` | Same content as Word documents, if you prefer |
 
 ---
 
@@ -349,7 +349,7 @@ python scripts/tfidf_baseline.py       # always run this first
 python scripts/replay_risk_rules.py 6
 ```
 
-Then [`phase04_v2_return_regression.ipynb`](https://github.com/Pranav240/paper-trading-agent/blob/master/phase04_v2_return_regression.ipynb) on Kaggle with a GPU.
+Then [`phase04_v2_return_regression.ipynb`](https://github.com/Pranav240/paper-trading-agent/blob/master/notebooks/phase04_v2_return_regression.ipynb) on Kaggle with a GPU.
 
 ---
 
