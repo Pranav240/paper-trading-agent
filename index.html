@@ -159,6 +159,7 @@
     white-space:nowrap; color:var(--ink);
   }
   td.l{ font-family:"IBM Plex Sans"; white-space:normal; }
+  .pct{ display:block; font-size:11px; color:var(--muted); margin-top:2px; }
   tbody tr:hover td{ background:var(--sunken); }
   .fig{ font-size:12.5px; color:var(--muted); margin-top:12px; max-width:70ch; }
 
@@ -269,19 +270,60 @@
     <h2 class="sec">The seven runs</h2>
     <div class="scroll">
       <table>
-        <thead><tr><th>Run</th><th>Configuration</th><th>Closed</th><th>Result</th><th>Buy &amp; hold</th><th>Difference</th></tr></thead>
+        <thead><tr><th>Run</th><th>Configuration</th><th>Closed</th><th>Result</th><th>Buy &amp; hold</th><th>Gap</th></tr></thead>
         <tbody>
-          <tr><td>#3</td><td class="l">categorical sentiment, pilot quarter</td><td>4</td><td>+6.21</td><td class="neg">&minus;15.40</td><td class="pos">+21.61</td></tr>
-          <tr><td>#4</td><td class="l">categorical sentiment, in-sample</td><td>32</td><td>+864.62</td><td>+903.80</td><td class="neg">&minus;39.18</td></tr>
-          <tr><td>#6</td><td class="l">categorical sentiment, out-of-sample</td><td>2</td><td class="neg">&minus;63.10</td><td>+2.20</td><td class="neg">&minus;65.30</td></tr>
-          <tr><td>#7</td><td class="l">sentiment ablated</td><td>33</td><td>+929.84</td><td>+970.60</td><td class="neg">&minus;40.76</td></tr>
-          <tr><td>#8</td><td class="l">sentiment ablated</td><td>33</td><td>+896.15</td><td>+970.60</td><td class="neg">&minus;74.45</td></tr>
-          <tr><td>#9</td><td class="l">categorical sentiment, replicate of #4</td><td>31</td><td>+840.45</td><td>+970.60</td><td class="neg">&minus;130.15</td></tr>
-          <tr><td>#14</td><td class="l">continuous score node</td><td>62</td><td>+745.86</td><td>+970.60</td><td class="neg">&minus;224.74</td></tr>
+          <tr><td>#3</td><td class="l">categorical sentiment, pilot quarter</td><td>4</td><td>+6.21<span class="pct">+0.22%</span></td><td class="neg">&minus;15.40<span class="pct">&minus;0.55%</span></td><td class="pos">+0.78%</td></tr>
+          <tr><td>#4</td><td class="l">categorical sentiment, in-sample</td><td>32</td><td>+864.62<span class="pct">+29.07%</span></td><td>+903.80<span class="pct">+30.38%</span></td><td class="neg">&minus;1.32%</td></tr>
+          <tr><td>#6</td><td class="l">categorical sentiment, out-of-sample</td><td>2</td><td class="neg">&minus;63.10<span class="pct">&minus;1.64%</span></td><td>+2.20<span class="pct">+0.06%</span></td><td class="neg">&minus;1.70%</td></tr>
+          <tr><td>#7</td><td class="l">sentiment ablated</td><td>33</td><td>+929.84<span class="pct">+31.98%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;1.40%</td></tr>
+          <tr><td>#8</td><td class="l">sentiment ablated</td><td>33</td><td>+896.15<span class="pct">+30.82%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;2.56%</td></tr>
+          <tr><td>#9</td><td class="l">categorical sentiment, replicate of #4</td><td>31</td><td>+840.45<span class="pct">+28.90%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;4.48%</td></tr>
+          <tr><td>#14</td><td class="l">continuous score node</td><td>62</td><td>+745.86<span class="pct">+25.65%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;7.73%</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="fig">AAPL, mark-to-market, each measured against buy-and-hold over its own window. The single positive row is a four-trade quarter that beat the baseline mainly because AAPL fell &mdash; buy-and-hold lost money and a largely idle system did not. That is not evidence of skill.</p>
+    <p class="fig">AAPL, mark-to-market, each measured against buy-and-hold over its own window. Percentages are against the capital the position cap implies &mdash; see below. The single positive row is a four-trade quarter that beat the baseline mainly because AAPL fell: buy-and-hold lost money and a largely idle system did not. That is not evidence of skill.</p>
+    <p class="fig"><strong>The percentages are the more honest read.</strong> In dollars, run #4 looks like &ldquo;+864 against +903&rdquo;. In percent it is <strong>29.1% earned in a market that rose 33.4%</strong> &mdash; a strategy tracking a bull run and lagging it, rather than one generating returns of its own.</p>
+  </section>
+
+  <section>
+    <h2 class="sec">The money, precisely</h2>
+
+    <h3>There was no starting balance</h3>
+    <p>This is worth stating plainly, because every table above reports dollars and it would be reasonable to assume a portfolio behind them. There isn&rsquo;t one. V1 has no capital-allocation model at all &mdash; deliberately, because the goal was to test whether the <em>decision logic</em> had an edge, not to also design position sizing.</p>
+    <p>What exists instead is a hard cap: <strong>20 shares per symbol</strong>, enforced by the risk layer, with each trade sized at up to 10 shares. So the figures are absolute profit and loss on a position that could never exceed 20 shares of one stock.</p>
+    <p>The percentages above are computed against <strong>the capital you would need to run it</strong> &mdash; 20 shares at the window&rsquo;s opening price. That is the honest denominator: it is what has to be available for the strategy to be executable at all.</p>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Window</th><th>Opening price</th><th>Capital required</th></tr></thead>
+        <tbody>
+          <tr><td class="l">Jul&ndash;Sep 2022 (pilot)</td><td>$138.85</td><td>$2,777</td></tr>
+          <tr><td class="l">Jun 2022&ndash;Jun 2023 (in-sample)</td><td>$148.73</td><td>$2,975</td></tr>
+          <tr><td class="l">Jun 2022&ndash;Jun 2023 (281-day runs)</td><td>$145.39</td><td>$2,908</td></tr>
+          <tr><td class="l">Jul&ndash;Dec 2023 (out-of-sample)</td><td>$192.50</td><td>$3,850</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fig">Roughly $2,800 to $3,900 of committed capital, depending on the window. Never at risk &mdash; the trades are simulated against historical prices in a database.</p>
+
+    <h3>What the project itself cost to run</h3>
+    <p>Separate question, and a much smaller number. The only real spend was language-model calls: two per symbol per simulated trading day, across seven backtests plus the diagnostic probes.</p>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Item</th><th>Spent</th></tr></thead>
+        <tbody>
+          <tr><td class="l">OpenAI &mdash; 7 backtests and all probes</td><td>~$4.91</td></tr>
+          <tr><td class="l">AWS &mdash; applied, verified, destroyed same day</td><td>~$0.02</td></tr>
+          <tr><td class="l">Kaggle GPU &mdash; fine-tuning, both rounds</td><td>free</td></tr>
+          <tr><td class="l">Alpaca market data &mdash; free tier</td><td>free</td></tr>
+          <tr><td class="l">Dataset, baseline, replay, every diagnostic</td><td class="pos">$0.00</td></tr>
+          <tr><td class="l"><strong>Total</strong></td><td><strong>under $5</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fig">Starting budget was $4.95, and $0.04 remained at the end &mdash; so the entire evaluation, including the work that established it does not work, cost less than a coffee. The offline replay tooling exists precisely because it made a whole class of question answerable for nothing.</p>
   </section>
 
   <section>
