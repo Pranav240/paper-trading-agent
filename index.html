@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Idiqlat&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
   /* Single-theme by intent: this page commits to one visual world rather
      than adapting to the viewer's light/dark setting. Every colour is
@@ -30,6 +30,18 @@
 
     --pos:       #22C55E;   /* profit                          */
     --neg:       #EF4444;   /* loss                            */
+  }
+
+  /* Idiqlat is a Syriac typeface with a Latin companion, and Google Fonts
+     ships it at a single weight (400) with no bold. It is therefore used
+     only at display sizes, where one weight reads as deliberate rather
+     than thin, and never for body copy — <strong> there would fall back to
+     the browser's synthesised fake-bold, which looks like a mistake.
+     Numbers stay monospace throughout: tabular figures are what keep
+     columns of results aligned on the decimal. */
+  .display, h1, .card h4, .about h3{
+    font-family:"Idiqlat","IBM Plex Mono",ui-monospace,Georgia,serif;
+    font-weight:400;
   }
 
   *{ box-sizing:border-box; }
@@ -53,17 +65,10 @@
     text-transform:uppercase; color:var(--muted); margin-bottom:22px;
   }
   h1{
-    font-family:"IBM Plex Mono"; font-weight:600;
-    font-size:clamp(34px,7vw,68px); line-height:1.03;
-    letter-spacing:-0.03em; margin:0 0 18px;
+    font-size:clamp(38px,7.5vw,74px); line-height:1.06;
+    letter-spacing:-0.005em; margin:0 0 18px;
     color:var(--ink-bold); text-wrap:balance;
   }
-  h1 .cursor{
-    color:var(--ink); font-weight:400;
-    animation:blink 1.15s step-end infinite;
-  }
-  @keyframes blink{ 50%{ opacity:0; } }
-  @media (prefers-reduced-motion:reduce){ h1 .cursor{ animation:none; } }
   .tagline{
     font-size:clamp(16px,2.2vw,20px); line-height:1.5;
     color:var(--ink); max-width:60ch; margin:0 0 26px;
@@ -133,8 +138,7 @@
     text-transform:uppercase; color:var(--muted); display:block; margin-bottom:10px;
   }
   a.card h4{
-    font-family:"IBM Plex Mono"; font-size:18px; font-weight:600;
-    color:var(--ink-bold); margin:0 0 8px;
+    font-size:21px; color:var(--ink-bold); margin:0 0 8px; letter-spacing:.005em;
   }
   a.card p{ margin:0; font-size:13.5px; line-height:1.5; }
   a.card .go{ display:inline-block; margin-top:13px; font-family:"IBM Plex Mono"; font-size:12.5px; color:var(--ink); }
@@ -179,7 +183,7 @@
     background:var(--surface); border:1px solid var(--rule);
     border-radius:2px; padding:26px 28px;
   }
-  .about h3{ margin-top:0; font-size:20px; }
+  .about h3{ margin-top:0; font-size:26px; letter-spacing:.005em; }
   .about .role{
     font-family:"IBM Plex Mono"; font-size:12px; letter-spacing:.1em;
     text-transform:uppercase; color:var(--muted); margin-bottom:16px;
@@ -204,7 +208,7 @@
 
   <header class="top">
     <div class="eyebrow">Multi-agent decision system &middot; paper trading only</div>
-    <h1>Paper Trading Agent<span class="cursor">_</span></h1>
+    <h1>Paper Trading Agent</h1>
     <p class="tagline">Built properly, measured honestly, and found to have no edge. This site is the record of that result and of the machinery built to establish it.</p>
     <div class="meta">
       <span>7 real-LLM backtests</span>
