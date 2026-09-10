@@ -3,186 +3,230 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Paper Trading Agent — no edge found</title>
-<meta name="description" content="A multi-agent trading decision system, built in six phases and evaluated honestly. Seven backtests, a negative result, and the machinery built to establish it.">
-<meta property="og:title" content="Paper Trading Agent — no edge found">
-<meta property="og:description" content="Seven backtests against real market data. Every run longer than a quarter underperformed buy-and-hold. This is the report of that result.">
+<title>Paper Trading Agent</title>
+<meta name="description" content="A multi-agent trading decision system, built across six phases and evaluated honestly. Seven backtests, a negative result, and the machinery built to establish it.">
+<meta property="og:title" content="Paper Trading Agent">
+<meta property="og:description" content="Built properly, measured honestly, and found to have no edge. Seven backtests against real market data.">
 <meta property="og:type" content="website">
+<meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
+  /* Single-theme by intent: this page commits to one visual world rather
+     than adapting to the viewer's light/dark setting. Every colour is
+     therefore stated explicitly, and nothing is inherited from the host. */
   :root{
-    color-scheme: light;
-    --ground:#F4F6F8; --surface:#FFFFFF; --sunken:#EBEEF2;
-    --ink:#131A21; --ink-2:#414E5B; --muted:#6B7784;
-    --rule:#DCE1E7; --hair:#EDF0F3;
-    --accent:#24446E; --neg:#A3372C; --pos:#1E6B4B;
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      color-scheme: dark;
-      --ground:#0C1116; --surface:#141B22; --sunken:#1B242D;
-      --ink:#E6EBF0; --ink-2:#B4C0CC; --muted:#8794A1;
-      --rule:#26313B; --hair:#1D2731;
-      --accent:#7BA7DA; --neg:#E5877A; --pos:#56B98F;
-    }
-  }
-  :root[data-theme="dark"]{
     color-scheme: dark;
-    --ground:#0C1116; --surface:#141B22; --sunken:#1B242D;
-    --ink:#E6EBF0; --ink-2:#B4C0CC; --muted:#8794A1;
-    --rule:#26313B; --hair:#1D2731;
-    --accent:#7BA7DA; --neg:#E5877A; --pos:#56B98F;
+    --bg:        #000000;
+    --surface:   #070C0D;
+    --sunken:    #040809;
+    --rule:      #10353A;
+    --hair:      #0B2226;
+
+    --ink:       #00EAF5;   /* body text                       */
+    --ink-bold:  #00AEBB;   /* headings and bold — deeper tone */
+    --muted:     #4A757B;   /* captions, labels                */
+
+    --pos:       #22C55E;   /* profit                          */
+    --neg:       #EF4444;   /* loss                            */
   }
 
   *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
   body{
-    margin:0; background:var(--ground); color:var(--ink);
-    font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-    font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    font-size:16px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
   }
-  a{ color:var(--accent); }
+  a{ color:var(--ink); text-underline-offset:3px; }
+  a:hover{ color:#7DF6FC; }
   .mono{ font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums; }
-  .wrap{ max-width:980px; margin:0 auto; padding:0 26px 80px; }
+  strong,b{ color:var(--ink-bold); font-weight:600; }
+  .wrap{ max-width:1000px; margin:0 auto; padding:0 26px 90px; }
 
-  /* ---------- hero ---------- */
-  header.hero{ padding:76px 0 34px; }
-  .kicker{
-    font-family:"IBM Plex Mono"; font-size:11.5px; letter-spacing:.15em;
-    text-transform:uppercase; color:var(--muted); margin-bottom:20px;
+  /* ---------------- header ---------------- */
+  header.top{ padding:80px 0 30px; border-bottom:1px solid var(--rule); }
+  .eyebrow{
+    font-family:"IBM Plex Mono"; font-size:11.5px; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:22px;
   }
   h1{
-    font-family:"IBM Plex Serif"; font-weight:600;
-    font-size:clamp(36px,6.5vw,64px); line-height:1.02;
-    letter-spacing:-0.022em; margin:0 0 20px; text-wrap:balance;
+    font-family:"IBM Plex Mono"; font-weight:600;
+    font-size:clamp(34px,7vw,68px); line-height:1.03;
+    letter-spacing:-0.03em; margin:0 0 18px;
+    color:var(--ink-bold); text-wrap:balance;
   }
-  h1 .quiet{ color:var(--muted); }
-  .lede{
-    font-family:"IBM Plex Serif"; font-size:clamp(17px,2.3vw,21px);
-    line-height:1.5; color:var(--ink-2); max-width:58ch; margin:0 0 28px;
+  h1 .cursor{
+    color:var(--ink); font-weight:400;
+    animation:blink 1.15s step-end infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+  @media (prefers-reduced-motion:reduce){ h1 .cursor{ animation:none; } }
+  .tagline{
+    font-size:clamp(16px,2.2vw,20px); line-height:1.5;
+    color:var(--ink); max-width:60ch; margin:0 0 26px;
   }
   .meta{
-    display:flex; flex-wrap:wrap; gap:8px 22px;
+    display:flex; flex-wrap:wrap; gap:8px 26px;
     font-family:"IBM Plex Mono"; font-size:12px; color:var(--muted);
-    padding-bottom:30px; border-bottom:2px solid var(--ink);
   }
 
-  /* ---------- finding ---------- */
+  /* ---------------- sections ---------------- */
+  section{ margin:52px 0; }
+  h2.sec{
+    font-family:"IBM Plex Mono"; font-size:13px; font-weight:600;
+    letter-spacing:.16em; text-transform:uppercase;
+    color:var(--muted); margin:0 0 18px;
+    padding-bottom:10px; border-bottom:1px solid var(--rule);
+  }
+  h3{
+    font-family:"IBM Plex Mono"; font-size:17px; font-weight:600;
+    color:var(--ink-bold); margin:26px 0 8px;
+  }
+  p{ max-width:70ch; margin:0 0 15px; }
+  .lead{ font-size:17.5px; }
+
+  /* ---------------- finding ---------------- */
   .finding{
     background:var(--surface); border:1px solid var(--rule);
-    border-left:4px solid var(--neg); border-radius:3px;
-    padding:22px 24px; margin:34px 0 40px;
+    border-left:3px solid var(--neg); border-radius:2px;
+    padding:22px 24px; margin:0 0 40px;
   }
-  .finding h2{
-    font-family:"IBM Plex Serif"; font-size:18px; font-weight:600;
-    color:var(--neg); margin:0 0 9px;
+  .finding .label{
+    font-family:"IBM Plex Mono"; font-size:11px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--neg); margin-bottom:10px;
   }
-  .finding p{ margin:0 0 10px; max-width:66ch; }
-  .finding p:last-child{ margin:0; }
+  .finding p:last-child{ margin-bottom:0; }
 
-  /* ---------- numbers ---------- */
+  /* ---------------- stats ---------------- */
   .stats{
-    display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(148px,1fr));
     gap:1px; background:var(--rule); border:1px solid var(--rule);
-    border-radius:3px; overflow:hidden; margin:0 0 46px;
+    border-radius:2px; overflow:hidden;
   }
   .stat{ background:var(--surface); padding:15px 17px; }
   .stat .k{
-    font-size:10.5px; letter-spacing:.07em; text-transform:uppercase;
-    color:var(--muted); font-family:"IBM Plex Mono"; margin-bottom:6px;
+    font-family:"IBM Plex Mono"; font-size:10px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:7px;
   }
   .stat .v{
-    font-family:"IBM Plex Mono"; font-size:23px; font-weight:600;
-    font-variant-numeric:tabular-nums; line-height:1.1;
+    font-family:"IBM Plex Mono"; font-size:24px; font-weight:600;
+    font-variant-numeric:tabular-nums; line-height:1.05; color:var(--ink);
   }
-  .stat .s{ font-size:12px; color:var(--muted); margin-top:4px; }
-  .neg{ color:var(--neg); } .pos{ color:var(--pos); }
+  .stat .s{ font-size:11.5px; color:var(--muted); margin-top:5px; }
+  .pos{ color:var(--pos); } .neg{ color:var(--neg); }
 
-  /* ---------- sections ---------- */
-  h2.sec{
-    font-family:"IBM Plex Serif"; font-size:24px; font-weight:600;
-    margin:0 0 4px; padding-top:16px; border-top:1px solid var(--rule);
-  }
-  .sub{
-    font-family:"IBM Plex Mono"; font-size:11.5px; letter-spacing:.09em;
-    text-transform:uppercase; color:var(--muted); margin:0 0 22px;
-  }
-  section{ margin-bottom:48px; }
-  p{ max-width:68ch; }
-
-  /* ---------- cards ---------- */
-  .cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; }
+  /* ---------------- cards ---------------- */
+  .cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(252px,1fr)); gap:14px; }
   a.card{
     display:block; text-decoration:none; color:inherit;
     background:var(--surface); border:1px solid var(--rule);
-    border-radius:4px; padding:20px 22px;
-    transition:border-color .15s, transform .15s;
+    border-radius:2px; padding:20px 22px;
+    transition:border-color .15s, background .15s;
   }
-  a.card:hover{ border-color:var(--accent); transform:translateY(-2px); }
-  a.card:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+  a.card:hover{ border-color:var(--ink); background:#08191B; }
+  a.card:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
   a.card .tag{
-    font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:.08em;
-    text-transform:uppercase; color:var(--muted); display:block; margin-bottom:9px;
+    font-family:"IBM Plex Mono"; font-size:10px; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--muted); display:block; margin-bottom:10px;
   }
-  a.card h3{ font-family:"IBM Plex Serif"; font-size:19px; font-weight:600; margin:0 0 7px; }
-  a.card p{ margin:0; font-size:14px; color:var(--ink-2); line-height:1.5; }
-  a.card .go{ display:inline-block; margin-top:12px; font-size:13px; font-weight:600; color:var(--accent); }
+  a.card h4{
+    font-family:"IBM Plex Mono"; font-size:18px; font-weight:600;
+    color:var(--ink-bold); margin:0 0 8px;
+  }
+  a.card p{ margin:0; font-size:13.5px; line-height:1.5; }
+  a.card .go{ display:inline-block; margin-top:13px; font-family:"IBM Plex Mono"; font-size:12.5px; color:var(--ink); }
 
-  /* ---------- table ---------- */
+  /* ---------------- table ---------------- */
   .scroll{ overflow-x:auto; }
-  table{ border-collapse:collapse; width:100%; min-width:520px; font-size:14px; }
+  table{ border-collapse:collapse; width:100%; min-width:540px; font-size:14px; }
   th{
-    text-align:right; font-size:11.5px; font-weight:600; color:var(--muted);
-    padding:0 11px 8px; border-bottom:1px solid var(--ink); white-space:nowrap;
+    text-align:right; font-family:"IBM Plex Mono"; font-size:11px;
+    font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--muted); padding:0 11px 9px;
+    border-bottom:1px solid var(--ink-bold); white-space:nowrap;
   }
   th:first-child, td:first-child{ text-align:left; }
   td{
-    text-align:right; padding:8px 11px; border-bottom:1px solid var(--hair);
-    font-family:"IBM Plex Mono"; font-variant-numeric:tabular-nums; white-space:nowrap;
+    text-align:right; padding:9px 11px; border-bottom:1px solid var(--hair);
+    font-family:"IBM Plex Mono"; font-variant-numeric:tabular-nums;
+    white-space:nowrap; color:var(--ink);
   }
   td.l{ font-family:"IBM Plex Sans"; white-space:normal; }
-  .fig{ font-size:12.5px; color:var(--muted); margin-top:10px; max-width:68ch; }
+  tbody tr:hover td{ background:var(--sunken); }
+  .fig{ font-size:12.5px; color:var(--muted); margin-top:12px; max-width:70ch; }
 
-  /* ---------- link list ---------- */
-  ul.links{ list-style:none; margin:0; padding:0; display:grid; gap:1px;
-            background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; }
+  /* ---------------- link list ---------------- */
+  ul.links{
+    list-style:none; margin:0; padding:0; display:grid; gap:1px;
+    background:var(--rule); border:1px solid var(--rule);
+    border-radius:2px; overflow:hidden;
+  }
   ul.links li{ background:var(--surface); }
   ul.links a{
     display:flex; flex-wrap:wrap; gap:4px 14px; align-items:baseline;
-    padding:13px 17px; text-decoration:none; color:inherit;
+    padding:13px 17px; text-decoration:none;
   }
-  ul.links a:hover{ background:var(--sunken); }
-  ul.links .n{ font-weight:600; font-size:14.5px; }
+  ul.links a:hover{ background:#08191B; }
+  ul.links .n{ font-family:"IBM Plex Mono"; font-weight:600; font-size:14px; color:var(--ink-bold); }
   ul.links .d{ font-size:13px; color:var(--muted); }
-  ul.links .u{ margin-left:auto; font-family:"IBM Plex Mono"; font-size:12px; color:var(--accent); }
+  ul.links .u{ margin-left:auto; font-family:"IBM Plex Mono"; font-size:11.5px; color:var(--ink); }
+
+  /* ---------------- about ---------------- */
+  .about{
+    background:var(--surface); border:1px solid var(--rule);
+    border-radius:2px; padding:26px 28px;
+  }
+  .about h3{ margin-top:0; font-size:20px; }
+  .about .role{
+    font-family:"IBM Plex Mono"; font-size:12px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:16px;
+  }
+  .contact{ display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+  .contact a{
+    font-family:"IBM Plex Mono"; font-size:13px; text-decoration:none;
+    color:var(--ink); border:1px solid var(--rule); border-radius:2px;
+    padding:8px 14px; transition:border-color .15s, background .15s;
+  }
+  .contact a:hover{ border-color:var(--ink); background:#08191B; }
 
   footer{
-    margin-top:16px; padding-top:22px; border-top:2px solid var(--ink);
-    font-size:13.5px; color:var(--muted);
+    margin-top:54px; padding-top:22px; border-top:1px solid var(--rule);
+    font-size:13px; color:var(--muted);
   }
-  footer p{ max-width:70ch; }
+  footer p{ max-width:72ch; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header class="hero">
-    <div class="kicker">Multi-agent trading system &middot; six phases &middot; paper trading only</div>
-    <h1>It runs, it reasons, it deploys.<br><span class="quiet">It has no edge.</span></h1>
-    <p class="lede">A daily paper-trading decision agent built to close six engineering gaps at once &mdash; and then evaluated honestly enough to find out it does not work.</p>
+  <header class="top">
+    <div class="eyebrow">Multi-agent decision system &middot; paper trading only</div>
+    <h1>Paper Trading Agent<span class="cursor">_</span></h1>
+    <p class="tagline">Built properly, measured honestly, and found to have no edge. This site is the record of that result and of the machinery built to establish it.</p>
     <div class="meta">
       <span>7 real-LLM backtests</span>
       <span>41,701-example fine-tuning dataset</span>
       <span>Deployed to AWS, then destroyed</span>
       <span>Never touched real capital</span>
+      <span>V2 in planning &mdash; Indian markets</span>
     </div>
   </header>
 
+  <section>
+    <h2 class="sec">What is it</h2>
+    <p class="lead">A daily trading decision-support agent. It reads a stock&rsquo;s recent price history and news headlines, has four specialist components argue about them, and produces one paper trade &mdash; every decision, every opinion and every simulated fill recorded and auditable.</p>
+    <p>It was built to close six engineering gaps at once: a backend API, a real relational database, agentic orchestration, LLM fine-tuning, containerisation with CI/CD, and cloud deployment. Building one system rather than six tutorials forces the parts to interoperate and produces decisions that only arise when components have to live together.</p>
+    <p>The second half of the project was spent trying to establish whether it actually works. It does not, and that turned out to be the more interesting outcome &mdash; five separate attempts to improve it produced five measured negative results, each of which says something specific about why.</p>
+    <p><strong>Nothing here ever touched real money.</strong> Trades are simulated against historical prices with slippage modelled; the account is fictional by design.</p>
+  </section>
+
   <div class="finding">
-    <h2>The finding</h2>
-    <p>Every backtest longer than a single quarter underperformed buy-and-hold, by $39 to $225 on a 20-share basis. The out-of-sample run &mdash; executed once, with nothing changed after seeing the in-sample result &mdash; lost $63 in a market that was essentially flat.</p>
-    <p>The project&rsquo;s founding rule was that an honestly evaluated failure is the correct thing to report. So it is reported, and the machinery built to establish it is the actual deliverable.</p>
+    <div class="label">The finding</div>
+    <p>Every backtest longer than a single quarter underperformed buy-and-hold, by <strong>$39 to $225</strong> on a 20-share basis. The out-of-sample run &mdash; executed once, with nothing changed after seeing the in-sample result &mdash; lost <strong>$63</strong> in a market that was essentially flat.</p>
+    <p>The project&rsquo;s founding rule was that an honestly evaluated failure is the correct thing to report. So it is reported, and the evaluation discipline that caught it is the actual deliverable.</p>
   </div>
 
   <div class="stats">
@@ -195,24 +239,23 @@
 
   <section>
     <h2 class="sec">Read it</h2>
-    <p class="sub">Three views of the same work</p>
     <div class="cards">
       <a class="card" href="dashboard/report.html">
         <span class="tag">Start here</span>
-        <h3>Technical report</h3>
-        <p>The full write-up: architecture, methodology, results, the fine-tuning failures, and seven defects with what each one hid.</p>
+        <h4>Technical report</h4>
+        <p>Architecture, methodology, results, the fine-tuning failures, and seven defects with what each one hid.</p>
         <span class="go">Read the report &rarr;</span>
       </a>
       <a class="card" href="dashboard/backtest_dashboard.html">
         <span class="tag">Interactive</span>
-        <h3>Results dashboard</h3>
-        <p>All seven runs with price-and-decision timelines, cumulative P&amp;L against buy-and-hold, per-agent opinion breakdowns and every trade.</p>
+        <h4>Results dashboard</h4>
+        <p>All seven runs with price-and-decision timelines, cumulative P&amp;L against buy-and-hold, and every trade.</p>
         <span class="go">Explore the data &rarr;</span>
       </a>
       <a class="card" href="dashboard/roadmap.html">
         <span class="tag">Plan vs. reality</span>
-        <h3>Roadmap</h3>
-        <p>Twelve phases, what shipped, and why the second half is on hold &mdash; the gate that said &ldquo;stop&rdquo; and was obeyed.</p>
+        <h4>Roadmap</h4>
+        <p>Twelve phases, what shipped, and why the second half is on hold &mdash; the gate that said stop, and was obeyed.</p>
         <span class="go">See the roadmap &rarr;</span>
       </a>
     </div>
@@ -220,14 +263,13 @@
 
   <section>
     <h2 class="sec">The seven runs</h2>
-    <p class="sub">AAPL &middot; mark-to-market &middot; each against buy-and-hold over its own window</p>
     <div class="scroll">
       <table>
         <thead><tr><th>Run</th><th>Configuration</th><th>Closed</th><th>Result</th><th>Buy &amp; hold</th><th>Difference</th></tr></thead>
         <tbody>
-          <tr><td>#3</td><td class="l">categorical sentiment, pilot quarter</td><td>4</td><td>+6.21</td><td>&minus;15.40</td><td class="pos">+21.61</td></tr>
+          <tr><td>#3</td><td class="l">categorical sentiment, pilot quarter</td><td>4</td><td>+6.21</td><td class="neg">&minus;15.40</td><td class="pos">+21.61</td></tr>
           <tr><td>#4</td><td class="l">categorical sentiment, in-sample</td><td>32</td><td>+864.62</td><td>+903.80</td><td class="neg">&minus;39.18</td></tr>
-          <tr><td>#6</td><td class="l">categorical sentiment, out-of-sample</td><td>2</td><td>&minus;63.10</td><td>+2.20</td><td class="neg">&minus;65.30</td></tr>
+          <tr><td>#6</td><td class="l">categorical sentiment, out-of-sample</td><td>2</td><td class="neg">&minus;63.10</td><td>+2.20</td><td class="neg">&minus;65.30</td></tr>
           <tr><td>#7</td><td class="l">sentiment ablated</td><td>33</td><td>+929.84</td><td>+970.60</td><td class="neg">&minus;40.76</td></tr>
           <tr><td>#8</td><td class="l">sentiment ablated</td><td>33</td><td>+896.15</td><td>+970.60</td><td class="neg">&minus;74.45</td></tr>
           <tr><td>#9</td><td class="l">categorical sentiment, replicate of #4</td><td>31</td><td>+840.45</td><td>+970.60</td><td class="neg">&minus;130.15</td></tr>
@@ -235,27 +277,61 @@
         </tbody>
       </table>
     </div>
-    <p class="fig">The single positive row is a four-trade quarter that beat the baseline mainly because AAPL fell over that window &mdash; buy-and-hold lost money and a largely idle system did not. That is not evidence of skill.</p>
+    <p class="fig">AAPL, mark-to-market, each measured against buy-and-hold over its own window. The single positive row is a four-trade quarter that beat the baseline mainly because AAPL fell &mdash; buy-and-hold lost money and a largely idle system did not. That is not evidence of skill.</p>
   </section>
 
   <section>
-    <h2 class="sec">What it is</h2>
-    <p class="sub">Four nodes, split by whether judgment is required</p>
-    <p>A <strong>Technical Analyst</strong> computes RSI-14 and SMA-20 in plain Python &mdash; arithmetic is not worth a language model. A <strong>Sentiment Analyst</strong> reads headlines through GPT-4o-mini. A <strong>Portfolio Manager</strong> on GPT-4o synthesises both into a proposal. A rule-based <strong>Risk Manager</strong> holds final authority and can veto or scale any trade.</p>
-    <p>That last split &mdash; propose versus gate &mdash; turned out to be the most valuable structural decision in the project. Because the risk layer is code and every input it consumed is stored, alternative risk rules could later be replayed against recorded decisions for free.</p>
+    <h2 class="sec">How it works</h2>
+    <p>Four nodes, split by whether judgment is actually required. A <strong>Technical Analyst</strong> computes RSI-14 and SMA-20 in plain Python &mdash; arithmetic is not worth a language model. A <strong>Sentiment Analyst</strong> reads headlines through GPT-4o-mini. A <strong>Portfolio Manager</strong> on GPT-4o synthesises both into a proposal. A rule-based <strong>Risk Manager</strong> holds final authority and can veto or scale any trade.</p>
+    <p>That last split &mdash; propose versus gate &mdash; was the most valuable structural decision in the project. Because the risk layer is code and every input it consumed is stored, alternative risk rules could later be replayed against recorded decisions for free, without a single new API call.</p>
+  </section>
+
+  <section>
+    <h2 class="sec">What&rsquo;s next &mdash; V2</h2>
+    <div class="finding" style="border-left-color:var(--ink-bold);">
+      <div class="label" style="color:var(--ink-bold);">In planning</div>
+      <p><strong>V2 moves to Indian markets &mdash; NSE and BSE.</strong> Not as a continuation of a strategy already measured as having no edge, but because it asks a different question: does the same pipeline behave differently on a different market, with different liquidity, different news flow and a different retail-participation profile?</p>
+      <p>The architecture is ready for it. Market data and news arrive through swappable protocols rather than hard-coded clients, so an Indian data source is a new implementation of an existing interface, not a rewrite.</p>
+    </div>
+
+    <h3>What has already been checked</h3>
+    <p>Zerodha, Upstox, Angel One and Fyers all publish free order-execution APIs. None offers a paper-trading sandbox &mdash; which turns out not to matter, because this system simulates fills in its own database rather than routing them through a broker&rsquo;s paper account.</p>
+    <p><strong>The real blockers are data, not execution.</strong> There is no free equivalent to the US news API this project uses, and no Indian counterpart to the historical headline corpus that made backtesting possible. Both the sentiment component and the backtest plan need new sourcing before anything can be measured.</p>
+
+    <h3>The order it has to happen in</h3>
+    <ul style="max-width:70ch; padding-left:20px;">
+      <li>Source Indian historical headlines, then check coverage <em>month by month</em> &mdash; year-level totals once hid a five-month gap that made an entire backtest uninformative.</li>
+      <li>Source daily bars for an NSE universe over the same window.</li>
+      <li>Re-run the honest backtest before building anything on top of it. The V1 gate exists precisely so that a non-edge is not scaled up.</li>
+    </ul>
+    <p class="fig">The continuous-intraday work originally planned as V2 stays on hold. Running a strategy faster does not create an edge it does not have &mdash; and that gate was written before the data existed to test it, which is the only reason it was believed when it fired.</p>
   </section>
 
   <section>
     <h2 class="sec">Everything else</h2>
-    <p class="sub">Code, data, pipelines</p>
     <ul class="links">
-      <li><a href="https://github.com/Pranav240/paper-trading-agent"><span class="n">Repository</span><span class="d">FastAPI, LangGraph, Postgres, Docker, Terraform</span><span class="u">github.com &rarr;</span></a></li>
+      <li><a href="https://github.com/Pranav240/paper-trading-agent"><span class="n">Repository</span><span class="d">FastAPI, LangGraph, Postgres, Docker, Terraform</span><span class="u">github &rarr;</span></a></li>
       <li><a href="https://github.com/Pranav240/paper-trading-agent/blob/master/PROJECT.md"><span class="n">PROJECT.md</span><span class="d">The complete record in one file</span><span class="u">markdown &rarr;</span></a></li>
       <li><a href="https://github.com/Pranav240/paper-trading-agent/blob/master/docs/engineering-log.md"><span class="n">Engineering log</span><span class="d">Design decisions, and the failure behind each one</span><span class="u">markdown &rarr;</span></a></li>
-      <li><a href="https://www.kaggle.com/code/pranavthota/papertrade1"><span class="n">Fine-tuning notebook</span><span class="d">QLoRA regression on headline &rarr; forward return</span><span class="u">kaggle &rarr;</span></a></li>
+      <li><a href="https://www.kaggle.com/code/pranavthota/papertrade1"><span class="n">Fine-tuning notebook</span><span class="d">QLoRA regression, headline to forward return</span><span class="u">kaggle &rarr;</span></a></li>
       <li><a href="https://www.kaggle.com/datasets/pranavthota/pta-return-dataset"><span class="n">Training dataset</span><span class="d">41,701 examples, 104 symbols, leak-free splits</span><span class="u">kaggle &rarr;</span></a></li>
       <li><a href="https://github.com/Pranav240/paper-trading-agent/actions/workflows/ci.yml"><span class="n">CI pipeline</span><span class="d">Tests against a real database; fails if any test skips</span><span class="u">actions &rarr;</span></a></li>
     </ul>
+  </section>
+
+  <section>
+    <h2 class="sec">About</h2>
+    <div class="about">
+      <h3>Pranav Thota</h3>
+      <div class="role">Software engineer</div>
+      <p>I built this to close six gaps in my own skill set at once &mdash; backend APIs, real database work, agentic orchestration, LLM fine-tuning, CI/CD and cloud deployment &mdash; by making them all serve one working system instead of six disconnected exercises.</p>
+      <p>The part I am most pleased with is not the code. It is that the project set a rule at the start &mdash; back-test honestly, and report whatever comes back &mdash; and then held to it when the answer was negative. Two results in here looked like successes until they were checked against a trivial baseline. One statistical threshold turned out to sit below the resolving power of the test I had chosen for it. All of that is written down rather than smoothed over, because a system you can trust the negative results from is the only kind whose positive results mean anything.</p>
+      <div class="contact">
+        <a href="https://github.com/Pranav240">GitHub</a>
+        <a href="https://www.kaggle.com/pranavthota">Kaggle</a>
+        <a href="mailto:thotapranav24@gmail.com">Email</a>
+      </div>
+    </div>
   </section>
 
   <footer>
