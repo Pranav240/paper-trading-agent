@@ -344,6 +344,14 @@
     <p>Zerodha, Upstox, Angel One and Fyers all publish free order-execution APIs. None offers a paper-trading sandbox &mdash; which turns out not to matter, because this system simulates fills in its own database rather than routing them through a broker&rsquo;s paper account.</p>
     <p><strong>The real blockers are data, not execution.</strong> There is no free equivalent to the US news API this project uses, and no Indian counterpart to the historical headline corpus that made backtesting possible. Both the sentiment component and the backtest plan need new sourcing before anything can be measured.</p>
 
+    <h3>Carried over from V1</h3>
+    <p>Two measurements were left unrun, both deferred on cost rather than on doubt. Each would sharpen a conclusion already drawn; neither changes the headline, which is why neither blocked V1 from closing.</p>
+    <ul style="max-width:70ch; padding-left:20px;">
+      <li><strong>Separate the score node from the prompt change.</strong> The final sentiment run altered two things at once &mdash; the node and the Portfolio Manager prompt that reads it &mdash; so its heavy trading cannot be attributed to either. One ablation with the new prompt and a neutral score settles it. About $0.87.</li>
+      <li><strong>Test a second symbol.</strong> Every result here is AAPL. Whether &ldquo;no edge&rdquo; describes the strategy or one stock in one period is untested. The headline data for 108 candidate symbols is already prepared and sitting in the repository. About $0.87 per symbol.</li>
+    </ul>
+    <p class="fig">Both are documented in the repository with the exact commands, so they are picked up rather than re-derived &mdash; by me when there is budget, or by anyone who wants to run them first.</p>
+
     <h3>The order it has to happen in</h3>
     <ul style="max-width:70ch; padding-left:20px;">
       <li>Source Indian historical headlines, then check coverage <em>month by month</em> &mdash; year-level totals once hid a five-month gap that made an entire backtest uninformative.</li>
