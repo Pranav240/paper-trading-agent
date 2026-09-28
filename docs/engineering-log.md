@@ -765,3 +765,34 @@ longer sees the in-progress bar for today.
 and the dashboard) were produced with the leak. They have not been rerun.
 Whether the leak helped or hurt the strategy is not measured; the exact
 numbers, and the verdict drawn from them, are not valid until rerun.
+
+## Phase 07 step 2: `risk_math.py`, and how much Kupiec can actually tell us
+
+`app/agent/risk_math.py`: historical VaR/CVaR (95%, 1-day, 250 returns,
+k-th largest loss with k = ceil(n x 5%) = 13, no interpolation), normal
+VaR/CVaR for comparison, 60-day pairwise correlation on date-aligned
+returns, and the Kupiec POF test. Plain Python, no scipy. Checked against
+scipy locally (p-values within 5e-15; VaR/CVaR/correlation identical) and,
+in `tests/test_risk_math.py`, against Jorion's published 95% acceptance
+regions (T=255: 7-20, T=510: 17-35, T=1000: 38-64 breaches, all exact).
+
+**Power check, before using the test** (exact binomial, alpha = 5%):
+
+| Days | Accept (breaches) | Size | True rate 2.5% | 7.5% | 10% | 15% |
+|---|---|---|---|---|---|---|
+| 140 (~out-of-sample run) | 3-12 | 0.051 | 0.32 | 0.25 | 0.65 | 0.98 |
+| 250 | 7-19 | 0.059 | 0.57 | 0.42 | 0.88 | 1.00 |
+| 283 (run #4) | 8-21 | 0.055 | 0.59 | 0.46 | 0.92 | 1.00 |
+
+What this means for step 6:
+
+- Over run #4's 283 days, Kupiec reliably catches a model breaching 10%+
+  of days (twice the target). It **misses a 7.5% model more often than
+  not** (46% power). "Passed Kupiec" is weak evidence; a 50%-too-high
+  breach rate usually passes.
+- On the ~140-day out-of-sample window it is weaker still: 65% power even
+  against a 10% breach rate.
+- 99% would be worse: at 250 days the region is 1-6 breaches, size 9.5%,
+  and only 24% power against a true 2% rate. Hence 95%.
+- So a naive 2% VaR "beating" our VaR on Kupiec needs the breach counts
+  and p-values reported side by side, not just pass/fail.
