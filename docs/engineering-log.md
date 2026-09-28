@@ -874,3 +874,36 @@ The rerun (backtest 18) **stopped after 25 of ~272 days: the OpenAI
 account ran out of credits** (HTTP 429 `credit_balance_exhausted`).
 Backtest 18 is marked FAILED; its partial rows are not a result. Nothing
 from it is reported. Step 6b, and therefore phase 07, is not done.
+
+### Before the reruns: backtest fixes (`70b7b7f`), and a full dry run
+
+Done while OpenAI credits were at zero, so the paid reruns happen once:
+
+- **Real trading calendar.** Days come from Alpaca's market calendar. V1
+  ran every weekday, 11 holidays included in run #4's window (283 vs 272).
+- **Fills at the open.** A trade decided before the open on D now fills
+  at D's open + 5 bps, as `docs/backtesting-plan.md` specified. V1 filled
+  at D's own close (the leak); with only the leak fixed it would have
+  filled at D-1's close, a price gone by the open. The open is stored per
+  decision (`decisions.execution_price`, migration 007) so replays fill
+  identically; old runs fall back to `current_price` and still reproduce
+  (runs 4 and 6: drift $0.0004 / $0.0003).
+- **Run setup recorded.** `backtests.config` holds models, risk settings,
+  fill rule, calendar, git commit. A paid run refuses a dirty tree.
+- **Crash = FAILED.** Backtests 5 (V1) and 18 had been left RUNNING; both
+  now FAILED, and a crash now marks the run FAILED with tokens used so far.
+- **Token usage measured.** Per model in `backtests.llm_usage`, via a
+  LangChain callback passed into every graph call; a test drives it
+  through LangGraph end to end.
+
+**What this means for the V1 reruns:** they are V1 with three corrections
+(leak, holidays, fill at the open), not the leak alone. Differences from
+the published numbers can't be attributed to the leak alone.
+
+**Dry run** (backtest 25, fake LLMs, VaR node, run #4's window): SUCCESS
+in 210 s; 272 decisions, 0 on weekends or holidays, 272 opens, 272 VaR
+forecasts matching an independent recomputation (max 4.8e-7); opens
+spot-checked against raw Alpaca bars. Not exercised: real LLM calls
+(token counts will be checked on the first paid run) and trade fills on
+real prices (the fake Portfolio Manager always HOLDs; fills are covered by
+`tests/test_backtest_v2.py`).
