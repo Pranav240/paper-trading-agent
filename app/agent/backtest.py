@@ -51,6 +51,7 @@ from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 from app.agent.graph import CompiledStateGraph
+from app.agent.var_forecasts import record_var_forecast
 from app.models import Action
 
 # Applied against the decision-time price to approximate the cost of
@@ -330,6 +331,17 @@ async def run_backtest(
                                     psycopg.types.json.Json(op.raw_output),
                                 ),
                             )
+
+                    await record_var_forecast(
+                        conn,
+                        decision_id=decision_id,
+                        backtest_id=backtest_id,
+                        symbol=symbol,
+                        as_of=as_of,
+                        risk_raw_output=risk_opinion.raw_output,
+                        final_action=final_action,
+                        final_quantity=final_quantity,
+                    )
 
                     # Same fallback as runner.py: the Technical Analyst's
                     # raw_output is the only price source here (backtests

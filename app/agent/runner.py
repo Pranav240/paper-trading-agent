@@ -37,6 +37,7 @@ from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 from app.agent.graph import CompiledStateGraph
+from app.agent.var_forecasts import record_var_forecast
 from app.models import Action, Decision, RunResult, RunStatus
 
 
@@ -272,6 +273,17 @@ async def run_decision_cycle(
                                 psycopg.types.json.Json(op.raw_output),
                             ),
                         )
+
+                await record_var_forecast(
+                    conn,
+                    decision_id=decision.id,
+                    backtest_id=None,
+                    symbol=symbol,
+                    as_of=started_at,
+                    risk_raw_output=risk_opinion.raw_output,
+                    final_action=final_action,
+                    final_quantity=final_quantity,
+                )
 
                 price = await _latest_close(conn, symbol)
                 if price is None:
