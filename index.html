@@ -231,6 +231,9 @@
 
   <div class="finding">
     <div class="label">The finding</div>
+    <!-- RERUN-PENDING: remove this paragraph once the V1 backtests are rerun with the look-ahead fix (engineering-log, Phase 07 step 1). -->
+    <p><strong>Rerun pending.</strong> A V2 check found that these backtests could see each decision day&rsquo;s own closing price &mdash; a look-ahead leak, now fixed. Every figure on this page came from the leaky runs and will be replaced once they are rerun.</p>
+    <!-- /RERUN-PENDING -->
     <p>Every backtest longer than a single quarter underperformed buy-and-hold, by <strong>$39 to $225</strong> on a 20-share basis. The out-of-sample run &mdash; executed once, with nothing changed after seeing the in-sample result &mdash; lost <strong>$63</strong> in a market that was essentially flat.</p>
     <p>The project&rsquo;s founding rule was that an honestly evaluated failure is the correct thing to report. So it is reported, and the evaluation discipline that caught it is the actual deliverable.</p>
   </div>
