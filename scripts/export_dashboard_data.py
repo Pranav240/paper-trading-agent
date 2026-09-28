@@ -49,7 +49,8 @@ FROM backtests WHERE id = ANY(%s) ORDER BY id
 
 DAILY = """
 SELECT r.backtest_id, r.as_of::date AS as_of,
-       (d.technicals_snapshot->>'current_price')::numeric AS price,
+       COALESCE(d.execution_price,
+                (d.technicals_snapshot->>'current_price')::numeric) AS price,
        d.action, d.confidence
 FROM decisions d JOIN runs r ON d.run_id = r.id
 WHERE r.backtest_id = ANY(%s)

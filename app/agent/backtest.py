@@ -31,22 +31,28 @@ loudly, which could quietly narrow the effective in-sample window
 without anyone noticing. Worth a real check before trusting 2015-2016
 results specifically.
 
-Trading-day loop: this walks calendar days from window_start to
-window_end and skips Saturday/Sunday only. It does NOT know about market
-holidays (Thanksgiving, Christmas, etc.) — a real trading calendar
-(e.g. the `pandas_market_calendars` package) would be a fair follow-up,
-but for V1 the cost of running (and getting a HOLD/no-data result on) a
-handful of holiday dates is a wasted-cycle nit, not a correctness bug
-that would flip a "no edge" result into a false positive.
+Trading-day loop: by default this walks calendar days from window_start
+to window_end and skips Saturday/Sunday only, which is how every V1 run
+worked -- including 11 market holidays in run #4's window. Callers pass
+`trading_days` (scripts/run_backtest.py uses Alpaca's market calendar,
+data_sources.alpaca_trading_days) to run real sessions only.
+
+Fills (V2, phase 07): V1 filled every trade at the Technical Analyst's
+current_price, which turned out to be day D's own close (the look-ahead
+leak). With `execution_prices` given, a trade decided before the open on
+D fills at D's open, plus slippage, as docs/backtesting-plan.md
+specifies; that open is stored on the decision (decisions.execution_price)
+so offline replays fill at the same price. Without it, the V1 rule stands.
 """
 
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Callable
+from typing import Callable, Protocol
 
 import psycopg
+from langchain_core.callbacks import UsageMetadataCallbackHandler
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
@@ -54,13 +60,12 @@ from app.agent.graph import CompiledStateGraph
 from app.agent.var_forecasts import record_var_forecast
 from app.models import Action
 
-# Applied against the decision-time price to approximate the cost of
-# actually getting a fill, instead of assuming perfect, instant,
-# frictionless execution — docs/backtesting-plan.md's slippage section
-# explicitly allows this basis-point approach as an alternative to
-# fetching the next bar's open (which would need a second price-source
-# call per symbol per day for comparatively little extra realism at V1
-# scale). BUY fills worse (higher) than the quoted price, SELL fills
+# Applied against the fill price to approximate the cost of actually
+# getting a fill, instead of assuming perfect, instant, frictionless
+# execution. V1 used this basis-point cost INSTEAD of the next bar's open
+# (docs/backtesting-plan.md allows either); with `execution_prices` the
+# fill is now at the open AND this still applies on top, as a spread
+# cost. BUY fills worse (higher) than the quoted price, SELL fills
 # worse (lower). 5 bps (0.05%) is a small, deliberately conservative
 # default for a liquid large-cap like AAPL — a placeholder assumption,
 # not a researched constant, and worth sensitivity-checking once real
@@ -80,6 +85,21 @@ def _apply_slippage(price: Decimal, action: Action, bps: Decimal) -> Decimal:
     if action == Action.SELL:
         return price * (Decimal("1") - factor)
     return price
+
+
+class ExecutionPrices(Protocol):
+    async def open_on(self, symbol: str, day: date) -> Decimal | None: ...
+
+
+def usage_summary(handler: UsageMetadataCallbackHandler) -> dict:
+    """Tokens per model, as plain JSON-able ints."""
+    return {
+        model: {
+            key: usage.get(key, 0)
+            for key in ("input_tokens", "output_tokens", "total_tokens")
+        }
+        for model, usage in handler.usage_metadata.items()
+    }
 
 
 def _trading_days(window_start: date, window_end: date) -> list[date]:
@@ -187,6 +207,22 @@ async def _record_backtest_trade(
             remaining -= close_qty
 
 
+async def _mark_failed(
+    pool: AsyncConnectionPool, backtest_id: int, usage: UsageMetadataCallbackHandler
+) -> None:
+    """Fresh connection: the run's own one may be the thing that broke."""
+    async with pool.connection() as conn:
+        await conn.execute(
+            "UPDATE backtests SET status = 'FAILED', finished_at = %s, llm_usage = %s "
+            "WHERE id = %s AND status = 'RUNNING'",
+            (
+                datetime.now(timezone.utc),
+                psycopg.types.json.Json(usage_summary(usage)),
+                backtest_id,
+            ),
+        )
+
+
 async def run_backtest(
     pool: AsyncConnectionPool,
     graph_factory: Callable[[int], CompiledStateGraph],
@@ -197,10 +233,57 @@ async def run_backtest(
     window_end: date,
     slippage_bps: Decimal = DEFAULT_SLIPPAGE_BPS,
     config: dict | None = None,
+    trading_days: list[date] | None = None,
+    execution_prices: ExecutionPrices | None = None,
+) -> int:
+    """Runs one full backtest (see _run_backtest). If it raises -- an API
+    out of credits, a network drop, Ctrl-C -- the `backtests` row is marked
+    FAILED with the tokens used so far, instead of being left RUNNING
+    forever as backtests 5 and 18 were. The exception still propagates."""
+    usage = UsageMetadataCallbackHandler()
+    created: list[int] = []
+    try:
+        return await _run_backtest(
+            pool,
+            graph_factory,
+            name=name,
+            symbols=symbols,
+            window_start=window_start,
+            window_end=window_end,
+            slippage_bps=slippage_bps,
+            config=config,
+            trading_days=trading_days,
+            execution_prices=execution_prices,
+            usage=usage,
+            created=created,
+        )
+    except BaseException:
+        if created:
+            await _mark_failed(pool, created[0], usage)
+        raise
+
+
+async def _run_backtest(
+    pool: AsyncConnectionPool,
+    graph_factory: Callable[[int], CompiledStateGraph],
+    *,
+    name: str,
+    symbols: list[str],
+    window_start: date,
+    window_end: date,
+    slippage_bps: Decimal,
+    config: dict | None,
+    trading_days: list[date] | None,
+    execution_prices: ExecutionPrices | None,
+    usage: UsageMetadataCallbackHandler,
+    created: list[int],
 ) -> int:
     """Runs one full backtest: one simulated decision cycle per trading
     day per symbol across [window_start, window_end], all persisted
     under one `backtests` row (id returned).
+
+    Every graph call carries `usage` as a LangChain callback, so token
+    counts per model are summed into backtests.llm_usage.
 
     `graph_factory` builds the graph, given the backtest_id this run just
     got assigned — a callback rather than a pre-built graph, because of a
@@ -221,7 +304,8 @@ async def run_backtest(
             )
         backtest_id = await run_backtest(pool, make_graph, name=..., ...)
     """
-    trading_days = _trading_days(window_start, window_end)
+    if trading_days is None:
+        trading_days = _trading_days(window_start, window_end)
 
     async with pool.connection() as conn:
         # This insert must commit for real before the day loop starts —
@@ -252,6 +336,7 @@ async def run_backtest(
                     (name, window_start, window_end, psycopg.types.json.Json(config or {})),
                 )
                 backtest_id = (await cur.fetchone())["id"]
+        created.append(backtest_id)
 
         graph = graph_factory(backtest_id)
 
@@ -278,7 +363,22 @@ async def run_backtest(
                     run_id = (await cur.fetchone())["id"]
 
                 for symbol in symbols:
-                    result = await graph.ainvoke({"symbol": symbol, "as_of": as_of})
+                    result = await graph.ainvoke(
+                        {"symbol": symbol, "as_of": as_of},
+                        config={"callbacks": [usage]},
+                    )
+
+                    execution_price = None
+                    if execution_prices is not None:
+                        execution_price = await execution_prices.open_on(symbol, day)
+                        if execution_price is None:
+                            # Loud, not silent: a real session with no bar
+                            # means the price data is wrong, and a skipped
+                            # fill would quietly change the result.
+                            raise ValueError(
+                                f"No opening price for {symbol} on {day}; "
+                                "cannot fill this day's decision."
+                            )
 
                     technical = result["technical_opinion"]
                     sentiment = result["sentiment_opinion"]
@@ -292,8 +392,9 @@ async def run_backtest(
                             """
                             INSERT INTO decisions
                                 (run_id, symbol, action, confidence, reasoning,
-                                 technicals_snapshot, sentiment_snapshot)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                                 technicals_snapshot, sentiment_snapshot,
+                                 execution_price)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                             RETURNING id
                             """,
                             (
@@ -304,6 +405,7 @@ async def run_backtest(
                                 risk_opinion.reasoning,
                                 psycopg.types.json.Json(technical.raw_output),
                                 psycopg.types.json.Json(sentiment.raw_output),
+                                execution_price,
                             ),
                         )
                         decision_id = (await cur.fetchone())["id"]
@@ -353,7 +455,11 @@ async def run_backtest(
                     # new gap introduced here.
                     raw_price = technical.raw_output.get("current_price")
                     if raw_price is not None and final_quantity:
-                        decision_price = Decimal(str(raw_price))
+                        decision_price = (
+                            execution_price
+                            if execution_price is not None
+                            else Decimal(str(raw_price))
+                        )
                         fill_price = _apply_slippage(
                             decision_price, Action(final_action), slippage_bps
                         )
@@ -377,9 +483,13 @@ async def run_backtest(
 
         async with conn.cursor() as cur:
             await cur.execute(
-                "UPDATE backtests SET status = 'SUCCESS', finished_at = %s "
-                "WHERE id = %s",
-                (datetime.now(timezone.utc), backtest_id),
+                "UPDATE backtests SET status = 'SUCCESS', finished_at = %s, "
+                "llm_usage = %s WHERE id = %s",
+                (
+                    datetime.now(timezone.utc),
+                    psycopg.types.json.Json(usage_summary(usage)),
+                    backtest_id,
+                ),
             )
 
     return backtest_id

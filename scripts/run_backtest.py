@@ -26,10 +26,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import subprocess
 import sys
 from datetime import date
 from decimal import Decimal
 
+import psycopg
 from dotenv import load_dotenv
 from psycopg_pool import AsyncConnectionPool
 
@@ -48,8 +50,15 @@ if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from app.agent.backtest import DEFAULT_SLIPPAGE_BPS, compute_backtest_metrics, run_backtest
-from app.agent.data_sources import build_historical_data_sources
+from app.agent.data_sources import (
+    OpenPriceBook,
+    alpaca_trading_days,
+    build_historical_data_sources,
+)
 from app.agent.graph import build_decision_graph
+from app.agent.portfolio_manager import PORTFOLIO_MODEL
+from app.agent.risk_manager import MAX_POSITION_QTY, VAR_BUDGET
+from app.agent.sentiment_analyst import SENTIMENT_MODEL
 from app.agent.state import TentativeDecision
 from app.repository.backtest import BacktestRepository
 
@@ -102,7 +111,30 @@ def _parse_args() -> argparse.Namespace:
             "run over the same window."
         ),
     )
+    parser.add_argument(
+        "--allow-dirty",
+        action="store_true",
+        help=(
+            "Allow --use-real-llms with uncommitted changes. Off by default: "
+            "a paid run records its git commit in backtests.config, and that "
+            "only identifies the code if the tree is clean."
+        ),
+    )
     return parser.parse_args()
+
+
+def _git_state() -> tuple[str, bool]:
+    """(HEAD commit, whether tracked files have uncommitted changes)."""
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+    ).stdout.strip()
+    dirty = bool(
+        subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=no"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+    )
+    return commit, dirty
 
 
 def _fake_llms():
@@ -128,6 +160,13 @@ def _fake_llms():
 
 async def main() -> None:
     args = _parse_args()
+
+    commit, dirty = _git_state()
+    if args.use_real_llms and dirty and not args.allow_dirty:
+        raise SystemExit(
+            "Uncommitted changes to tracked files. Commit first so this paid "
+            "run's recorded git commit identifies the code (or --allow-dirty)."
+        )
 
     pool = AsyncConnectionPool(DATABASE_URL, open=False)
     await pool.open(wait=True, timeout=10)
@@ -162,6 +201,27 @@ async def main() -> None:
             portfolio_llm=portfolio_llm,
         )
 
+    trading_days = alpaca_trading_days(args.start, args.end)
+    real = args.use_real_llms
+    # Everything needed to say exactly how this result was produced.
+    config = {
+        "symbols": [s.upper() for s in args.symbols],
+        "models": {
+            "portfolio_manager": PORTFOLIO_MODEL if real else "fake:HOLD",
+            "sentiment_analyst": (
+                "fake:neutral" if (args.no_sentiment or not real) else SENTIMENT_MODEL
+            ),
+        },
+        "no_sentiment_ablation": args.no_sentiment,
+        "risk_node": {"max_position_qty": MAX_POSITION_QTY, "var_budget": VAR_BUDGET},
+        "slippage_bps": str(args.slippage_bps),
+        "fill": "decision-day open + slippage",
+        "calendar": "alpaca market calendar",
+        "trading_days": len(trading_days),
+        "git_commit": commit,
+        "git_dirty": dirty,
+    }
+
     try:
         backtest_id = await run_backtest(
             pool,
@@ -171,6 +231,9 @@ async def main() -> None:
             window_start=args.start,
             window_end=args.end,
             slippage_bps=args.slippage_bps,
+            config=config,
+            trading_days=trading_days,
+            execution_prices=OpenPriceBook(price_source, args.start, args.end),
         )
         metrics = await compute_backtest_metrics(pool, backtest_id)
     finally:
@@ -179,6 +242,10 @@ async def main() -> None:
     print(f"\nbacktest_id: {backtest_id}")
     for key, value in metrics.items():
         print(f"  {key}: {value}")
+
+    async with await psycopg.AsyncConnection.connect(DATABASE_URL) as conn:
+        cur = await conn.execute("SELECT llm_usage FROM backtests WHERE id = %s", (backtest_id,))
+        print(f"  llm_usage: {(await cur.fetchone())[0]}")
 
 
 if __name__ == "__main__":

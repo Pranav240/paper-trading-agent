@@ -68,7 +68,10 @@ SELECT
     r.as_of,
     pm.opinion                       AS proposed_action,
     (pm.raw_output->>'quantity')::int AS proposed_qty,
-    (d.technicals_snapshot->>'current_price')::numeric AS price
+    -- The fill price: the day's open for runs that recorded one
+    -- (migration 007), else V1's current_price, which old runs filled at.
+    COALESCE(d.execution_price,
+             (d.technicals_snapshot->>'current_price')::numeric) AS price
 FROM decisions d
 JOIN runs r ON d.run_id = r.id
 JOIN agent_opinions pm

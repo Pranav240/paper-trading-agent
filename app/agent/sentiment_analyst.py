@@ -111,6 +111,9 @@ def format_score(score: float) -> str:
     return f"{score:+.2f}"
 
 
+SENTIMENT_MODEL = "gpt-4o-mini"
+
+
 def make_sentiment_analyst_node(
     headline_source: HeadlineSource,
     llm: ChatOpenAI | None = None,
@@ -145,7 +148,7 @@ def make_sentiment_analyst_node(
             )
             return {"sentiment_opinion": opinion}
 
-        model = llm or ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        model = llm or ChatOpenAI(model=SENTIMENT_MODEL, temperature=0)
         structured_model = model.with_structured_output(SentimentScore)
 
         headline_block = "\n".join(f"- {h.headline}" for h in headlines)

@@ -74,10 +74,13 @@ combined conviction, not a copy of either specialist's number.
 English a human could audit."""
 
 
+PORTFOLIO_MODEL = "gpt-4o"
+
+
 def make_portfolio_manager_node(
     llm: ChatOpenAI | None = None,
 ) -> Callable[[GraphState], Awaitable[dict]]:
-    model = llm or ChatOpenAI(model="gpt-4o", temperature=0)
+    model = llm or ChatOpenAI(model=PORTFOLIO_MODEL, temperature=0)
     structured_model = model.with_structured_output(TentativeDecision)
 
     async def node(state: GraphState) -> dict:

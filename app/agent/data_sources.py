@@ -31,7 +31,7 @@ price bars, Alpaca news, and the response shapes below (`BarSet.data`,
 from __future__ import annotations
 
 import os
-from datetime import datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 from typing import Protocol
 from zoneinfo import ZoneInfo
@@ -259,3 +259,47 @@ def build_historical_data_sources(
         AlpacaPriceSource(api_key, secret_key),
         HistoricalHeadlineSource(pool),
     )
+
+
+def alpaca_trading_days(window_start: date, window_end: date) -> list[date]:
+    """NYSE trading days in [window_start, window_end], from Alpaca's market
+    calendar. Replaces "every weekday", which put V1 backtests through
+    market holidays (11 in run #4's window: 283 weekdays, 272 sessions)."""
+    from alpaca.trading.client import TradingClient
+    from alpaca.trading.requests import GetCalendarRequest
+
+    client = TradingClient(
+        os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"], paper=True
+    )
+    calendar = client.get_calendar(GetCalendarRequest(start=window_start, end=window_end))
+    return [session.date for session in calendar]
+
+
+class OpenPriceBook:
+    """Day D's opening price per symbol: the price a backtest trade decided
+    before the open on D fills at (docs/backtesting-plan.md, "fill at the
+    next bar's open"). Used for execution only, never shown to an agent.
+
+    Bars for the whole window are fetched once per symbol and cached.
+    """
+
+    def __init__(self, price_source: PriceDataSource, window_start: date, window_end: date) -> None:
+        self._source = price_source
+        self._start = window_start
+        self._end = window_end
+        self._opens: dict[str, dict[date, Decimal]] = {}
+
+    async def open_on(self, symbol: str, day: date) -> Decimal | None:
+        if symbol not in self._opens:
+            # Noon UTC the day after window_end: window_end's session has
+            # closed, so bars_closed_before keeps its bar.
+            as_of = datetime.combine(
+                self._end + timedelta(days=1), time(12), tzinfo=timezone.utc
+            )
+            bars = await self._source.get_recent_bars(
+                symbol, as_of, lookback_days=(as_of.date() - self._start).days + 7
+            )
+            self._opens[symbol] = {
+                bar.timestamp.astimezone(NEW_YORK).date(): bar.open for bar in bars
+            }
+        return self._opens[symbol].get(day)

@@ -57,7 +57,10 @@ SELECT
     r.as_of,
     pm.opinion                        AS proposed_action,
     (pm.raw_output->>'quantity')::int AS proposed_qty,
-    (d.technicals_snapshot->>'current_price')::numeric AS price,
+    -- Fill price: the day's open where recorded (migration 007), else
+    -- V1's current_price, which old runs filled at.
+    COALESCE(d.execution_price,
+             (d.technicals_snapshot->>'current_price')::numeric) AS price,
     vf.var_max_qty,
     vf.var
 FROM decisions d
