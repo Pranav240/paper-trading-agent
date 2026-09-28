@@ -31,9 +31,10 @@ price bars, Alpaca news, and the response shapes below (`BarSet.data`,
 from __future__ import annotations
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 from decimal import Decimal
 from typing import Protocol
+from zoneinfo import ZoneInfo
 
 from alpaca.data.historical.news import NewsClient
 from alpaca.data.historical.stock import StockHistoricalDataClient
@@ -74,6 +75,30 @@ class HeadlineSource(Protocol):
     ) -> list[Headline]: ...
 
 
+NEW_YORK = ZoneInfo("America/New_York")
+# Regular-session close. Early-close days (13:00) are treated as 16:00,
+# which can only drop a bar that was already final, never leak one.
+SESSION_CLOSE = time(16, 0)
+
+
+def bars_closed_before(bars: list[PriceBar], as_of: datetime) -> list[PriceBar]:
+    """Keep only daily bars whose session had closed by `as_of`.
+
+    Alpaca stamps a daily bar at midnight New York (04:00/05:00 UTC), so
+    `end=as_of` alone returns the decision day's own bar -- close included --
+    for any as_of after that midnight. Confirmed live by
+    scripts/check_bar_timing.py (2026-09-28): as_of 12:00 UTC got that
+    day's bar. docs/backtesting-plan.md requires prior-day close only.
+    """
+    kept = []
+    for bar in bars:
+        session_day = bar.timestamp.astimezone(NEW_YORK).date()
+        closed_at = datetime.combine(session_day, SESSION_CLOSE, tzinfo=NEW_YORK)
+        if closed_at <= as_of:
+            kept.append(bar)
+    return kept
+
+
 class AlpacaPriceSource:
     """Live implementation of PriceDataSource, backed by Alpaca's
     historical bars endpoint (which also serves "recent" data — there's
@@ -107,7 +132,7 @@ class AlpacaPriceSource:
         # actually needs many concurrent requests.
         bar_set = self._client.get_stock_bars(request)
         bars = bar_set.data.get(symbol, [])
-        return [
+        return bars_closed_before([
             PriceBar(
                 symbol=symbol,
                 timestamp=bar.timestamp,
@@ -118,7 +143,7 @@ class AlpacaPriceSource:
                 volume=int(bar.volume),
             )
             for bar in bars
-        ]
+        ], as_of)
 
 
 class AlpacaHeadlineSource:

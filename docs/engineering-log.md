@@ -734,3 +734,34 @@ skip guard caught. One line in `tests/conftest.py` fixed it.
 So the CI job greps its own output and **fails if any test skipped**. A
 green tick over a silently shortened suite is worse than a red one — that
 is the entire lesson of the bug above, encoded so it can't recur.
+
+## Phase 07 — Risk engine (V2), step 1: price look-ahead in backtests
+
+**Found a leak. Every V1 backtest number is affected and needs a rerun.**
+
+`run_backtest` decides at 12:00 UTC. `AlpacaPriceSource.get_recent_bars`
+asked Alpaca for daily bars with `end=as_of`. Alpaca stamps a daily bar at
+midnight New York (04:00 UTC summer, 05:00 UTC winter), so the decision
+day's own bar, with its close, came back. `scripts/check_bar_timing.py`
+confirmed it live on 2026-09-28 for AAPL:
+
+| Decision day | Last bar returned (before fix) | Close | After fix |
+|---|---|---|---|
+| 2023-06-15 | 2023-06-15 04:00 UTC | 185.99 | 2023-06-14, 183.95 |
+| 2023-12-14 | 2023-12-14 05:00 UTC | 198.16 | 2023-12-13, 197.86 |
+
+This breaks the first rule of `docs/backtesting-plan.md`'s look-ahead
+checklist (prior-day close only). The technical analyst was scoring each
+day with that day's close already in hand.
+
+**Fix:** `bars_closed_before()` in `app/agent/data_sources.py` keeps a bar
+only if its session close (16:00 New York, DST-aware) is at or before
+`as_of`. Early-close days are treated as 16:00, which can drop a final bar
+but never leak one. Tests: `tests/test_alpaca_price_source.py`, using the
+real timestamps above. Live runs are affected too: a mid-session run no
+longer sees the in-progress bar for today.
+
+**Not yet done:** the seven V1 backtests (and the results on `index.html`
+and the dashboard) were produced with the leak. They have not been rerun.
+Whether the leak helped or hurt the strategy is not measured; the exact
+numbers, and the verdict drawn from them, are not valid until rerun.

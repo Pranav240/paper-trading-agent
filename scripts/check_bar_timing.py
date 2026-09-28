@@ -11,6 +11,10 @@ the decision day itself. Alpaca stamps daily bars at midnight New York
 (04:00 or 05:00 UTC), which is BEFORE 12:00 UTC, so it is plausible that
 the decision day's bar -- including its not-yet-happened close -- comes back.
 
+OUTCOME (2026-09-28): it did. Both check days leaked. AlpacaPriceSource now
+drops any bar whose 16:00 New York close is after as_of (bars_closed_before
+in app/agent/data_sources.py); this script now reports OK for both days.
+
 Nothing in the repo checks this. This script does, against the real API,
 using the exact code path the backtest uses.
 
@@ -81,7 +85,7 @@ async def main() -> int:
     if leaked_any:
         print("RESULT: look-ahead present -- backtest decisions saw that day's close.")
         return 1
-    print("RESULT: no look-ahead -- Alpaca leaves out the decision day's bar.")
+    print("RESULT: no look-ahead -- no bar from the decision day reached the backtest.")
     return 0
 
 
