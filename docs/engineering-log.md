@@ -796,3 +796,25 @@ What this means for step 6:
   and only 24% power against a true 2% rate. Hence 95%.
 - So a naive 2% VaR "beating" our VaR on Kupiec needs the breach counts
   and p-values reported side by side, not just pass/fail.
+
+## Phase 07 step 3: VaR budget in the risk manager (pre-registered)
+
+Fixed **before** any backtest was run with it, and without looking at
+AAPL's VaR over the backtest windows:
+
+- **Budget:** a full 20-share position may carry at most **2.0%** of its
+  value as 95% 1-day historical VaR. Max shares = floor(20 x 2% / VaR),
+  capped at 20. VaR at or under 2%: the budget never binds.
+- **V1 rules first, unchanged**, as a hard floor. The budget only shrinks
+  or vetoes a BUY that V1 allowed; it never enlarges a trade.
+- **SELLs are never limited** by the budget.
+- **Already over budget** (volatility rose after buying): further BUYs
+  vetoed, `over_var_budget` flagged, **no forced sell**.
+- **Under 250 returns of history:** V1 only, `var_unavailable` flagged.
+- **Correlation** (60-day, with other held symbols): recorded, and
+  `high_correlation:<SYM>` flagged above 0.8. Never changes quantity.
+
+Everything lands in the risk manager's `raw_output`: VaR/CVaR (historical
+and normal), `var_max_qty`, `correlations`, `risk_flags`. The node takes an
+optional `price_source`; without one it is exactly the V1 node, which is
+how the 7 original tests still run untouched.

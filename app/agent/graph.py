@@ -50,7 +50,7 @@ def build_decision_graph(
         make_sentiment_analyst_node(headline_source, llm=sentiment_llm),
     )
     graph.add_node("portfolio_manager", make_portfolio_manager_node(llm=portfolio_llm))
-    graph.add_node("risk_manager", make_risk_manager_node(repository))
+    graph.add_node("risk_manager", make_risk_manager_node(repository, price_source))
 
     graph.add_edge(START, "technical_analyst")
     graph.add_edge(START, "sentiment_analyst")
