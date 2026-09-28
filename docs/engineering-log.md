@@ -818,3 +818,59 @@ Everything lands in the risk manager's `raw_output`: VaR/CVaR (historical
 and normal), `var_max_qty`, `correlations`, `risk_flags`. The node takes an
 optional `price_source`; without one it is exactly the V1 node, which is
 how the 7 original tests still run untouched.
+
+## Phase 07 step 6: baselines
+
+### Leak confirmed in the stored V1 runs, not just the API
+
+Every stored V1 decision's `technicals_snapshot.current_price` was
+compared with real IEX closes: **938 of 938** decisions in runs #4, #6, #9
+and #14 used that day's own close; none used the prior day's. (Those runs
+also made a decision on every weekday, including 11 market holidays in
+run #4's window. Not a leak: there's no close that day. But those days
+count as "decision days" in V1's totals.)
+
+### 6a: historical VaR vs a naive 2% VaR (Kupiec, `scripts/evaluate_var.py`)
+
+Criterion committed before the first run (`dff330f`): historical VaR
+"beats" naive iff Kupiec does not reject it (p >= 0.05) and does reject
+naive. AAPL, 95% 1-day, closes through D-1 only:
+
+| Window | Days | Historical: breaches, p | Parametric | Naive 2% | Verdict |
+|---|---|---|---|---|---|
+| **Primary: run #4** (Jun 2022 to Jun 2023) | 272 | 12 (4.4%), p=0.65 | 12, p=0.65 | 28 (10.3%), p<0.001 | **beats naive** |
+| Out-of-sample (Jul to Dec 2023) | 126 | 2 (1.6%), p=0.041 | 2, p=0.041 | 7 (5.6%), p=0.78 | **historical fails** |
+| "Long" (Jul 2021 to Dec 2023) | 613 | 33 (5.4%), p=0.67 | 32, p=0.80 | 65 (10.6%), p<0.001 | beats naive |
+
+- **Primary verdict: pass.** In run #4's window the 2% naive VaR was
+  breached twice as often as it should be; the 250-day historical VaR was
+  on target.
+- **Out-of-sample it fails the other way: too conservative.** The 250-day
+  window still carried 2022's volatility into a calm late 2023 (mean VaR
+  2.7% vs a realized breach rate of 1.6%). For a budget this means
+  shrinking positions more than the risk justified. Naive 2% happened to
+  fit that calm stretch. At 126 days the test's size is 7% (not 5%), so
+  this rejection is itself weak evidence, but it is reported as a fail,
+  as pre-registered.
+- **The "long window" is shorter than planned.** It was meant to be
+  2017 to 2023; Alpaca's IEX feed only has AAPL bars from mid-2020, so
+  the first forecast with 250 returns behind it is 2021-07-26. Reported
+  as what it actually covered.
+- Parametric and historical VaR are nearly indistinguishable here.
+
+Stored forecasts were cross-checked against an independent recomputation
+(`evaluate_var.py --check-backtest`): max difference 3.6e-7, the
+NUMERIC(10,6) rounding.
+
+### 6b: VaR node vs rule-based node, blocked
+
+Plan: one real-LLM rerun of run #4's config with the VaR node, then
+replay both rule sets over the same recorded proposals
+(`scripts/compare_var_node.py`, committed before the run finished,
+`ee9d656`; the replay gate reproduces run #6 to $0.0003). The Portfolio
+Manager never sees positions, so this isolates the risk node exactly.
+
+The rerun (backtest 18) **stopped after 25 of ~272 days: the OpenAI
+account ran out of credits** (HTTP 429 `credit_balance_exhausted`).
+Backtest 18 is marked FAILED; its partial rows are not a result. Nothing
+from it is reported. Step 6b, and therefore phase 07, is not done.
