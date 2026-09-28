@@ -216,7 +216,8 @@
       <span>41,701-example fine-tuning dataset</span>
       <span>Deployed to AWS, then destroyed</span>
       <span>Never touched real capital</span>
-      <span>V2 in planning &mdash; Indian markets</span>
+      <span>V2 in planning &mdash; real risk engine &amp; explainability</span>
+      <span>V3 in planning &mdash; Indian markets</span>
     </div>
   </header>
 
@@ -260,7 +261,7 @@
       <a class="card" href="dashboard/roadmap.html">
         <span class="tag">Plan vs. reality</span>
         <h4>Roadmap</h4>
-        <p>Twelve phases, what shipped, and why the second half is on hold &mdash; the gate that said stop, and was obeyed.</p>
+        <p>Sixteen phases across three tracks &mdash; what shipped, what's next regardless of the gate, and why one track is on hold.</p>
         <span class="go">See the roadmap &rarr;</span>
       </a>
     </div>
@@ -333,14 +334,21 @@
   </section>
 
   <section>
-    <h2 class="sec">What&rsquo;s next &mdash; V2</h2>
+    <h2 class="sec">What&rsquo;s next &mdash; V2, then V3</h2>
     <div class="finding" style="border-left-color:var(--ink-bold);">
-      <div class="label" style="color:var(--ink-bold);">In planning</div>
-      <p><strong>V2 moves to Indian markets &mdash; NSE and BSE.</strong> Not as a continuation of a strategy already measured as having no edge, but because it asks a different question: does the same pipeline behave differently on a different market, with different liquidity, different news flow and a different retail-participation profile?</p>
+      <div class="label" style="color:var(--ink-bold);">In planning &mdash; V2</div>
+      <p><strong>V2 replaces the rule-based Risk Manager with real risk math, and adds an agent that explains its own alerts.</strong> In place of just a hard position cap, the risk layer computes VaR and CVaR, watches for a shift in how the watchlist&rsquo;s holdings move together, and backtests its own risk estimate against what actually happened &mdash; a Kupiec test, the same kind of check that caught this project&rsquo;s own pre-registration flaw in Phase 04.</p>
+      <p>When it flags something, a retrieval agent pulls the relevant recent news and writes the reason in plain language, instead of leaving a number on a dashboard for someone to interpret. Every explanation is checked against a hand-labelled set of past events before it is trusted, and every retrieval and reasoning step is traced, not just the output.</p>
+      <p>This does not depend on the strategy having an edge. It makes the existing system&rsquo;s judgment better and its reasoning visible &mdash; the same gap the rest of this project already cares about.</p>
+    </div>
+
+    <div class="finding" style="border-left-color:var(--ink-bold); margin-top:24px;">
+      <div class="label" style="color:var(--ink-bold);">In planning &mdash; V3</div>
+      <p><strong>V3 moves to Indian markets &mdash; NSE and BSE.</strong> Not as a continuation of a strategy already measured as having no edge, but because it asks a different question: does the same pipeline behave differently on a different market, with different liquidity, different news flow and a different retail-participation profile?</p>
       <p>The architecture is ready for it. Market data and news arrive through swappable protocols rather than hard-coded clients, so an Indian data source is a new implementation of an existing interface, not a rewrite.</p>
     </div>
 
-    <h3>What has already been checked</h3>
+    <h3>What has already been checked, for V3</h3>
     <p>Zerodha, Upstox, Angel One and Fyers all publish free order-execution APIs. None offers a paper-trading sandbox &mdash; which turns out not to matter, because this system simulates fills in its own database rather than routing them through a broker&rsquo;s paper account.</p>
     <p><strong>The real blockers are data, not execution.</strong> There is no free equivalent to the US news API this project uses, and no Indian counterpart to the historical headline corpus that made backtesting possible. Both the sentiment component and the backtest plan need new sourcing before anything can be measured.</p>
 
@@ -352,13 +360,13 @@
     </ul>
     <p class="fig">Both are documented in the repository with the exact commands, so they are picked up rather than re-derived &mdash; by me when there is budget, or by anyone who wants to run them first.</p>
 
-    <h3>The order it has to happen in</h3>
+    <h3>The order it has to happen in, for V3</h3>
     <ul style="max-width:70ch; padding-left:20px;">
       <li>Source Indian historical headlines, then check coverage <em>month by month</em> &mdash; year-level totals once hid a five-month gap that made an entire backtest uninformative.</li>
       <li>Source daily bars for an NSE universe over the same window.</li>
       <li>Re-run the honest backtest before building anything on top of it. The V1 gate exists precisely so that a non-edge is not scaled up.</li>
     </ul>
-    <p class="fig">The continuous-intraday work originally planned as V2 stays on hold. Running a strategy faster does not create an edge it does not have &mdash; and that gate was written before the data existed to test it, which is the only reason it was believed when it fired.</p>
+    <p class="fig">The continuous-intraday work, now <strong>V4</strong>, stays on hold. Running a strategy faster does not create an edge it does not have &mdash; and that gate was written before the data existed to test it, which is the only reason it was believed when it fired.</p>
   </section>
 
   <section>
