@@ -9,8 +9,10 @@
     --line:    #D3D9DF;
     --v1:      #1F8A82;
     --v1-soft: #E4F2F0;
-    --v2:      #C97A1F;
-    --v2-soft: #FBEEDD;
+    --v2:      #6B4FA0;
+    --v2-soft: #EFE8F7;
+    --v4:      #C97A1F;
+    --v4-soft: #FBEEDD;
     --focus:   #2A6FDB;
     --done:    #1F8A82;
     --stopped: #B4462F;
@@ -26,8 +28,10 @@
       --line:    #2B3441;
       --v1:      #3FB0A6;
       --v1-soft: #17302D;
-      --v2:      #E0973A;
-      --v2-soft: #332310;
+      --v2:      #A88BD9;
+      --v2-soft: #241C33;
+      --v4:      #E0973A;
+      --v4-soft: #332310;
       --done:    #3FB0A6;
       --stopped: #E0765A;
       --stopped-soft: #341A14;
@@ -42,8 +46,10 @@
     --line:    #2B3441;
     --v1:      #3FB0A6;
     --v1-soft: #17302D;
-    --v2:      #E0973A;
-    --v2-soft: #332310;
+    --v2:      #A88BD9;
+    --v2-soft: #241C33;
+    --v4:      #E0973A;
+    --v4-soft: #332310;
     --done:    #3FB0A6;
     --stopped: #E0765A;
     --stopped-soft: #341A14;
@@ -90,9 +96,14 @@
     letter-spacing:-0.01em;
   }
   .dek{
-    max-width:62ch;
+    max-width:68ch;
     color:var(--muted);
     font-size:15.5px;
+  }
+  .dek .note{
+    display:block;
+    margin-top:8px;
+    font-size:13px;
   }
 
   .legend{
@@ -115,6 +126,7 @@
   }
   .swatch.v1{ background:var(--v1); }
   .swatch.v2{ background:var(--v2); }
+  .swatch.v4{ background:var(--v4); }
   .swatch.dash{
     background:none;
     border-top:2px dashed var(--muted);
@@ -155,10 +167,11 @@
   /* ---- reference list ---- */
   .tracks{
     display:grid;
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:1fr 1fr 1fr;
     gap:20px;
   }
-  @media (max-width:760px){ .tracks{ grid-template-columns:1fr; } }
+  @media (max-width:980px){ .tracks{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:640px){ .tracks{ grid-template-columns:1fr; } }
 
   .track{
     background:var(--surface);
@@ -177,6 +190,7 @@
   }
   .track.v1 .dot{ background:var(--v1); }
   .track.v2 .dot{ background:var(--v2); }
+  .track.v4 .dot{ background:var(--v4); }
   .track-head h3{
     margin:0;
     font-size:15px;
@@ -219,6 +233,7 @@
   }
   .track.v1 ol.steps .num{ color:var(--v1); }
   .track.v2 ol.steps .num{ color:var(--v2); }
+  .track.v4 ol.steps .num{ color:var(--v4); }
 
   .tag{
     display:inline-block;
@@ -265,6 +280,12 @@
   .callout td{ padding:3px 16px 3px 0; }
   .callout td.n{ text-align:right; }
 
+  .callout.v2{
+    background:var(--v2-soft);
+    border-color:var(--v2);
+  }
+  .callout.v2 b{ color:var(--v2); }
+
   a{ color:var(--focus); }
 </style>
 
@@ -272,11 +293,15 @@
 
   <header class="page">
     <span class="eyebrow">Build sequence · paper trading only</span>
-    <h1>V1 first, V2 only if V1 earns it</h1>
-    <p class="dek">Six phases build the daily decision-support agent (V1). Six more extend it into a continuous intraday system (V2) — each one reusing or upgrading a specific V1 component, not starting over. <strong>Status as of 9 Sep 2026: five of the six V1 phases are settled, and the honest-backtest gate that stands between V1 and V2 has been reached and answered.</strong></p>
+    <h1>V1 first. V2 doesn&rsquo;t need an edge. V4 does.</h1>
+    <p class="dek">Six phases build the daily decision-support agent (V1). Four more replace its rule-based risk gate with real risk math and an agent that explains its own alerts (V2) — this doesn&rsquo;t require V1 to have found an edge, only to exist. Six further phases would turn it into a continuous intraday system (V4), and that one stays gated: it only starts if V1&rsquo;s strategy logic backtests with a real edge.
+      <strong>Status as of 28 Sep 2026: five of six V1 phases are settled, the honest-backtest gate has been reached and answered — no edge on this evidence — so V4 stays on hold. V2 does not depend on that gate and is next.</strong>
+      <span class="note">V3 — a pivot to Indian markets — is a separate, parallel track driven by data sourcing rather than build phases, and isn&rsquo;t diagrammed here. See the homepage.</span>
+    </p>
     <div class="legend">
       <span class="legend-item"><span class="swatch v1"></span>V1 — foundation</span>
-      <span class="legend-item"><span class="swatch v2"></span>V2 — extension</span>
+      <span class="legend-item"><span class="swatch v2"></span>V2 — risk &amp; explainability</span>
+      <span class="legend-item"><span class="swatch v4"></span>V4 — continuous extension</span>
       <span class="legend-item"><span class="swatch dash"></span>extends this block</span>
       <span class="legend-item"><span class="swatch round done"></span>done</span>
       <span class="legend-item"><span class="swatch round stopped"></span>closed on a negative result</span>
@@ -288,28 +313,29 @@
     <h2>Block diagram</h2>
     <div class="diagram-frame">
       <figure>
-        <svg viewBox="0 0 1240 400" role="img" aria-label="Roadmap showing six V1 blocks built in sequence with status markers, a shipped milestone gate, then six V2 blocks, with dashed lines showing which V1 block each V2 block extends. Phases 1, 2, 3 and 5 are done, phase 4 is closed on a negative result, phase 6 and all V2 phases are not started.">
+        <svg viewBox="0 0 1240 410" role="img" aria-label="Roadmap showing six V1 blocks built in sequence with status markers, then four V2 blocks that do not need a gate, then a gate ribbon, then six V4 blocks. Dashed lines show which earlier block each later block extends. Phases 1, 2, 3 and 5 are done, phase 4 is closed on a negative result, and every V2 and V4 phase is not started.">
           <defs>
             <marker id="arrowV1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M0,0 L10,5 L0,10 z" fill="var(--v1)"/>
             </marker>
-            <!-- Grey rather than V2 amber: the row it belongs to is not
-                 started, and an amber arrowhead on a grey line reads as a
+            <!-- Grey rather than a track colour: every V2 and V4 row is not
+                 started, and a coloured arrowhead on a grey line reads as a
                  half-finished state rather than a not-yet-begun one. -->
-            <marker id="arrowV2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <marker id="arrowPending" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M0,0 L10,5 L0,10 z" fill="var(--pending)"/>
             </marker>
           </defs>
 
-          <!-- ===== gate ribbon ===== -->
-          <rect x="20" y="112" width="1176" height="34" rx="17" fill="var(--stopped-soft)" stroke="var(--stopped)"/>
-          <text x="608" y="133" text-anchor="middle" class="mono" font-size="12" fill="var(--stopped)">GATE REACHED · BACKTESTED HONESTLY · NO EDGE FOUND → V2 NOT JUSTIFIED ON THIS EVIDENCE</text>
+          <!-- ===== gate ribbon (between V2 and V4 only) ===== -->
+          <rect x="20" y="228" width="1176" height="34" rx="17" fill="var(--stopped-soft)" stroke="var(--stopped)"/>
+          <text x="608" y="249" text-anchor="middle" class="mono" font-size="11.5" fill="var(--stopped)">GATE REACHED · NO EDGE FOUND → V4 (CONTINUOUS TRADING) ON HOLD · V2 DOES NOT DEPEND ON THIS GATE</text>
 
           <!-- ===== row labels ===== -->
           <text x="20" y="18" class="mono" font-size="12" font-weight="600" fill="var(--v1)">V1 — DAILY DECISION-SUPPORT AGENT</text>
-          <text x="20" y="238" class="mono" font-size="12" font-weight="600" fill="var(--v2)">V2 — CONTINUOUS INTRADAY EXTENSION</text>
+          <text x="20" y="138" class="mono" font-size="12" font-weight="600" fill="var(--v2)">V2 — REAL RISK ENGINE + EXPLAINABILITY</text>
+          <text x="20" y="292" class="mono" font-size="12" font-weight="600" fill="var(--v4)">V4 — CONTINUOUS INTRADAY EXTENSION</text>
 
-          <!-- ===== Row 1 sequential arrows ===== -->
+          <!-- ===== Row 1 (V1) sequential arrows ===== -->
           <g stroke="var(--v1)" stroke-width="2" marker-end="url(#arrowV1)">
             <line x1="196" y1="60" x2="218" y2="60"/>
             <line x1="396" y1="60" x2="418" y2="60"/>
@@ -318,30 +344,49 @@
             <line x1="996" y1="60" x2="1018" y2="60"/>
           </g>
 
-          <!-- ===== Row 2 sequential arrows ===== -->
-          <g stroke="var(--pending)" stroke-width="2" marker-end="url(#arrowV2)">
-            <line x1="196" y1="280" x2="218" y2="280"/>
-            <line x1="396" y1="280" x2="418" y2="280"/>
-            <line x1="596" y1="280" x2="618" y2="280"/>
-            <line x1="796" y1="280" x2="818" y2="280"/>
-            <line x1="996" y1="280" x2="1018" y2="280"/>
+          <!-- ===== Row 2 (V2) sequential arrows ===== -->
+          <g stroke="var(--pending)" stroke-width="2" marker-end="url(#arrowPending)">
+            <line x1="596" y1="180" x2="618" y2="180"/>
+            <line x1="796" y1="180" x2="818" y2="180"/>
+            <line x1="996" y1="180" x2="1018" y2="180"/>
           </g>
 
-          <!-- ===== dashed extension connectors ===== -->
+          <!-- ===== Row 3 (V4) sequential arrows ===== -->
+          <g stroke="var(--pending)" stroke-width="2" marker-end="url(#arrowPending)">
+            <line x1="196" y1="324" x2="218" y2="324"/>
+            <line x1="396" y1="324" x2="418" y2="324"/>
+            <line x1="596" y1="324" x2="618" y2="324"/>
+            <line x1="796" y1="324" x2="818" y2="324"/>
+            <line x1="996" y1="324" x2="1018" y2="324"/>
+          </g>
+
+          <!-- ===== dashed extension connectors: V1 -> V2 ===== -->
           <g stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" fill="none">
-            <path d="M108,90 C108,160 108,190 108,250"/>
-            <path d="M308,90 C308,160 308,190 308,250"/>
-            <path d="M508,90 C508,160 508,190 508,250"/>
-            <path d="M908,90 C908,160 908,190 908,250"/>
-            <path d="M1108,90 C1108,160 1108,190 1108,250"/>
+            <path d="M508,90 C508,110 508,130 508,150"/>
           </g>
-          <text x="98"  y="180" class="mono" font-size="10" fill="var(--muted)">fetch→stream</text>
-          <text x="298" y="180" class="mono" font-size="10" fill="var(--muted)">adds hot state</text>
-          <text x="498" y="180" class="mono" font-size="10" fill="var(--muted)">one-shot→loop</text>
-          <text x="898" y="180" class="mono" font-size="10" fill="var(--muted)">adds uptime alerts</text>
-          <text x="1084" y="180" class="mono" font-size="10" fill="var(--muted)">cron→always-on</text>
+          <text x="518" y="122" class="mono" font-size="10" fill="var(--muted)">upgrades risk manager</text>
 
-          <!-- ===== Row 1 boxes ===== -->
+          <!-- ===== dashed extension connectors: V1 -> V4 (pass behind V2 row and gate) ===== -->
+          <g stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" fill="none">
+            <path d="M108,90 C108,180 108,210 108,294"/>
+            <path d="M308,90 C308,180 308,210 308,294"/>
+            <path d="M508,90 C420,150 420,240 508,294"/>
+            <path d="M908,90 C908,180 908,210 908,294"/>
+            <path d="M1108,90 C1108,180 1108,210 1108,294"/>
+          </g>
+          <text x="98"  y="206" class="mono" font-size="10" fill="var(--muted)">fetch→stream</text>
+          <text x="298" y="206" class="mono" font-size="10" fill="var(--muted)">adds hot state</text>
+          <text x="428" y="206" class="mono" font-size="10" fill="var(--muted)">one-shot→loop</text>
+          <text x="898" y="206" class="mono" font-size="10" fill="var(--muted)">adds uptime alerts</text>
+          <text x="1084" y="206" class="mono" font-size="10" fill="var(--muted)">cron→always-on</text>
+
+          <!-- ===== dashed extension connector: V2 -> V4 (risk guardrails) ===== -->
+          <g stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" fill="none">
+            <path d="M508,210 C508,235 708,240 708,294"/>
+          </g>
+          <text x="560" y="228" class="mono" font-size="10" fill="var(--muted)">tick-rate risk check</text>
+
+          <!-- ===== Row 1 boxes (V1) ===== -->
           <!-- 01 Control API -->
           <g>
             <rect x="20" y="30" width="176" height="60" rx="6" fill="var(--v1-soft)" stroke="var(--v1)"/>
@@ -391,52 +436,82 @@
             <circle cx="1180" cy="44" r="5" fill="none" stroke="var(--pending)" stroke-width="1.5"/>
           </g>
 
-          <!-- ===== Row 2 boxes — all not started ===== -->
-          <!-- 07 Live Feed -->
+          <!-- ===== Row 2 boxes (V2) — none started ===== -->
+          <!-- 07 Risk Engine -->
           <g>
-            <rect x="20" y="250" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
-            <text x="32" y="265" class="mono" font-size="10" fill="var(--pending)">07</text>
-            <text x="32" y="283" font-size="14" font-weight="600" fill="var(--ink)">Live Feed</text>
-            <text x="32" y="300" class="mono" font-size="11" fill="var(--muted)">WebSocket</text>
+            <rect x="420" y="150" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="432" y="165" class="mono" font-size="10" fill="var(--pending)">07</text>
+            <text x="432" y="183" font-size="14" font-weight="600" fill="var(--ink)">Risk Engine</text>
+            <text x="432" y="200" class="mono" font-size="11" fill="var(--muted)">VaR · CVaR · Kupiec</text>
           </g>
-          <!-- 08 Hot State -->
+          <!-- 08 Explainer Agent -->
           <g>
-            <rect x="220" y="250" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
-            <text x="232" y="265" class="mono" font-size="10" fill="var(--pending)">08</text>
-            <text x="232" y="283" font-size="14" font-weight="600" fill="var(--ink)">Hot State</text>
-            <text x="232" y="300" class="mono" font-size="11" fill="var(--muted)">Redis + queue</text>
+            <rect x="620" y="150" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="632" y="165" class="mono" font-size="10" fill="var(--pending)">08</text>
+            <text x="632" y="183" font-size="14" font-weight="600" fill="var(--ink)">Explainer Agent</text>
+            <text x="632" y="200" class="mono" font-size="11" fill="var(--muted)">RAG retrieval</text>
           </g>
-          <!-- 09 Continuous Loop -->
+          <!-- 09 Eval Harness -->
           <g>
-            <rect x="420" y="250" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
-            <text x="432" y="265" class="mono" font-size="10" fill="var(--pending)">09</text>
-            <text x="432" y="283" font-size="14" font-weight="600" fill="var(--ink)">Continuous Loop</text>
-            <text x="432" y="300" class="mono" font-size="11" fill="var(--muted)">Worker process</text>
+            <rect x="820" y="150" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="832" y="165" class="mono" font-size="10" fill="var(--pending)">09</text>
+            <text x="832" y="183" font-size="14" font-weight="600" fill="var(--ink)">Eval Harness</text>
+            <text x="832" y="200" class="mono" font-size="11" fill="var(--muted)">Golden set + judge</text>
           </g>
-          <!-- 10 Risk Guardrails -->
+          <!-- 10 Reasoning Trace -->
           <g>
-            <rect x="620" y="250" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
-            <text x="632" y="265" class="mono" font-size="10" fill="var(--pending)">10</text>
-            <text x="632" y="283" font-size="14" font-weight="600" fill="var(--ink)">Risk Guardrails</text>
-            <text x="632" y="300" class="mono" font-size="11" fill="var(--muted)">new — no V1 origin</text>
+            <rect x="1020" y="150" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="1032" y="165" class="mono" font-size="10" fill="var(--pending)">10</text>
+            <text x="1032" y="183" font-size="14" font-weight="600" fill="var(--ink)">Reasoning Trace</text>
+            <text x="1032" y="200" class="mono" font-size="11" fill="var(--muted)">Langfuse / Phoenix</text>
           </g>
-          <!-- 11 Ops Watch -->
+
+          <!-- ===== Row 3 boxes (V4) — none started ===== -->
+          <!-- 11 Live Feed -->
           <g>
-            <rect x="820" y="250" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
-            <text x="832" y="265" class="mono" font-size="10" fill="var(--pending)">11</text>
-            <text x="832" y="283" font-size="14" font-weight="600" fill="var(--ink)">Ops Watch</text>
-            <text x="832" y="300" class="mono" font-size="11" fill="var(--muted)">Alerts</text>
+            <rect x="20" y="294" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="32" y="309" class="mono" font-size="10" fill="var(--pending)">11</text>
+            <text x="32" y="327" font-size="14" font-weight="600" fill="var(--ink)">Live Feed</text>
+            <text x="32" y="344" class="mono" font-size="11" fill="var(--muted)">WebSocket</text>
           </g>
-          <!-- 12 Session Scheduler -->
+          <!-- 12 Hot State -->
           <g>
-            <rect x="1020" y="250" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
-            <text x="1032" y="265" class="mono" font-size="10" fill="var(--pending)">12</text>
-            <text x="1032" y="283" font-size="14" font-weight="600" fill="var(--ink)">Session Scheduler</text>
-            <text x="1032" y="300" class="mono" font-size="11" fill="var(--muted)">Always-on</text>
+            <rect x="220" y="294" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="232" y="309" class="mono" font-size="10" fill="var(--pending)">12</text>
+            <text x="232" y="327" font-size="14" font-weight="600" fill="var(--ink)">Hot State</text>
+            <text x="232" y="344" class="mono" font-size="11" fill="var(--muted)">Redis + queue</text>
+          </g>
+          <!-- 13 Continuous Loop -->
+          <g>
+            <rect x="420" y="294" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="432" y="309" class="mono" font-size="10" fill="var(--pending)">13</text>
+            <text x="432" y="327" font-size="14" font-weight="600" fill="var(--ink)">Continuous Loop</text>
+            <text x="432" y="344" class="mono" font-size="11" fill="var(--muted)">Worker process</text>
+          </g>
+          <!-- 14 Risk Guardrails -->
+          <g>
+            <rect x="620" y="294" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="632" y="309" class="mono" font-size="10" fill="var(--pending)">14</text>
+            <text x="632" y="327" font-size="14" font-weight="600" fill="var(--ink)">Risk Guardrails</text>
+            <text x="632" y="344" class="mono" font-size="11" fill="var(--muted)">extends V2 · tick-rate</text>
+          </g>
+          <!-- 15 Ops Watch -->
+          <g>
+            <rect x="820" y="294" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="832" y="309" class="mono" font-size="10" fill="var(--pending)">15</text>
+            <text x="832" y="327" font-size="14" font-weight="600" fill="var(--ink)">Ops Watch</text>
+            <text x="832" y="344" class="mono" font-size="11" fill="var(--muted)">Alerts</text>
+          </g>
+          <!-- 16 Session Scheduler -->
+          <g>
+            <rect x="1020" y="294" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
+            <text x="1032" y="309" class="mono" font-size="10" fill="var(--pending)">16</text>
+            <text x="1032" y="327" font-size="14" font-weight="600" fill="var(--ink)">Session Scheduler</text>
+            <text x="1032" y="344" class="mono" font-size="11" fill="var(--muted)">Always-on</text>
           </g>
 
         </svg>
-        <figcaption>Solid arrows are build order within each phase. Dashed lines show which V2 block extends a specific V1 block — the one V2 block with no dashed line (Risk Guardrails) is genuinely new, not an upgrade of anything already built. Filled dots mark shipped phases; phase 04 is filled in red because it was completed as an investigation and closed on a negative result, which is different from being skipped.</figcaption>
+        <figcaption>Solid arrows are build order within each track. Dashed lines show which earlier block a later one extends: V2&rsquo;s Risk Engine upgrades the rule-based Risk Manager inside V1&rsquo;s Decision Agent, and V4&rsquo;s Risk Guardrails in turn extends V2&rsquo;s Risk Engine to fire on every tick instead of once a day — nothing in V2 or V4 is built from scratch. Filled dots mark shipped phases; phase 04 is filled in red because it was completed as an investigation and closed on a negative result, which is different from being skipped.</figcaption>
       </figure>
     </div>
   </section>
@@ -464,25 +539,46 @@
       <div class="track v2">
         <div class="track-head">
           <span class="dot"></span>
-          <h3>V2 — extend, don't restart</h3>
+          <h3>V2 — make the judgment real</h3>
+          <span class="sub">unblocked — no gate to clear</span>
+        </div>
+        <ol class="steps">
+          <li><span class="num">07</span><div><div class="label">Risk engine<span class="tag pending">not started</span></div><div class="desc">Replaces the rule-based Risk Manager with VaR, CVaR, a rolling correlation-regime check, and a Kupiec backtest of the risk model itself against realized P&amp;L.</div></div></li>
+          <li><span class="num">08</span><div><div class="label">Explainer agent<span class="tag pending">not started</span></div><div class="desc">A new LangGraph node that retrieves recent news via RAG when the risk engine flags something, and writes the reason in plain language instead of leaving a number on a dashboard.</div></div></li>
+          <li><span class="num">09</span><div><div class="label">Eval harness<span class="tag pending">not started</span></div><div class="desc">A hand-labelled set of past risk events with known-correct explanations, scored with LLM-as-judge, run as a regression check before any change ships.</div></div></li>
+          <li><span class="num">10</span><div><div class="label">Reasoning trace<span class="tag pending">not started</span></div><div class="desc">Full trace of every retrieval and reasoning step behind an explanation, so a flagged decision can be audited, not just trusted.</div></div></li>
+        </ol>
+        <div class="gate-note">None of this depends on the strategy having an edge — it makes the existing system's judgment better and its reasoning visible. None of it is started.</div>
+      </div>
+
+      <div class="track v4">
+        <div class="track-head">
+          <span class="dot"></span>
+          <h3>V4 — extend, don&rsquo;t restart</h3>
           <span class="sub">on hold — the gate below was not cleared</span>
         </div>
         <ol class="steps">
-          <li><span class="num">07</span><div><div class="label">Live feed<span class="tag pending">on hold</span></div><div class="desc">Replaces the daily fetch with a streamed WebSocket connection to market data.</div></div></li>
-          <li><span class="num">08</span><div><div class="label">Hot state<span class="tag pending">on hold</span></div><div class="desc">Redis in front of Postgres for state read and written every tick, plus a queue decoupling feed from decisions.</div></div></li>
-          <li><span class="num">09</span><div><div class="label">Continuous loop<span class="tag pending">on hold</span></div><div class="desc">The same agent logic as a long-running worker reacting to each bar instead of running once.</div></div></li>
-          <li><span class="num">10</span><div><div class="label">Risk guardrails<span class="tag pending">on hold</span></div><div class="desc">Max position size, daily loss limit, circuit breaker on stale data — built new, not an upgrade.</div></div></li>
-          <li><span class="num">11</span><div><div class="label">Ops watch<span class="tag pending">on hold</span></div><div class="desc">Crash and staleness alerts — mandatory once something runs unattended for hours.</div></div></li>
-          <li><span class="num">12</span><div><div class="label">Session scheduler<span class="tag pending">on hold</span></div><div class="desc">Starts at market open, flattens positions and stops at close, skips weekends and holidays.</div></div></li>
+          <li><span class="num">11</span><div><div class="label">Live feed<span class="tag pending">on hold</span></div><div class="desc">Replaces the daily fetch with a streamed WebSocket connection to market data.</div></div></li>
+          <li><span class="num">12</span><div><div class="label">Hot state<span class="tag pending">on hold</span></div><div class="desc">Redis in front of Postgres for state read and written every tick, plus a queue decoupling feed from decisions.</div></div></li>
+          <li><span class="num">13</span><div><div class="label">Continuous loop<span class="tag pending">on hold</span></div><div class="desc">The same agent logic as a long-running worker reacting to each bar instead of running once.</div></div></li>
+          <li><span class="num">14</span><div><div class="label">Risk guardrails<span class="tag pending">on hold</span></div><div class="desc">Extends V2's risk engine to fire on every tick instead of once a day, plus a hard circuit breaker on stale data.</div></div></li>
+          <li><span class="num">15</span><div><div class="label">Ops watch<span class="tag pending">on hold</span></div><div class="desc">Crash and staleness alerts — mandatory once something runs unattended for hours.</div></div></li>
+          <li><span class="num">16</span><div><div class="label">Session scheduler<span class="tag pending">on hold</span></div><div class="desc">Starts at market open, flattens positions and stops at close, skips weekends and holidays.</div></div></li>
         </ol>
-        <div class="gate-note">Every block here either upgrades a numbered V1 block or is explicitly new — nothing is rebuilt from scratch. None of it is started.</div>
+        <div class="gate-note">Every block here either upgrades a numbered V1 or V2 block, or is explicitly new — nothing is rebuilt from scratch. None of it is started.</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="callout v2">
+      <p><b>V2 does not wait on the gate below.</b> It was tempting to lump "improve the risk logic" in with the rest of the on-hold work, but the reasoning doesn't hold up: a better risk model and an agent that can explain its own alerts make the existing V1 system more trustworthy regardless of whether the strategy ever finds an edge. That's a different claim from "run it faster and more often," which is what the gate below is actually about.</p>
     </div>
   </section>
 
   <section style="margin-bottom:0;">
     <div class="callout">
-      <p><b>The gate before phase 07 has been reached, and the answer is no.</b> The rule set at the start was: back-test the V1 strategy logic honestly first, because if it shows no real edge on historical data with realistic slippage, running it continuously in V2 won't create one — it will replay the same non-edge faster and with more moving parts to debug.</p>
+      <p><b>The gate before phase 11 has been reached, and the answer is no.</b> The rule set at the start was: back-test the V1 strategy logic honestly first, because if it shows no real edge on historical data with realistic slippage, running it continuously in V4 won't create one — it will replay the same non-edge faster and with more moving parts to debug.</p>
       <p>Seven real-LLM runs on AAPL, 5bps slippage, mark-to-market, each against buy-and-hold over its own window:</p>
       <table>
         <tr><td>#4 &nbsp;in-sample, 13 months</td><td class="n">−$39</td></tr>
@@ -493,7 +589,7 @@
         <tr><td>#3 &nbsp;pilot quarter, 4 trades</td><td class="n">+$22</td></tr>
       </table>
       <p>Every run longer than a quarter underperformed. The single exception is a 3-month pilot with four closed trades, which beat the baseline mainly because AAPL fell over that window — buy-and-hold lost money and a largely idle system did not. The out-of-sample run was executed once, with no code, prompt or parameter changes made after seeing the in-sample result, which is what makes it worth believing.</p>
-      <p><b>So V2 is on hold, and that is the roadmap working as designed.</b> The gate existed precisely to catch this before six more phases were built on top of it. Phase 06 remains worth finishing — deployment is a real skill to demonstrate, and it does not depend on the strategy being profitable.</p>
+      <p><b>So V4 is on hold, and that is the roadmap working as designed.</b> The gate existed precisely to catch this before six more phases were built on top of it. Phase 06 remains worth finishing — deployment is a real skill to demonstrate, and it does not depend on the strategy being profitable. V2 and V3 (see the homepage) proceed independently of this gate.</p>
     </div>
   </section>
 
