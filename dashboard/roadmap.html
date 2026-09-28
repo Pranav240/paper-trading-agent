@@ -295,7 +295,7 @@
     <span class="eyebrow">Build sequence · paper trading only</span>
     <h1>V1 first. V2 doesn&rsquo;t need an edge. V4 does.</h1>
     <p class="dek">Six phases build the daily decision-support agent (V1). Four more replace its rule-based risk gate with real risk math and an agent that explains its own alerts (V2) — this doesn&rsquo;t require V1 to have found an edge, only to exist. Six further phases would turn it into a continuous intraday system (V4), and that one stays gated: it only starts if V1&rsquo;s strategy logic backtests with a real edge.
-      <strong>Status as of 28 Sep 2026: five of six V1 phases are settled, the honest-backtest gate has been reached and answered — no edge on this evidence — so V4 stays on hold. V2 does not depend on that gate and is next.</strong>
+      <strong>Status as of 28 Sep 2026: all six V1 phases are settled, the honest-backtest gate has been reached and answered — no edge on this evidence — so V4 stays on hold. V2 does not depend on that gate and is next.</strong>
       <span class="note">V3 — a pivot to Indian markets — is a separate, parallel track driven by data sourcing rather than build phases, and isn&rsquo;t diagrammed here. See the homepage.</span>
     </p>
     <div class="legend">
@@ -313,7 +313,7 @@
     <h2>Block diagram</h2>
     <div class="diagram-frame">
       <figure>
-        <svg viewBox="0 0 1240 410" role="img" aria-label="Roadmap showing six V1 blocks built in sequence with status markers, then four V2 blocks that do not need a gate, then a gate ribbon, then six V4 blocks. Dashed lines show which earlier block each later block extends. Phases 1, 2, 3 and 5 are done, phase 4 is closed on a negative result, and every V2 and V4 phase is not started.">
+        <svg viewBox="0 0 1240 410" role="img" aria-label="Roadmap showing six V1 blocks built in sequence with status markers, then four V2 blocks that do not need a gate, then a gate ribbon, then six V4 blocks. Dashed lines show which earlier block each later block extends. Phases 1, 2, 3, 5 and 6 are done, phase 4 is closed on a negative result, and every V2 and V4 phase is not started.">
           <defs>
             <marker id="arrowV1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M0,0 L10,5 L0,10 z" fill="var(--v1)"/>
@@ -427,13 +427,13 @@
             <text x="832" y="80" class="mono" font-size="11" fill="var(--muted)">Docker + CI</text>
             <circle cx="980" cy="44" r="5" fill="var(--done)"/>
           </g>
-          <!-- 06 Scheduled Run — not started -->
+          <!-- 06 Scheduled Run — done -->
           <g>
-            <rect x="1020" y="30" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
-            <text x="1032" y="45" class="mono" font-size="10" fill="var(--pending)">06</text>
+            <rect x="1020" y="30" width="176" height="60" rx="6" fill="var(--v1-soft)" stroke="var(--v1)"/>
+            <text x="1032" y="45" class="mono" font-size="10" fill="var(--v1)">06</text>
             <text x="1032" y="63" font-size="14" font-weight="600" fill="var(--ink)">Scheduled Run</text>
             <text x="1032" y="80" class="mono" font-size="11" fill="var(--muted)">Cloud cron</text>
-            <circle cx="1180" cy="44" r="5" fill="none" stroke="var(--pending)" stroke-width="1.5"/>
+            <circle cx="1180" cy="44" r="5" fill="var(--done)"/>
           </g>
 
           <!-- ===== Row 2 boxes (V2) — none started ===== -->
@@ -531,9 +531,9 @@
           <li><span class="num">03</span><div><div class="label">Decision agent<span class="tag done">done</span></div><div class="desc">LangGraph multi-agent flow, verified end to end against real Alpaca data, real OpenAI calls and a real Postgres write.</div></div></li>
           <li><span class="num">04</span><div><div class="label">Sentiment model<span class="tag stopped">closed</span></div><div class="desc">Two LoRA adapters trained; both landed at or below the majority-class baseline. Ablating the node outperformed keeping it, and rewriting it as a continuous score did worse still. Closed on the negative result rather than spending ~6,000 more labelling calls.</div></div></li>
           <li><span class="num">05</span><div><div class="label">Build pipeline<span class="tag done">done</span></div><div class="desc">Dockerfile, compose stack, GitHub Actions running the suite against a real Postgres service — and failing if any test skips.</div></div></li>
-          <li><span class="num">06</span><div><div class="label">Scheduled run<span class="tag pending">not started</span></div><div class="desc">One deployed run per session on AWS — a cron trigger, not an always-on service yet.</div></div></li>
+          <li><span class="num">06</span><div><div class="label">Scheduled run<span class="tag done">done</span></div><div class="desc">Terraform on AWS, applied and verified live: VPC, ECR, SSM secrets, scoped IAM, GitHub OIDC deploys, and an EventBridge cron trigger — not an always-on service. The schedule ships disarmed by default, so arming it is a deliberate act.</div></div></li>
         </ol>
-        <div class="gate-note">Five of six settled. Phase 06 is the only V1 block still to build, and it is unblocked.</div>
+        <div class="gate-note">All six settled. Five shipped; phase 04 closed on a measured negative result.</div>
       </div>
 
       <div class="track v2">
@@ -589,7 +589,7 @@
         <tr><td>#3 &nbsp;pilot quarter, 4 trades</td><td class="n">+$22</td></tr>
       </table>
       <p>Every run longer than a quarter underperformed. The single exception is a 3-month pilot with four closed trades, which beat the baseline mainly because AAPL fell over that window — buy-and-hold lost money and a largely idle system did not. The out-of-sample run was executed once, with no code, prompt or parameter changes made after seeing the in-sample result, which is what makes it worth believing.</p>
-      <p><b>So V4 is on hold, and that is the roadmap working as designed.</b> The gate existed precisely to catch this before six more phases were built on top of it. Phase 06 remains worth finishing — deployment is a real skill to demonstrate, and it does not depend on the strategy being profitable. V2 and V3 (see the homepage) proceed independently of this gate.</p>
+      <p><b>So V4 is on hold, and that is the roadmap working as designed.</b> The gate existed precisely to catch this before six more phases were built on top of it. Phase 06 was finished anyway — deployment is a real skill to demonstrate, and it does not depend on the strategy being profitable. V2 and V3 (see the homepage) proceed independently of this gate.</p>
     </div>
   </section>
 
