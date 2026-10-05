@@ -253,3 +253,18 @@ async def test_correlation_with_other_holding_is_flagged_only():
     assert raw["correlations"]["XOM"] == pytest.approx(-1.0)
     assert raw["risk_flags"] == ["high_correlation:MSFT"]
     assert result["final_quantity"] == 1
+
+
+@pytest.mark.asyncio
+async def test_var_tail_lists_the_days_behind_the_var():
+    node = _v2_node([], {"AAPL": _bars("AAPL", HIGH_VOL)})
+    raw = (await node(_v2_state("BUY", 10)))["risk_opinion"].raw_output
+
+    tail = raw["var_tail"]
+    # k = 13 worst returns, worst first; HIGH_VOL's losses are -1%..-20% on
+    # its first 20 days, so the worst is -20% on the 21st bar's date.
+    assert len(tail) == 13
+    assert tail[0]["return"] == pytest.approx(-0.20)
+    assert tail[0]["date"] == "2023-01-22"
+    # The 13th worst loss is the VaR itself.
+    assert -tail[-1]["return"] == pytest.approx(raw["var_95"])

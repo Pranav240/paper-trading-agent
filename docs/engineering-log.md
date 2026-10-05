@@ -1049,3 +1049,49 @@ one stock, after four simultaneous changes, and replicates don't sample
 the price path, which dominates any buy-and-hold comparison. Every page
 now says the narrower, true thing: V1's "underperforms" does not survive
 the correction, and an edge is not established.
+
+## Phase 08 — Explainer agent, built with fakes
+
+A node after the risk manager that says, in plain language, why the VaR
+budget cut or blocked a trade. Pre-registered design (module docstring of
+`app/agent/explainer.py`, written before any real call):
+
+- **Trigger:** `var_budget_scale` / `var_budget_veto` only: the budget
+  changed the trade. It explains; it never alters a decision.
+- **What it explains:** the 5 worst losses the VaR is built from. The risk
+  node now records them (`var_tail`, via `risk_math.tail_losses`), so the
+  explanation is about the number actually used, not this week's news.
+- **Retrieval:** Postgres full-text search over `historical_headlines`,
+  window [D-1, D+1) New York and strictly before `as_of`, ranked by
+  relevance to the company and fixed market terms; 8 per day. Baseline:
+  same window by recency only (`--explain recent`).
+- **Grounding check:** every cited headline must have been retrieved for
+  that same day; problems are stored and `citations_valid` set false. The
+  explanation is kept, never repaired, so the failure rate is measurable.
+- **Baseline explanation:** a no-news, no-model template with the same
+  facts, stored next to every explanation, for phase 09 to compare.
+- **Storage:** `risk_explanations` (migration 008). Model: Haiku 4.5.
+
+Tests: 17 new (110 total): trigger, grounding check, template, node with
+fake LLMs (including an invented citation kept and flagged), retrieval
+SQL against real Postgres (ranking, New York day bounds, nothing after
+`as_of`), the real graph end to end, and persistence through a backtest.
+
+**Retrieval-only dry run** (`scripts/explainer_retrieval_check.py`, no LLM):
+
+| | bt 45 (in-sample) | bt 71 (out-of-sample) |
+|---|---|---|
+| VaR-changed decisions | 105 | 49 |
+| Driver days with any headline | 253 / 525 (48%) | 245 / 245 (100%) |
+| Top headline names Apple: fts vs recent | 59 vs 21 | 128 vs 75 |
+| fts / recent overlap in picks | 31% | 30% |
+| Est. prompt / cost per call (Haiku) | ~870 tok / $0.0026 | ~1,315 tok / $0.0031 |
+
+- Half the in-sample driver days have **no news at all**: the worst losses
+  include May 2022, inside FNSPID's gap. The "say so, cite nothing" rule
+  will carry much of the in-sample load.
+- Full-text ranking surfaces an Apple-named headline first 2.8x (in) and
+  1.7x (out) as often as recency. "Names Apple" is a crude proxy for
+  relevance; phase 09's hand labels are the real test.
+- Not yet done: one small real run (~20 decisions, ~$0.06) to measure the
+  share of explanations whose citations hold up.

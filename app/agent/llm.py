@@ -11,6 +11,7 @@ Environment (all optional):
     LLM_PROVIDER               "openai" (default) or "anthropic"
     PORTFOLIO_MODEL            overrides the provider's default for the PM
     SENTIMENT_MODEL            overrides the provider's default for sentiment
+    EXPLAINER_MODEL            overrides the provider's default for the explainer
 
 Two Claude API details this module exists to get right:
 
@@ -28,15 +29,27 @@ from __future__ import annotations
 import os
 from typing import Any, Literal
 
-Role = Literal["portfolio_manager", "sentiment_analyst"]
+Role = Literal["portfolio_manager", "sentiment_analyst", "explainer"]
+ROLES: tuple[Role, ...] = ("portfolio_manager", "sentiment_analyst", "explainer")
+ENV_KEYS: dict[Role, str] = {
+    "portfolio_manager": "PORTFOLIO_MODEL",
+    "sentiment_analyst": "SENTIMENT_MODEL",
+    "explainer": "EXPLAINER_MODEL",
+}
 
 DEFAULT_MODELS: dict[str, dict[Role, str]] = {
-    "openai": {"portfolio_manager": "gpt-4o", "sentiment_analyst": "gpt-4o-mini"},
+    "openai": {
+        "portfolio_manager": "gpt-4o",
+        "sentiment_analyst": "gpt-4o-mini",
+        "explainer": "gpt-4o-mini",
+    },
     # Chosen 2026-10-05: the same large/small split V1 had (gpt-4o /
     # gpt-4o-mini), at ~$1.60 per 272-day run (engineering-log, phase 07).
     "anthropic": {
         "portfolio_manager": "claude-sonnet-5-5",
         "sentiment_analyst": "claude-haiku-4-5",
+        # Phase 08: short grounded summaries; the small model, by default.
+        "explainer": "claude-haiku-4-5",
     },
 }
 
@@ -83,7 +96,7 @@ def provider() -> str:
 
 
 def model_name(role: Role) -> str:
-    env_key = "PORTFOLIO_MODEL" if role == "portfolio_manager" else "SENTIMENT_MODEL"
+    env_key = ENV_KEYS[role]
     return os.environ.get(env_key) or DEFAULT_MODELS[provider()][role]
 
 
@@ -126,7 +139,7 @@ def describe() -> dict:
     """What the next run will use, for backtests.config."""
     name = provider()
     out: dict = {"provider": name}
-    for role in ("portfolio_manager", "sentiment_analyst"):
+    for role in ROLES:
         model = model_name(role)
         if name == "anthropic":
             out[role] = {

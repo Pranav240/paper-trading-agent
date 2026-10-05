@@ -49,6 +49,7 @@ from app.agent.risk_math import (
     parametric_cvar,
     parametric_var,
     simple_returns,
+    tail_losses,
 )
 from app.agent.state import AgentOpinion, GraphState, RiskVerdict, TentativeDecision
 from app.repository.base import Repository
@@ -198,6 +199,16 @@ def make_risk_manager_node(
                     "parametric_var_95": parametric_var(returns),
                     "parametric_cvar_95": parametric_cvar(returns),
                     "last_close": float(bars[-1].close) if bars else None,
+                    # The losses the VaR is built from, worst first: what the
+                    # explainer node (phase 08) explains. Return i is the move
+                    # into bar i+1, so it is labelled with that bar's NY date.
+                    "var_tail": [
+                        {"date": str(day), "return": r}
+                        for day, r in tail_losses(
+                            returns,
+                            [b.timestamp.astimezone(NEW_YORK).date() for b in bars[1:]],
+                        ) or []
+                    ],
                 }
             )
 

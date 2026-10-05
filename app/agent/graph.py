@@ -26,6 +26,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
 from app.agent.data_sources import HeadlineSource, PriceDataSource
+from app.agent.explainer import HeadlineRetriever, make_explainer_node
 from app.agent.portfolio_manager import make_portfolio_manager_node
 from app.agent.risk_manager import make_risk_manager_node
 from app.agent.sentiment_analyst import make_sentiment_analyst_node
@@ -43,7 +44,11 @@ def build_decision_graph(
     sentiment_llm: BaseChatModel | None = None,
     portfolio_llm: BaseChatModel | None = None,
     sentiment_mode: SentimentMode = "score",
+    explainer_retriever: HeadlineRetriever | None = None,
+    explainer_llm: BaseChatModel | None = None,
 ) -> CompiledStateGraph:
+    """`explainer_retriever` adds the phase 08 explainer after the risk
+    manager. Without it the graph is unchanged (and costs nothing extra)."""
     graph = StateGraph(GraphState)
 
     graph.add_node("technical_analyst", make_technical_analyst_node(price_source))
@@ -62,6 +67,13 @@ def build_decision_graph(
     graph.add_edge("technical_analyst", "portfolio_manager")
     graph.add_edge("sentiment_analyst", "portfolio_manager")
     graph.add_edge("portfolio_manager", "risk_manager")
-    graph.add_edge("risk_manager", END)
+    if explainer_retriever is None:
+        graph.add_edge("risk_manager", END)
+    else:
+        graph.add_node(
+            "explainer", make_explainer_node(explainer_retriever, llm=explainer_llm)
+        )
+        graph.add_edge("risk_manager", "explainer")
+        graph.add_edge("explainer", END)
 
     return graph.compile()

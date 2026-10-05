@@ -21,7 +21,9 @@ from langgraph.graph import END, START, StateGraph
 from psycopg_pool import AsyncConnectionPool
 
 from app.agent.backtest import DEFAULT_SLIPPAGE_BPS, BudgetExceeded, run_backtest
-from app.agent.state import AgentOpinion, GraphState, RiskVerdict, TentativeDecision
+from app.agent.state import (
+    AgentOpinion, GraphState, RiskExplanation, RiskVerdict, TentativeDecision,
+)
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
@@ -62,7 +64,8 @@ def _opinion(agent: str, raw: dict | None = None) -> AgentOpinion:
     return AgentOpinion(agent_name=agent, opinion="X", reasoning="t", raw_output=raw or {})
 
 
-def _graph(action: str = "BUY", quantity: int = 5, chat_model=None, fail: bool = False):
+def _graph(action: str = "BUY", quantity: int = 5, chat_model=None, fail: bool = False,
+           explanation=None):
     """Stand-in decision graph. If `chat_model` is given, the node calls it
     once per day, like a real LLM node would."""
 
@@ -82,6 +85,7 @@ def _graph(action: str = "BUY", quantity: int = 5, chat_model=None, fail: bool =
             "risk_verdict": RiskVerdict(opinion="APPROVE", reasoning="t"),
             "final_action": action,
             "final_quantity": quantity,
+            "risk_explanation": explanation,
         }
 
     graph = StateGraph(GraphState)
@@ -268,3 +272,46 @@ async def test_missing_open_fails_loudly(pool):
     async with pool.connection() as conn:
         cur = await conn.execute("SELECT status FROM backtests WHERE name = %s", (NAME,))
         assert await cur.fetchall() == [("FAILED",)]
+
+
+async def test_explanation_is_stored_with_its_decision(pool):
+    explanation = RiskExplanation(
+        trigger_flags=["var_budget_veto"], model="fake", prompt_version="v1",
+        retrieval_method="fts", retrieved={"2022-09-13": [1, 2], "2022-05-18": []},
+        cited_headline_ids=[2], citations_valid=True, validation_problems=[],
+        summary="Blocked because past losses were large.",
+        drivers=[{"date": "2022-09-13", "cause": "CPI", "headline_ids": [2], "return": -0.0579}],
+        template_baseline="The risk engine blocked the buy: ...",
+    )
+    day = date(2022, 1, 10)
+    backtest_id = await run_backtest(
+        pool, lambda _id: _graph("HOLD", 0, explanation=explanation),
+        name=NAME, symbols=[SYMBOL], window_start=day, window_end=day, trading_days=[day],
+    )
+    async with pool.connection() as conn:
+        cur = await conn.execute(
+            "SELECT e.trigger_flags, e.retrieved, e.cited_headline_ids, e.citations_valid, "
+            "e.summary, e.drivers FROM risk_explanations e JOIN decisions d ON e.decision_id = d.id "
+            "JOIN runs r ON d.run_id = r.id WHERE r.backtest_id = %s",
+            (backtest_id,),
+        )
+        rows = await cur.fetchall()
+    assert rows == [(
+        ["var_budget_veto"], {"2022-09-13": [1, 2], "2022-05-18": []}, [2], True,
+        "Blocked because past losses were large.",
+        [{"date": "2022-09-13", "cause": "CPI", "headline_ids": [2], "return": -0.0579}],
+    )]
+
+
+async def test_no_explanation_row_when_not_triggered(pool):
+    day = date(2022, 1, 10)
+    backtest_id = await run_backtest(
+        pool, lambda _id: _graph("HOLD", 0),
+        name=NAME, symbols=[SYMBOL], window_start=day, window_end=day, trading_days=[day],
+    )
+    async with pool.connection() as conn:
+        cur = await conn.execute(
+            "SELECT count(*) FROM risk_explanations e JOIN decisions d ON e.decision_id = d.id "
+            "JOIN runs r ON d.run_id = r.id WHERE r.backtest_id = %s", (backtest_id,),
+        )
+        assert (await cur.fetchone())[0] == 0

@@ -37,6 +37,7 @@ from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 from app.agent.graph import CompiledStateGraph
+from app.agent.explainer import record_explanation
 from app.agent.var_forecasts import record_var_forecast
 from app.models import Action, Decision, RunResult, RunStatus
 
@@ -284,6 +285,17 @@ async def run_decision_cycle(
                     final_action=final_action,
                     final_quantity=final_quantity,
                 )
+
+                # Phase 08: present only when the graph has an explainer and
+                # the VaR budget changed this trade.
+                if result.get("risk_explanation") is not None:
+                    await record_explanation(
+                        conn,
+                        decision_id=decision.id,
+                        symbol=symbol,
+                        as_of=started_at,
+                        explanation=result["risk_explanation"],
+                    )
 
                 price = await _latest_close(conn, symbol)
                 if price is None:

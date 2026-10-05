@@ -55,6 +55,7 @@ from app.agent.data_sources import (
     alpaca_trading_days,
     build_historical_data_sources,
 )
+from app.agent.explainer import EXPLAINER_PROMPT_VERSION, HeadlineRetriever
 from app.agent.graph import build_decision_graph
 from app.agent.llm import describe as describe_llms
 from app.agent.risk_manager import MAX_POSITION_QTY, VAR_BUDGET
@@ -121,6 +122,17 @@ def _parse_args() -> argparse.Namespace:
             "Manager prompt written for it, verbatim "
             "(app/agent/v1_categorical.py) -- only for rerunning V1 "
             "backtests #3, #4, #6, #9."
+        ),
+    )
+    parser.add_argument(
+        "--explain",
+        choices=["off", "fts", "recent"],
+        default="off",
+        help=(
+            "Phase 08 explainer: explain each trade the VaR budget changed, "
+            "from headlines around the VaR's worst-loss days. 'fts' ranks "
+            "them by relevance, 'recent' is the recency-only baseline. One "
+            "extra LLM call per explained decision (counts toward the cap)."
         ),
     )
     parser.add_argument(
@@ -196,6 +208,15 @@ def _fake_llms(sentiment_mode: str = "score"):
     return sentiment_llm, portfolio_llm
 
 
+def _fake_explainer_llm():
+    """Dry-run explainer: a fixed summary citing nothing. Valid by the
+    grounding check, so a dry run exercises retrieval and persistence."""
+    from app.agent.explainer import ExplanationCall
+    from tests.agent_fakes import FakeLLM
+
+    return FakeLLM(ExplanationCall(summary="dry run — no real LLM", drivers=[]))
+
+
 async def main() -> None:
     args = _parse_args()
 
@@ -214,9 +235,10 @@ async def main() -> None:
 
     price_source, headline_source = build_historical_data_sources(pool)
 
-    sentiment_llm = portfolio_llm = None
+    sentiment_llm = portfolio_llm = explainer_llm = None
     if not args.use_real_llms:
         sentiment_llm, portfolio_llm = _fake_llms(args.sentiment_mode)
+        explainer_llm = _fake_explainer_llm()
         print(
             "NOTE: --use-real-llms not passed — running with fixed "
             "neutral LLM stand-ins. This verifies the pipeline runs "
@@ -241,6 +263,10 @@ async def main() -> None:
             sentiment_llm=sentiment_llm,
             portfolio_llm=portfolio_llm,
             sentiment_mode=args.sentiment_mode,
+            explainer_retriever=(
+                None if args.explain == "off" else HeadlineRetriever(pool, method=args.explain)
+            ),
+            explainer_llm=explainer_llm,
         )
 
     trading_days = alpaca_trading_days(args.start, args.end)
@@ -260,6 +286,15 @@ async def main() -> None:
             ),
         },
         "sentiment_mode": args.sentiment_mode,
+        "explainer": (
+            None
+            if args.explain == "off"
+            else {
+                "retrieval": args.explain,
+                "model": llms["explainer"]["model"] if real else "fake:no-citations",
+                "prompt_version": EXPLAINER_PROMPT_VERSION,
+            }
+        ),
         "no_sentiment_ablation": args.no_sentiment,
         "risk_node": {"max_position_qty": MAX_POSITION_QTY, "var_budget": VAR_BUDGET},
         "slippage_bps": str(args.slippage_bps),

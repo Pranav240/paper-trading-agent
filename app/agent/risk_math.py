@@ -68,6 +68,21 @@ def historical_cvar(
     return sum(tail) / len(tail)
 
 
+def tail_losses(
+    returns: Sequence[float],
+    labels: Sequence[object],
+    confidence: float = CONFIDENCE,
+    window: int = VAR_WINDOW,
+) -> list[tuple[object, float]] | None:
+    """The k largest losses behind historical_var, worst first, as
+    (label, return) -- e.g. (date, -0.0579). Same k, same window, so these
+    are exactly the days the VaR figure is built from."""
+    if len(returns) < window or len(labels) != len(returns):
+        return None
+    pairs = sorted(zip(returns[-window:], labels[-window:]), key=lambda p: p[0])
+    return [(label, r) for r, label in pairs[: _tail_count(window, confidence)]]
+
+
 def _mean_std(values: Sequence[float]) -> tuple[float, float]:
     n = len(values)
     mean = sum(values) / n

@@ -58,6 +58,7 @@ from psycopg_pool import AsyncConnectionPool
 
 from app.agent.graph import CompiledStateGraph
 from app.agent.llm import usage_cost_usd
+from app.agent.explainer import record_explanation
 from app.agent.var_forecasts import record_var_forecast
 from app.models import Action
 
@@ -256,7 +257,7 @@ async def _mark_failed(
 # else (git commit, dirty flag) may differ and is recorded per resume.
 RESUME_MUST_MATCH = (
     "symbols", "llm", "models", "sentiment_mode", "no_sentiment_ablation",
-    "risk_node", "slippage_bps", "fill", "calendar",
+    "risk_node", "slippage_bps", "fill", "calendar", "explainer",
 )
 
 
@@ -566,6 +567,17 @@ async def _run_backtest(
                         final_action=final_action,
                         final_quantity=final_quantity,
                     )
+
+                    # Phase 08: present only when the graph has an explainer and
+                    # the VaR budget changed this trade.
+                    if result.get("risk_explanation") is not None:
+                        await record_explanation(
+                            conn,
+                            decision_id=decision_id,
+                            symbol=symbol,
+                            as_of=as_of,
+                            explanation=result["risk_explanation"],
+                        )
 
                     # Same fallback as runner.py: the Technical Analyst's
                     # raw_output is the only price source here (backtests
