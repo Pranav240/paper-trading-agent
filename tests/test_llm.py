@@ -18,8 +18,8 @@ MESSAGES = [{"role": "system", "content": "s"}, {"role": "user", "content": "u"}
 def anthropic_env(monkeypatch):
     monkeypatch.setenv("LLM_PROVIDER", "anthropic")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-used")
-    monkeypatch.setenv("PORTFOLIO_MODEL", "claude-opus-5-5")
-    monkeypatch.setenv("SENTIMENT_MODEL", "claude-haiku-4-5")
+    monkeypatch.delenv("PORTFOLIO_MODEL", raising=False)
+    monkeypatch.delenv("SENTIMENT_MODEL", raising=False)
 
 
 def _payload(model):
@@ -44,23 +44,50 @@ def test_unknown_provider_rejected(monkeypatch):
         describe()
 
 
+def _temperature(payload):
+    # anthropic 1.x takes sampling params via extra_body; langchain moves them.
+    return payload.get("temperature", payload.get("extra_body", {}).get("temperature"))
+
+
+def test_claude_defaults_are_the_chosen_models(anthropic_env):
+    assert describe() == {
+        "provider": "anthropic",
+        "portfolio_manager": {
+            "model": "claude-sonnet-5-5", "temperature": None, "thinking": "between_tools",
+        },
+        "sentiment_analyst": {
+            "model": "claude-haiku-4-5", "temperature": 0.0, "thinking": "model default",
+        },
+    }
+
+
 def test_claude_uses_native_structured_output_not_forced_tool(anthropic_env):
     payload = _payload(default_llm("portfolio_manager"))
-    assert payload["model"] == "claude-opus-5-5"
+    assert payload["model"] == "claude-sonnet-5-5"
     assert payload["output_config"]["format"]["type"] == "json_schema"
     assert "tool_choice" not in payload and "tools" not in payload
 
 
-def test_temperature_only_where_the_model_accepts_it(anthropic_env):
-    opus = _payload(default_llm("portfolio_manager"))
-    haiku = _payload(default_llm("sentiment_analyst"))
+def test_sonnet_thinking_off_and_no_temperature(anthropic_env):
+    payload = _payload(default_llm("portfolio_manager"))
+    # Sonnet 5.5 rejects {"type": "disabled"}; between_tools is its off switch,
+    # and it accepts no other thinking field alongside it.
+    assert payload["thinking"] == {"type": "between_tools"}
+    assert _temperature(payload) is None  # non-default values are rejected
 
-    def temperature(payload):
-        return payload.get("temperature", payload.get("extra_body", {}).get("temperature"))
 
-    assert temperature(opus) is None       # rejected on Claude Opus 5.5
-    assert temperature(haiku) == 0.0       # V1's setting, where allowed
-    assert describe()["sentiment_analyst"] == {"model": "claude-haiku-4-5", "temperature": 0.0}
+def test_haiku_keeps_temperature_zero(anthropic_env):
+    payload = _payload(default_llm("sentiment_analyst"))
+    assert payload["model"] == "claude-haiku-4-5"
+    assert _temperature(payload) == 0.0  # V1's setting, where allowed
+    assert "thinking" not in payload
+
+
+def test_model_override_from_env(anthropic_env, monkeypatch):
+    monkeypatch.setenv("PORTFOLIO_MODEL", "claude-opus-5-5")
+    payload = _payload(default_llm("portfolio_manager"))
+    assert payload["model"] == "claude-opus-5-5"
+    assert _temperature(payload) is None and "thinking" not in payload
 
 
 def test_structured_leaves_fakes_alone():

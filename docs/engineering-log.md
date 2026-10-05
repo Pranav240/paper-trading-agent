@@ -907,3 +907,32 @@ spot-checked against raw Alpaca bars. Not exercised: real LLM calls
 (token counts will be checked on the first paid run) and trade fills on
 real prices (the fake Portfolio Manager always HOLDs; fills are covered by
 `tests/test_backtest_v2.py`).
+
+### Switching the LLM provider to Claude (V2 onward)
+
+Both OpenAI and Anthropic balances were at zero; Claude credit is what
+gets bought. Rather than swap one hard-coded client for another, the
+provider became configuration: `app/agent/llm.py`, `LLM_PROVIDER` in
+`.env`, default still OpenAI. Every backtest records provider, models,
+temperature and thinking setting in `backtests.config`.
+
+- **Models (chosen 2026-10-05):** Portfolio Manager `claude-sonnet-5-5`,
+  Sentiment Analyst `claude-haiku-4-5`: the same large/small split V1 had
+  with gpt-4o / gpt-4o-mini.
+- **Settings:** Sonnet 5.5 runs with thinking off (`between_tools`; it
+  rejects `disabled`) to match V1's non-reasoning setup. Sonnet 5.5
+  rejects `temperature`, so the Portfolio Manager runs at the model
+  default: unlike V1's temperature 0, two runs need not match exactly.
+  Haiku 4.5 keeps temperature 0.
+- **Structured output** uses Claude's native JSON-schema mode; the default
+  forced-tool-call method returns a 400 on Sonnet 5.5.
+- **Estimated cost** from run #14's measured prompt sizes (chars / 3.5,
+  so +/-50%): ~$1.60 per 272-day run; step 6 plus every V1 rerun ~$8.
+  The first paid run's `llm_usage` replaces this estimate.
+
+**What this does to comparisons.** Results from here on are a
+Claude-driven strategy. The V1 reruns change four things at once (look-
+ahead leak, holidays, fill at the open, model), so a difference from the
+published V1 numbers can't be attributed to any one of them; no bridge
+run (same config on both providers) is possible without OpenAI credit.
+The VaR-node comparison is unaffected: both sides replay one run.

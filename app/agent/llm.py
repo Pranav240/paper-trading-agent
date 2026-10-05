@@ -32,15 +32,22 @@ Role = Literal["portfolio_manager", "sentiment_analyst"]
 
 DEFAULT_MODELS: dict[str, dict[Role, str]] = {
     "openai": {"portfolio_manager": "gpt-4o", "sentiment_analyst": "gpt-4o-mini"},
-    # Placeholders until the model choice is made (see engineering-log).
+    # Chosen 2026-10-05: the same large/small split V1 had (gpt-4o /
+    # gpt-4o-mini), at ~$1.60 per 272-day run (engineering-log, phase 07).
     "anthropic": {
-        "portfolio_manager": "claude-opus-5-5",
-        "sentiment_analyst": "claude-opus-5-5",
+        "portfolio_manager": "claude-sonnet-5-5",
+        "sentiment_analyst": "claude-haiku-4-5",
     },
 }
 
 # Claude models that still accept `temperature`. Others: model default only.
 CLAUDE_TEMPERATURE_OK = ("claude-haiku-4-5",)
+
+# Claude Sonnet 5.5 thinks by default and rejects {"type": "disabled"};
+# "between_tools" is its thinking-off setting. Off, to match V1's
+# no-reasoning-model setup and keep cost and output comparable. Haiku 4.5
+# doesn't think unless asked, so it needs nothing.
+CLAUDE_THINKING_OFF = {"claude-sonnet-5-5": {"type": "between_tools"}}
 
 
 def provider() -> str:
@@ -69,6 +76,8 @@ def default_llm(role: Role) -> Any:
         temperature = _claude_temperature(model)
         if temperature is not None:
             kwargs["temperature"] = temperature
+        if model in CLAUDE_THINKING_OFF:
+            kwargs["thinking"] = CLAUDE_THINKING_OFF[model]
         return ChatAnthropic(**kwargs)
 
     from langchain_openai import ChatOpenAI
@@ -94,8 +103,12 @@ def describe() -> dict:
     out: dict = {"provider": name}
     for role in ("portfolio_manager", "sentiment_analyst"):
         model = model_name(role)
-        temperature = (
-            _claude_temperature(model) if name == "anthropic" else 0.0
-        )
-        out[role] = {"model": model, "temperature": temperature}
+        if name == "anthropic":
+            out[role] = {
+                "model": model,
+                "temperature": _claude_temperature(model),
+                "thinking": CLAUDE_THINKING_OFF.get(model, {}).get("type", "model default"),
+            }
+        else:
+            out[role] = {"model": model, "temperature": 0.0}
     return out
