@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phase 09 Labelling</title>
+<style>
+  :root{
+    --page:#f7f7f5; --surface:#ffffff; --ink:#151515; --ink-2:#55544f; --muted:#8a8882;
+    --line:rgba(0,0,0,.10); --accent:#2a6fd6; --yes:#13865f; --no:#b23b3b; --warn:#a86b00;
+    --yes-soft:#e3f4ec; --no-soft:#f8e6e6; --chip:#f0efeb;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --page:#0f1011; --surface:#17181a; --ink:#f2f2f0; --ink-2:#c3c2b7; --muted:#8b897f;
+      --line:rgba(255,255,255,.10); --accent:#5b9bf0; --yes:#3fbf8f; --no:#e66b6b; --warn:#e0a53a;
+      --yes-soft:#16302a; --no-soft:#3a1d1d; --chip:#222326;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  .wrap{max-width:920px;margin:0 auto;padding:20px 16px 80px}
+  h1{font-size:1.3rem;margin:0 0 4px}
+  .sub{color:var(--ink-2);margin:0 0 16px;font-size:.9rem}
+  details.rules{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:16px}
+  details.rules summary{cursor:pointer;font-weight:600}
+  details.rules li{margin:4px 0}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+  button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .progress{margin-left:auto;color:var(--ink-2);font-size:.9rem}
+  .days{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px}
+  .days button{padding:3px 7px;font-size:.78rem;font-family:ui-monospace,monospace}
+  .days button.done{background:var(--yes-soft);border-color:var(--yes)}
+  .days button.cur{outline:2px solid var(--accent)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .dayhead{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;margin-bottom:12px}
+  .dayhead .date{font-size:1.25rem;font-weight:700;font-family:ui-monospace,monospace}
+  .ret{color:var(--no);font-weight:600;font-family:ui-monospace,monospace}
+  .h{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;border:1px solid var(--line);margin-bottom:6px}
+  .h.yes{background:var(--yes-soft);border-color:var(--yes)}
+  .h.no{background:var(--no-soft);border-color:transparent}
+  .h .t{overflow-wrap:anywhere}
+  .h .when{display:block;color:var(--muted);font-size:.78rem;font-family:ui-monospace,monospace}
+  .h .btns{display:flex;gap:4px}
+  .h .btns button{padding:4px 10px;font-size:.85rem}
+  .h.yes .y{background:var(--yes);color:#fff;border-color:var(--yes)}
+  .h.no .n{background:var(--no);color:#fff;border-color:var(--no)}
+  label.field{display:block;margin-top:14px;font-weight:600;font-size:.9rem}
+  input[type=text]{width:100%;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--page);color:var(--ink);margin-top:4px}
+  .chk{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:.9rem}
+  .hint{color:var(--muted);font-size:.82rem}
+  .nav{display:flex;justify-content:space-between;margin-top:16px}
+  .warn{color:var(--warn);font-size:.85rem}
+  kbd{font-family:ui-monospace,monospace;font-size:.75rem;border:1px solid var(--line);border-radius:4px;padding:0 4px;background:var(--chip)}
+  @media (max-width:560px){ .h{grid-template-columns:1fr} .progress{margin-left:0;width:100%} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Phase 09 labelling</h1>
+  <p class="sub">40 days on which AAPL fell sharply. For each, mark every headline that explains that day's move, and write the cause in one line. Your work saves in this browser as you go; <b>Export</b> writes <code>labels.json</code>.</p>
+
+  <details class="rules" open>
+    <summary>Rules (from docs/phase09-plan.md)</summary>
+    <ul>
+      <li><b>Relevant</b> = the headline reports or explains <i>this day's</i> move in AAPL: company news (earnings, iPhone demand, China, lawsuits…) or market-wide news plausibly moving AAPL that day (Fed, inflation data, a broad tech sell-off).</li>
+      <li><b>Not relevant</b> = listicles ("3 stocks to buy"), other companies' news, generic commentary, or news about a different day.</li>
+      <li><b>Cause</b>: one plain line, e.g. "Hot CPI print triggered a broad tech sell-off". If nothing here explains the move, tick <i>No headline explains this move</i>.</li>
+      <li>Judge only from the headlines shown, not from what you know happened. Order is shuffled and the page doesn't say how each headline was found.</li>
+      <li>Keys: <kbd>Y</kbd>/<kbd>N</kbd> mark the next unanswered headline, <kbd>→</kbd>/<kbd>←</kbd> change day.</li>
+    </ul>
+  </details>
+
+  <div class="bar">
+    <button id="exportBtn" class="primary">Export labels.json</button>
+    <button id="importBtn">Import…</button>
+    <input id="importFile" type="file" accept="application/json" hidden>
+    <span class="progress" id="progress"></span>
+  </div>
+  <div class="days" id="days"></div>
+  <div class="card" id="card"></div>
+  <div class="nav">
+    <button id="prev">← Previous day</button>
+    <button id="next">Next day →</button>
+  </div>
+  <p class="warn" id="storageWarn" hidden>This browser isn't keeping your work between visits — export before closing the page.</p>
+</div>
+
+<script>
+const DATA = /*DATA*/null;
+const KEY = "phase09-labels-v1";
+
+function load(){
+  try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
+  catch(e){ document.getElementById("storageWarn").hidden = false; return {}; }
+}
+let labels = load();
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(labels)); }
+  catch(e){ document.getElementById("storageWarn").hidden = false; }
+}
+function dayLabels(date){
+  return labels[date] || (labels[date] = {relevant:{}, cause:"", no_explaining:false});
+}
+function isDone(day){
+  const l = labels[day.date];
+  if(!l) return false;
+  const allMarked = day.candidates.every(c => c.id in l.relevant);
+  return allMarked && (l.no_explaining || l.cause.trim().length > 0);
+}
+
+let idx = Math.max(0, DATA.days.findIndex(d => !isDone(d)));
+
+function render(){
+  const day = DATA.days[idx];
+  const l = dayLabels(day.date);
+  const card = document.getElementById("card");
+  const fmt = new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
+  card.innerHTML = `
+    <div class="dayhead">
+      <span class="date">${day.date}</span>
+      <span class="ret">${(day.return*100).toFixed(2)}%</span>
+      <span class="hint">day ${idx+1} of ${DATA.days.length} · ${day.candidates.length} headlines · published from the day before through this day (New York time)</span>
+    </div>
+    <div id="list"></div>
+    <label class="field">Cause, in one line
+      <input type="text" id="cause" placeholder="e.g. Report of China iPhone curbs hit Apple and its suppliers">
+    </label>
+    <div class="chk"><input type="checkbox" id="none"><label for="none">No headline explains this move</label></div>`;
+  const list = card.querySelector("#list");
+  day.candidates.forEach(c => {
+    const v = l.relevant[c.id];
+    const row = document.createElement("div");
+    row.className = "h" + (v === true ? " yes" : v === false ? " no" : "");
+    row.innerHTML = `<span class="t"></span><span class="btns"><button class="y">Relevant</button><button class="n">Not</button></span>`;
+    row.querySelector(".t").textContent = c.headline;
+    const when = document.createElement("span"); when.className = "when";
+    when.textContent = fmt.format(new Date(c.published_at));
+    row.querySelector(".t").appendChild(when);
+    row.querySelector(".y").onclick = () => { l.relevant[c.id] = true; save(); render(); };
+    row.querySelector(".n").onclick = () => { l.relevant[c.id] = false; save(); render(); };
+    list.appendChild(row);
+  });
+  const cause = card.querySelector("#cause"), none = card.querySelector("#none");
+  cause.value = l.cause; none.checked = l.no_explaining;
+  cause.oninput = () => { l.cause = cause.value; save(); renderChrome(); };
+  none.onchange = () => { l.no_explaining = none.checked; save(); renderChrome(); };
+  renderChrome();
+}
+
+function renderChrome(){
+  const days = document.getElementById("days");
+  days.innerHTML = "";
+  DATA.days.forEach((d,i) => {
+    const b = document.createElement("button");
+    b.textContent = d.date.slice(2);
+    b.className = (isDone(d) ? "done " : "") + (i === idx ? "cur" : "");
+    b.onclick = () => { idx = i; render(); };
+    days.appendChild(b);
+  });
+  const done = DATA.days.filter(isDone).length;
+  document.getElementById("progress").textContent = `${done} / ${DATA.days.length} days complete`;
+  document.getElementById("prev").disabled = idx === 0;
+  document.getElementById("next").disabled = idx === DATA.days.length - 1;
+}
+
+document.getElementById("prev").onclick = () => { if(idx>0){ idx--; render(); window.scrollTo(0,0);} };
+document.getElementById("next").onclick = () => { if(idx<DATA.days.length-1){ idx++; render(); window.scrollTo(0,0);} };
+document.addEventListener("keydown", e => {
+  if(e.target.tagName === "INPUT") return;
+  const day = DATA.days[idx], l = dayLabels(day.date);
+  if(e.key === "ArrowRight") document.getElementById("next").click();
+  else if(e.key === "ArrowLeft") document.getElementById("prev").click();
+  else if(e.key === "y" || e.key === "n"){
+    const c = day.candidates.find(c => !(c.id in l.relevant));
+    if(c){ l.relevant[c.id] = e.key === "y"; save(); render(); }
+  }
+});
+
+document.getElementById("exportBtn").onclick = () => {
+  const done = DATA.days.filter(isDone).length;
+  if(done < DATA.days.length && !confirm(`Only ${done} of ${DATA.days.length} days are complete. Export anyway?`)) return;
+  const out = {
+    labeller: "project owner",
+    exported: new Date().toISOString(),
+    golden_built: DATA.built,
+    complete_days: done,
+    days: DATA.days.map(d => ({
+      date: d.date,
+      relevant_ids: d.candidates.filter(c => labels[d.date]?.relevant[c.id] === true).map(c => c.id),
+      not_relevant_ids: d.candidates.filter(c => labels[d.date]?.relevant[c.id] === false).map(c => c.id),
+      cause: labels[d.date]?.cause?.trim() || "",
+      no_explaining_headline: !!labels[d.date]?.no_explaining,
+    })),
+  };
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], {type:"application/json"}));
+  a.download = "labels.json"; a.click();
+};
+document.getElementById("importBtn").onclick = () => document.getElementById("importFile").click();
+document.getElementById("importFile").onchange = async e => {
+  const f = e.target.files[0]; if(!f) return;
+  const inp = JSON.parse(await f.text());
+  inp.days.forEach(d => {
+    const l = dayLabels(d.date);
+    d.relevant_ids.forEach(id => l.relevant[id] = true);
+    d.not_relevant_ids.forEach(id => l.relevant[id] = false);
+    l.cause = d.cause; l.no_explaining = d.no_explaining_headline;
+  });
+  save(); render();
+};
+
+render();
+</script>
+</body>
+</html>
