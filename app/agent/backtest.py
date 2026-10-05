@@ -207,20 +207,105 @@ async def _record_backtest_trade(
             remaining -= close_qty
 
 
+def _add_usage(a: dict | None, b: dict) -> dict:
+    total = {model: dict(counts) for model, counts in (a or {}).items()}
+    for model, counts in b.items():
+        slot = total.setdefault(model, {})
+        for key, value in counts.items():
+            slot[key] = slot.get(key, 0) + value
+    return total
+
+
+async def _finish(
+    conn: psycopg.AsyncConnection,
+    backtest_id: int,
+    status: str,
+    usage: UsageMetadataCallbackHandler,
+) -> None:
+    """Set the final status and add this process's tokens to any already
+    recorded (a resumed run keeps the earlier part's usage)."""
+    async with conn.cursor() as cur:
+        await cur.execute("SELECT llm_usage FROM backtests WHERE id = %s", (backtest_id,))
+        previous = (await cur.fetchone())[0]
+        await cur.execute(
+            "UPDATE backtests SET status = %s, finished_at = %s, llm_usage = %s "
+            "WHERE id = %s AND status = 'RUNNING'",
+            (
+                status,
+                datetime.now(timezone.utc),
+                psycopg.types.json.Json(_add_usage(previous, usage_summary(usage))),
+                backtest_id,
+            ),
+        )
+
+
 async def _mark_failed(
     pool: AsyncConnectionPool, backtest_id: int, usage: UsageMetadataCallbackHandler
 ) -> None:
     """Fresh connection: the run's own one may be the thing that broke."""
     async with pool.connection() as conn:
-        await conn.execute(
-            "UPDATE backtests SET status = 'FAILED', finished_at = %s, llm_usage = %s "
-            "WHERE id = %s AND status = 'RUNNING'",
-            (
-                datetime.now(timezone.utc),
-                psycopg.types.json.Json(usage_summary(usage)),
-                backtest_id,
-            ),
+        await _finish(conn, backtest_id, "FAILED", usage)
+
+
+# Settings a resumed run must share with the run it continues; anything
+# else (git commit, dirty flag) may differ and is recorded per resume.
+RESUME_MUST_MATCH = (
+    "symbols", "llm", "models", "sentiment_mode", "no_sentiment_ablation",
+    "risk_node", "slippage_bps", "fill", "calendar",
+)
+
+
+async def _start_resume(
+    cur, backtest_id: int, window_start: date, window_end: date, config: dict
+) -> tuple[int, date]:
+    """Validate that `backtest_id` can be continued with this config, mark
+    it RUNNING again, and return (id, last completed day)."""
+    await cur.execute(
+        "SELECT window_start, window_end, status, config, llm_usage "
+        "FROM backtests WHERE id = %s FOR UPDATE",
+        (backtest_id,),
+    )
+    row = await cur.fetchone()
+    if row is None:
+        raise ValueError(f"No backtest {backtest_id} to resume.")
+    if row["status"] not in ("RUNNING", "FAILED"):
+        raise ValueError(f"Backtest {backtest_id} is {row['status']}; only an unfinished run resumes.")
+    if (row["window_start"], row["window_end"]) != (window_start, window_end):
+        raise ValueError(
+            f"Window {window_start}..{window_end} does not match backtest "
+            f"{backtest_id}'s {row['window_start']}..{row['window_end']}."
         )
+    stored = row["config"] or {}
+    mismatched = [k for k in RESUME_MUST_MATCH if stored.get(k) != config.get(k)]
+    if mismatched:
+        raise ValueError(f"Cannot resume backtest {backtest_id}: settings differ: {mismatched}")
+
+    await cur.execute(
+        "SELECT count(*) FILTER (WHERE status <> 'SUCCESS') AS unfinished, max(as_of) AS last "
+        "FROM runs WHERE backtest_id = %s",
+        (backtest_id,),
+    )
+    runs = await cur.fetchone()
+    if runs["unfinished"]:
+        raise ValueError(f"Backtest {backtest_id} has a partly written day; inspect before resuming.")
+    last_done = runs["last"].date() if runs["last"] else date.min
+
+    resume = {
+        "after_day": str(last_done),
+        "at": datetime.now(timezone.utc).isoformat(),
+        "git_commit": config.get("git_commit"),
+        "git_dirty": config.get("git_dirty"),
+        # None: the earlier part's tokens were never recorded (the process
+        # was killed outright), so llm_usage covers only what came after.
+        "llm_usage_before": row["llm_usage"],
+    }
+    await cur.execute(
+        "UPDATE backtests SET status = 'RUNNING', finished_at = NULL, "
+        "config = jsonb_set(config, '{resumes}', COALESCE(config->'resumes', '[]'::jsonb) || %s::jsonb) "
+        "WHERE id = %s",
+        (psycopg.types.json.Json([resume]), backtest_id),
+    )
+    return backtest_id, last_done
 
 
 async def run_backtest(
@@ -235,11 +320,18 @@ async def run_backtest(
     config: dict | None = None,
     trading_days: list[date] | None = None,
     execution_prices: ExecutionPrices | None = None,
+    resume_backtest_id: int | None = None,
 ) -> int:
     """Runs one full backtest (see _run_backtest). If it raises -- an API
     out of credits, a network drop, Ctrl-C -- the `backtests` row is marked
     FAILED with the tokens used so far, instead of being left RUNNING
-    forever as backtests 5 and 18 were. The exception still propagates."""
+    forever as backtests 5 and 18 were. The exception still propagates.
+
+    `resume_backtest_id` continues an interrupted run after its last
+    completed day instead of starting a new one (see _start_resume). That
+    is sound because a run's only cross-day state -- open positions --
+    lives in backtest_outcomes, and each day commits as one transaction,
+    so a killed run leaves whole days or nothing."""
     usage = UsageMetadataCallbackHandler()
     created: list[int] = []
     try:
@@ -256,6 +348,7 @@ async def run_backtest(
             execution_prices=execution_prices,
             usage=usage,
             created=created,
+            resume_backtest_id=resume_backtest_id,
         )
     except BaseException:
         if created:
@@ -277,6 +370,7 @@ async def _run_backtest(
     execution_prices: ExecutionPrices | None,
     usage: UsageMetadataCallbackHandler,
     created: list[int],
+    resume_backtest_id: int | None = None,
 ) -> int:
     """Runs one full backtest: one simulated decision cycle per trading
     day per symbol across [window_start, window_end], all persisted
@@ -327,15 +421,21 @@ async def _run_backtest(
         # positions.
         async with conn.transaction():
             async with conn.cursor(row_factory=dict_row) as cur:
-                await cur.execute(
-                    """
-                    INSERT INTO backtests (name, window_start, window_end, config)
-                    VALUES (%s, %s, %s, %s)
-                    RETURNING id
-                    """,
-                    (name, window_start, window_end, psycopg.types.json.Json(config or {})),
-                )
-                backtest_id = (await cur.fetchone())["id"]
+                if resume_backtest_id is None:
+                    await cur.execute(
+                        """
+                        INSERT INTO backtests (name, window_start, window_end, config)
+                        VALUES (%s, %s, %s, %s)
+                        RETURNING id
+                        """,
+                        (name, window_start, window_end, psycopg.types.json.Json(config or {})),
+                    )
+                    backtest_id = (await cur.fetchone())["id"]
+                else:
+                    backtest_id, last_done = await _start_resume(
+                        cur, resume_backtest_id, window_start, window_end, config or {}
+                    )
+                    trading_days = [d for d in trading_days if d > last_done]
         created.append(backtest_id)
 
         graph = graph_factory(backtest_id)
@@ -481,16 +581,7 @@ async def _run_backtest(
                         (datetime.now(timezone.utc), run_id),
                     )
 
-        async with conn.cursor() as cur:
-            await cur.execute(
-                "UPDATE backtests SET status = 'SUCCESS', finished_at = %s, "
-                "llm_usage = %s WHERE id = %s",
-                (
-                    datetime.now(timezone.utc),
-                    psycopg.types.json.Json(usage_summary(usage)),
-                    backtest_id,
-                ),
-            )
+        await _finish(conn, backtest_id, "SUCCESS", usage)
 
     return backtest_id
 

@@ -124,6 +124,16 @@ def _parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--resume",
+        type=int,
+        metavar="BACKTEST_ID",
+        help=(
+            "Continue an interrupted backtest after its last completed day "
+            "instead of starting a new one. Window and settings must match "
+            "the original (checked); the resume is recorded in its config."
+        ),
+    )
+    parser.add_argument(
         "--allow-dirty",
         action="store_true",
         help=(
@@ -260,6 +270,7 @@ async def main() -> None:
             config=config,
             trading_days=trading_days,
             execution_prices=OpenPriceBook(price_source, args.start, args.end),
+            resume_backtest_id=args.resume,
         )
         metrics = await compute_backtest_metrics(pool, backtest_id)
     finally:

@@ -179,6 +179,64 @@ async def test_crash_marks_backtest_failed(pool):
         assert await cur.fetchall() == [("FAILED", {})]
 
 
+async def test_resume_continues_after_last_completed_day(pool):
+    days = [date(2022, 1, 10), date(2022, 1, 11), date(2022, 1, 12)]
+    config = {"symbols": [SYMBOL], "sentiment_mode": "score", "git_commit": "first"}
+
+    # A run that completed day 1, then was killed outright: status left
+    # RUNNING, its tokens recorded only up to here.
+    backtest_id = await run_backtest(
+        pool, lambda _id: _graph("HOLD", 0, chat_model=_usage_model(1)),
+        name=NAME, symbols=[SYMBOL], window_start=days[0], window_end=days[-1],
+        config=config, trading_days=days[:1],
+    )
+    async with pool.connection() as conn:
+        await conn.execute("UPDATE backtests SET status = 'RUNNING' WHERE id = %s", (backtest_id,))
+
+    resumed = await run_backtest(
+        pool, lambda _id: _graph("HOLD", 0, chat_model=_usage_model(2)),
+        name=NAME, symbols=[SYMBOL], window_start=days[0], window_end=days[-1],
+        config={**config, "git_commit": "second"}, trading_days=days,
+        resume_backtest_id=backtest_id,
+    )
+    assert resumed == backtest_id
+
+    async with pool.connection() as conn:
+        cur = await conn.execute(
+            "SELECT as_of::date FROM runs WHERE backtest_id = %s ORDER BY as_of", (backtest_id,)
+        )
+        run_days = [row[0] for row in await cur.fetchall()]
+    status, usage, stored = await _backtest_row(pool, backtest_id)
+
+    assert run_days == days  # day 1 once, then only days 2 and 3
+    assert status == "SUCCESS"
+    # 1 call before the interruption + 2 after, summed.
+    assert usage["fake-model"]["total_tokens"] == 330
+    assert stored["git_commit"] == "first"
+    [resume] = stored["resumes"]
+    assert resume["after_day"] == "2022-01-10" and resume["git_commit"] == "second"
+    assert resume["llm_usage_before"]["fake-model"]["total_tokens"] == 110
+
+
+async def test_resume_refuses_different_settings(pool):
+    days = [date(2022, 1, 10), date(2022, 1, 11)]
+    backtest_id = await run_backtest(
+        pool, lambda _id: _graph("HOLD", 0),
+        name=NAME, symbols=[SYMBOL], window_start=days[0], window_end=days[-1],
+        config={"sentiment_mode": "score"}, trading_days=days[:1],
+    )
+    async with pool.connection() as conn:
+        await conn.execute("UPDATE backtests SET status = 'RUNNING' WHERE id = %s", (backtest_id,))
+
+    with pytest.raises(ValueError, match="sentiment_mode"):
+        await run_backtest(
+            pool, lambda _id: _graph("HOLD", 0),
+            name=NAME, symbols=[SYMBOL], window_start=days[0], window_end=days[-1],
+            config={"sentiment_mode": "categorical"}, trading_days=days,
+            resume_backtest_id=backtest_id,
+        )
+
+
 async def test_missing_open_fails_loudly(pool):
     with pytest.raises(ValueError, match="No opening price"):
         await run_backtest(
