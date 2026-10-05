@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>No Edge Found</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -294,7 +295,7 @@
     <h1>No edge found.</h1>
     <p class="standfirst">A multi-agent paper-trading system, built across six phases and evaluated honestly. It runs, it reasons, it deploys — and it does not beat buying the stock and holding it. This is the report of that result.</p>
     <div class="byline">
-      <span>9 September 2026</span>
+      <span>9 September 2026 · corrected 5 October 2026</span>
       <span>AAPL · 7 real-LLM backtests</span>
       <span>Never touched real capital</span>
     </div>
@@ -304,6 +305,12 @@
     <h2>The finding</h2>
     <p>Every backtest longer than a single quarter underperformed buy-and-hold, by <span class="mono">$39</span> to <span class="mono">$225</span> on a 20-share basis. The out-of-sample run — executed once, with no code, prompt or parameter changes made after seeing the in-sample result — lost <span class="mono">$63</span> in a market that was essentially flat.</p>
     <p>The project's founding rule was that an honestly evaluated failure is the correct thing to report. So it is reported, and the machinery built to detect it is the actual deliverable.</p>
+  </div>
+
+  <div class="note">
+    <p class="lede">Correction, 5 October 2026: every backtest in this report could see the future.</p>
+    <p>The first step of V2 checked when each simulated decision got its prices. Backtests decided at 12:00 UTC, but the price source stamps a day&rsquo;s bar at midnight New York, so each decision was handed that day&rsquo;s own close &mdash; a price that would not exist for another eight hours. Confirmed for all <span class="mono">938</span> stored decisions in runs #4, #6, #9 and #14. Fixed, along with two smaller problems found next to it: decisions made on market holidays, and fills at a price already gone by the open.</p>
+    <p>Two runs have been redone with all three fixes, and on Claude rather than GPT-4o, so a change cannot be attributed to the leak alone. With V1&rsquo;s own risk rules, the out-of-sample run moves from <span class="mono">&minus;$63</span> to <span class="mono">+$66</span> against buy-and-hold&rsquo;s <span class="mono">+$2</span>, and the score-node configuration on the in-sample window lands <span class="mono">$83</span> above buy-and-hold. Both are inside the spread V1&rsquo;s own repeat runs showed. The headline survives in substance &mdash; <strong>no edge detected</strong> &mdash; but not as a loss: in neither direction. Every figure below is from the original runs and is left as published; runs #3, #4 and #7 have not been redone.</p>
   </div>
 
   <section>
@@ -351,6 +358,7 @@
       </table>
     </div>
     <p class="fig">The single positive row is a three-month pilot with four closed trades. It beat the baseline mainly because AAPL fell over that window — buy-and-hold lost money and a largely idle system did not. That is not evidence of skill.</p>
+    <p class="fig"><strong>Corrected since (see above):</strong> every row here had the look-ahead leak. Corrected reruns: #6 &rarr; <span class="mono">+66.35</span> against <span class="mono">+2.20</span>; the #14 configuration on #4&rsquo;s window &rarr; <span class="mono">+920.81</span> against <span class="mono">+837.80</span>.</p>
 
     <h3>Why mark-to-market, not realized P&amp;L</h3>
     <p>Realized P&amp;L alone made run #3 look like a clean 100% win rate and made run #14 look far worse than it was. Both had open lots carrying unrealized moves. Any run ending with open positions gets marked at the window's last price before being compared to anything.</p>
@@ -453,6 +461,7 @@
     <p>It also corrected the project's own recorded diagnosis. Three consecutive December buys into a decline had been named as the cause; they are 43% of the loss. The largest single contributor, 54%, is one September lot caught by a two-day 6.4% gap down that no add-to-position rule can anticipate. And the December decline was only ~1.1% from the first buy to the third, which is why a 2% threshold changes literally nothing.</p>
 
     <p class="fig">Note also that three "different" rules land on exactly −49.24. They block the same two trades by three mechanisms. A table of seven rules was really testing about three ideas — worth knowing before anyone reports "we evaluated seven risk rules".</p>
+    <p class="fig"><strong>Corrected since:</strong> this replay ran over the leaky run #6, so the loss it was trying to explain does not survive the correction &mdash; rerun, #6 finishes $66 ahead. The replay tool itself carried over into V2 unchanged: it is how V2&rsquo;s risk engine was compared with V1&rsquo;s rules on identical decisions.</p>
   </section>
 
   <section>
@@ -460,6 +469,7 @@
     <p class="sec-note">Each one changed a conclusion or hid one</p>
 
     <ol class="bugs">
+      <li><b>Every backtest could see that day&rsquo;s close (found in V2)</b><p>Decisions ran at 12:00 UTC and asked for bars &ldquo;up to now&rdquo;; the price source stamps each day&rsquo;s bar at midnight New York, so the decision day&rsquo;s own bar, close included, came back. The backtesting plan required prior-day prices from the start; nothing checked it. Prices are now filtered to bars whose session closed before the decision. It turned the out-of-sample &ldquo;loss&rdquo; into a result indistinguishable from buy-and-hold.</p></li>
       <li><b>A transaction bug made every backtest meaningless</b><p>The first insert wasn't wrapped in its own transaction, so every later <em class="term">conn.transaction()</em> silently downgraded to a savepoint and no day's writes were visible to the next day. The symptom was the position cap never engaging. Found before any result was trusted.</p></li>
       <li><b>Six database tests silently skipped for two entire phases</b><p>On Windows, psycopg's pool cannot run on the default event loop. It raises <em class="term">PoolTimeout</em>, which subclasses <em class="term">OperationalError</em>, which the "no database available" guard caught. The suite reported green while running 33 of 39 tests. CI now fails if any test skips.</p></li>
       <li><b>A buy-and-hold baseline from the wrong window</b><p>Two days' difference between runs moved the baseline by $66.80 and turned "matched buy and hold" into "$41–74 below it".</p></li>
@@ -467,7 +477,7 @@
       <li><b>An AMI lookup that churned the server</b><p><em class="term">most_recent = true</em> meant a newly published image made Terraform propose destroying a running instance for no reason anyone asked for. A plan you cannot trust is a plan you stop reading.</p></li>
       <li><b>GitHub's OIDC claim carries numeric IDs</b><p>The documented subject is <em class="term">repo:owner/name</em>; the real one appends immutable account and repository IDs. AWS returns only "Not authorized" — uninformative by design, since naming the failed condition would let an attacker probe the policy. CloudTrail carries the actual claim.</p></li>
     </ol>
-    <p>Four of those six were only findable by running the thing for real. That is the argument for the deployment costing a few cents rather than being left as validated code.</p>
+    <p>Four of the six found in V1 were only findable by running the thing for real. That is the argument for the deployment costing a few cents rather than being left as validated code. The seventh was visible in the code all along and confirmed with one call to the real price API; it survived because a written requirement was never turned into a check.</p>
   </section>
 
   <section>
