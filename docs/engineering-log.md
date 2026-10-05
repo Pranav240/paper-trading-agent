@@ -954,3 +954,16 @@ trading day (Portfolio Manager ~$0.004, sentiment ~$0.002):
 Open: #3, #4 and #6 used the categorical sentiment prompt, which the
 Phase 04 rewrite removed. Rerunning them faithfully needs it restored
 behind a setting.
+
+**Categorical mode restored (`fa094e8`).** V1's BUY/SELL/HOLD sentiment
+prompt and the Portfolio Manager prompt written for it are back, verbatim,
+behind `--sentiment-mode categorical` (`app/agent/v1_categorical.py`).
+Both were checked byte-for-byte against git (ba47f0a, 275b6e4^) and are
+pinned by hash in `tests/test_v1_categorical.py`. Dry run over #3's window
+(backtest 44, fake LLMs): 64 trading days, all 64 sentiment opinions
+stored as votes, mode recorded in config.
+
+**Reduced to fit a $5 budget, in this order:** step 6 (~$1.60), #6
+(~$0.75), then check real cost from `llm_usage`, then #4 (~$1.60) if it
+fits. #3 and #7 are not rerun for now; the homepage will say so rather
+than leave their old numbers looking corrected.
