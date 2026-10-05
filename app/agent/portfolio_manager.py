@@ -24,6 +24,11 @@ from langchain_core.language_models import BaseChatModel
 
 from app.agent.llm import default_llm, structured
 from app.agent.state import AgentOpinion, GraphState, TentativeDecision
+from app.agent.v1_categorical import (
+    CATEGORICAL_PM_PROMPT,
+    SentimentMode,
+    categorical_pm_user_prompt,
+)
 
 # Fixed paper-trade lot size. Keeping this a flat number (rather than a
 # % of some notional portfolio value, which doesn't exist yet — there's
@@ -77,29 +82,36 @@ English a human could audit."""
 
 def make_portfolio_manager_node(
     llm: BaseChatModel | None = None,
+    sentiment_mode: SentimentMode = "score",
 ) -> Callable[[GraphState], Awaitable[dict]]:
     # Provider and model come from app/agent/llm.py (LLM_PROVIDER env).
     model = llm or default_llm("portfolio_manager")
     structured_model = structured(model, TentativeDecision)
+    # sentiment_mode="categorical": V1's prompt, written for a BUY/SELL/HOLD
+    # sentiment vote, for faithful V1 reruns (app/agent/v1_categorical.py).
+    system_prompt = CATEGORICAL_PM_PROMPT if sentiment_mode == "categorical" else SYSTEM_PROMPT
 
     async def node(state: GraphState) -> dict:
         technical = state["technical_opinion"]
         sentiment = state["sentiment_opinion"]
         symbol = state["symbol"]
 
-        user_prompt = (
-            f"Symbol: {symbol}\n\n"
-            f"Technical Analyst opinion: {technical.opinion} "
-            f"(confidence={technical.confidence})\n"
-            f"Technical Analyst reasoning: {technical.reasoning}\n\n"
-            f"Sentiment Analyst score: {sentiment.opinion} "
-            f"(on the -1.0 to +1.0 scale; confidence={sentiment.confidence})\n"
-            f"Sentiment Analyst reasoning: {sentiment.reasoning}"
-        )
+        if sentiment_mode == "categorical":
+            user_prompt = categorical_pm_user_prompt(symbol, technical, sentiment)
+        else:
+            user_prompt = (
+                f"Symbol: {symbol}\n\n"
+                f"Technical Analyst opinion: {technical.opinion} "
+                f"(confidence={technical.confidence})\n"
+                f"Technical Analyst reasoning: {technical.reasoning}\n\n"
+                f"Sentiment Analyst score: {sentiment.opinion} "
+                f"(on the -1.0 to +1.0 scale; confidence={sentiment.confidence})\n"
+                f"Sentiment Analyst reasoning: {sentiment.reasoning}"
+            )
 
         decision: TentativeDecision = await structured_model.ainvoke(
             [
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ]
         )

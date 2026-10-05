@@ -112,6 +112,18 @@ def _parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--sentiment-mode",
+        choices=["score", "categorical"],
+        default="score",
+        help=(
+            "'score' (default): the current -1..+1 sentiment score. "
+            "'categorical': V1's BUY/SELL/HOLD vote and the Portfolio "
+            "Manager prompt written for it, verbatim "
+            "(app/agent/v1_categorical.py) -- only for rerunning V1 "
+            "backtests #3, #4, #6, #9."
+        ),
+    )
+    parser.add_argument(
         "--allow-dirty",
         action="store_true",
         help=(
@@ -137,19 +149,26 @@ def _git_state() -> tuple[str, bool]:
     return commit, dirty
 
 
-def _fake_llms():
-    """Fixed neutral stand-ins (sentiment score 0.00, Portfolio Manager
-    action HOLD), imported from the test suite rather than redefined
+def _fake_llms(sentiment_mode: str = "score"):
+    """Fixed neutral stand-ins (sentiment score 0.00, or a HOLD vote in
+    categorical mode as V1's dry run used; Portfolio Manager action HOLD),
+    imported from the test suite rather than redefined
     here — one definition of "what a fake LLM response looks like," not
     two that can drift apart. Only meant for a dry-run
     smoke test of the pipeline; --use-real-llms is what actually
     evaluates the strategy."""
     from app.agent.sentiment_analyst import SentimentScore
+    from app.agent.v1_categorical import SentimentCall
     from tests.agent_fakes import FakeLLM
 
-    sentiment_llm = FakeLLM(
-        SentimentScore(score=0.0, confidence=0.5, reasoning="dry run — no real LLM")
-    )
+    if sentiment_mode == "categorical":
+        sentiment_llm = FakeLLM(
+            SentimentCall(opinion="HOLD", confidence=0.5, reasoning="dry run — no real LLM")
+        )
+    else:
+        sentiment_llm = FakeLLM(
+            SentimentScore(score=0.0, confidence=0.5, reasoning="dry run — no real LLM")
+        )
     portfolio_llm = FakeLLM(
         TentativeDecision(
             action="HOLD", quantity=0, confidence=0.5, reasoning="dry run — no real LLM"
@@ -175,7 +194,7 @@ async def main() -> None:
 
     sentiment_llm = portfolio_llm = None
     if not args.use_real_llms:
-        sentiment_llm, portfolio_llm = _fake_llms()
+        sentiment_llm, portfolio_llm = _fake_llms(args.sentiment_mode)
         print(
             "NOTE: --use-real-llms not passed — running with fixed "
             "neutral LLM stand-ins. This verifies the pipeline runs "
@@ -184,7 +203,7 @@ async def main() -> None:
         )
 
     if args.no_sentiment:
-        sentiment_llm, _ = _fake_llms()
+        sentiment_llm, _ = _fake_llms(args.sentiment_mode)
         print(
             "ABLATION MODE: sentiment node forced to a neutral score of "
             "0.00 (confidence 0.5). The node still runs and the Portfolio "
@@ -199,6 +218,7 @@ async def main() -> None:
             repository=BacktestRepository(pool, backtest_id),
             sentiment_llm=sentiment_llm,
             portfolio_llm=portfolio_llm,
+            sentiment_mode=args.sentiment_mode,
         )
 
     trading_days = alpaca_trading_days(args.start, args.end)
@@ -217,6 +237,7 @@ async def main() -> None:
                 else llms["sentiment_analyst"]["model"]
             ),
         },
+        "sentiment_mode": args.sentiment_mode,
         "no_sentiment_ablation": args.no_sentiment,
         "risk_node": {"max_position_qty": MAX_POSITION_QTY, "var_budget": VAR_BUDGET},
         "slippage_bps": str(args.slippage_bps),

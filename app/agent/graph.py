@@ -31,6 +31,7 @@ from app.agent.risk_manager import make_risk_manager_node
 from app.agent.sentiment_analyst import make_sentiment_analyst_node
 from app.agent.state import GraphState
 from app.agent.technical_analyst import make_technical_analyst_node
+from app.agent.v1_categorical import SentimentMode
 from app.repository.base import Repository
 
 
@@ -41,15 +42,19 @@ def build_decision_graph(
     repository: Repository,
     sentiment_llm: BaseChatModel | None = None,
     portfolio_llm: BaseChatModel | None = None,
+    sentiment_mode: SentimentMode = "score",
 ) -> CompiledStateGraph:
     graph = StateGraph(GraphState)
 
     graph.add_node("technical_analyst", make_technical_analyst_node(price_source))
     graph.add_node(
         "sentiment_analyst",
-        make_sentiment_analyst_node(headline_source, llm=sentiment_llm),
+        make_sentiment_analyst_node(headline_source, llm=sentiment_llm, mode=sentiment_mode),
     )
-    graph.add_node("portfolio_manager", make_portfolio_manager_node(llm=portfolio_llm))
+    graph.add_node(
+        "portfolio_manager",
+        make_portfolio_manager_node(llm=portfolio_llm, sentiment_mode=sentiment_mode),
+    )
     graph.add_node("risk_manager", make_risk_manager_node(repository, price_source))
 
     graph.add_edge(START, "technical_analyst")
