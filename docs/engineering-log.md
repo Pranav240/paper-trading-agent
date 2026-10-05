@@ -967,3 +967,37 @@ stored as votes, mode recorded in config.
 (~$0.75), then check real cost from `llm_usage`, then #4 (~$1.60) if it
 fits. #3 and #7 are not rerun for now; the homepage will say so rather
 than leave their old numbers looking corrected.
+
+### 6b result: VaR node vs V1 rules on the same decisions (backtest 45)
+
+Backtest 45: run #4's window, current (score) sentiment, Claude (Sonnet
+5.5 + Haiku 4.5), leak/holiday/open-fill fixes. It was killed by a tool
+time limit at day 220 and resumed (`3b101bc`); the resume is recorded in
+its config. Replay gate: recorded MtM +428.56, replayed +428.56.
+
+| Same 272 decisions | MtM P&L | % of cap | vs buy & hold | Max drawdown | Avg shares |
+|---|---|---|---|---|---|
+| VaR node (recorded) | +428.56 | 14.3% | -409.24 | 579.15 | 10.8 |
+| V1 rules (replayed) | +920.81 | 30.7% | **+83.01** | 790.17 | 17.0 |
+| Buy & hold, 20 sh | +837.80 | 27.9% | | | 20 |
+
+- **The VaR budget bound on all 272 days** (AAPL's VaR stayed above 2%
+  throughout), so the node held ~64% of V1's average position.
+- **As pre-registered, it cost P&L** (-$492) in a rising market. Its
+  drawdown was smaller (-$211), but by less than its exposure was cut:
+  return per dollar of drawdown 0.74 vs V1's 1.17. On this window the
+  budget made the strategy worse, risk-adjusted too.
+- **The forecasts themselves hold up:** 12 breaches in 272 days (4.4%,
+  Kupiec p=0.65) vs the naive 2% VaR's 28 (10.3%, p=0.0004), matching
+  step 6a exactly. The VaR is a good estimate; using it as a binding
+  2% budget was the costly part.
+- **V1's rules beat buy-and-hold here, by $83 (3%).** No V1 run did. Not
+  evidence of an edge: one path, one symbol, and smaller than the
+  run-to-run spread of V1's repeat runs ($24-90). It also can't be pinned
+  on any one change (leak fix, holidays, open fills, Claude).
+
+**Cost:** the resumed 52 days measured $0.46 (Sonnet 78k in / 17k out,
+Haiku 97k / 7k tokens), ~$0.0088 per day, ~50% above the estimate. The
+first 220 days' usage was lost with the killed process; extrapolated
+~$1.94, so step 6 cost ~$2.40 of the $5 budget. Spending caps are now
+mandatory on paid runs (`a2602e2`).
