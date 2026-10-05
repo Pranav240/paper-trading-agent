@@ -50,6 +50,31 @@ CLAUDE_TEMPERATURE_OK = ("claude-haiku-4-5",)
 CLAUDE_THINKING_OFF = {"claude-sonnet-5-5": {"type": "between_tools"}}
 
 
+# USD per million tokens (input, output), Anthropic list prices as of
+# 2026-09-25. Only used to enforce a run's spending cap (run_backtest
+# max_cost_usd); update if prices change. Longest prefix wins.
+PRICES_PER_MTOK: dict[str, tuple[float, float]] = {
+    "claude-sonnet-5-5": (2.00, 10.00),
+    "claude-haiku-4-5": (1.00, 5.00),
+    "claude-opus-5-5": (4.00, 20.00),
+}
+
+
+def usage_cost_usd(usage: dict) -> float:
+    """Dollar cost of a usage summary ({model: {input_tokens, output_tokens}}).
+    Raises KeyError for a model with no known price: a spending cap that
+    silently counted it as free would not be a cap."""
+    total = 0.0
+    for model, counts in usage.items():
+        matches = [p for p in PRICES_PER_MTOK if model.startswith(p)]
+        if not matches:
+            raise KeyError(f"No price for model {model!r}; add it to PRICES_PER_MTOK.")
+        price_in, price_out = PRICES_PER_MTOK[max(matches, key=len)]
+        total += counts.get("input_tokens", 0) / 1e6 * price_in
+        total += counts.get("output_tokens", 0) / 1e6 * price_out
+    return total
+
+
 def provider() -> str:
     name = os.environ.get("LLM_PROVIDER", "openai").strip().lower()
     if name not in DEFAULT_MODELS:

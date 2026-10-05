@@ -7,7 +7,7 @@ the newest models).
 
 import pytest
 
-from app.agent.llm import default_llm, describe, structured
+from app.agent.llm import default_llm, describe, structured, usage_cost_usd
 from app.agent.state import TentativeDecision
 from tests.agent_fakes import FakeLLM
 
@@ -88,6 +88,20 @@ def test_model_override_from_env(anthropic_env, monkeypatch):
     payload = _payload(default_llm("portfolio_manager"))
     assert payload["model"] == "claude-opus-5-5"
     assert _temperature(payload) is None and "thinking" not in payload
+
+
+def test_usage_cost_known_values():
+    # 1M in + 1M out: Sonnet 5.5 $2 + $10; Haiku 4.5 $1 + $5.
+    usage = {
+        "claude-sonnet-5-5": {"input_tokens": 1_000_000, "output_tokens": 1_000_000},
+        "claude-haiku-4-5": {"input_tokens": 1_000_000, "output_tokens": 1_000_000},
+    }
+    assert usage_cost_usd(usage) == pytest.approx(18.0)
+
+
+def test_usage_cost_refuses_unpriced_model():
+    with pytest.raises(KeyError, match="gpt-4o"):
+        usage_cost_usd({"gpt-4o": {"input_tokens": 1, "output_tokens": 1}})
 
 
 def test_structured_leaves_fakes_alone():

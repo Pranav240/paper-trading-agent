@@ -57,6 +57,7 @@ from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 from app.agent.graph import CompiledStateGraph
+from app.agent.llm import usage_cost_usd
 from app.agent.var_forecasts import record_var_forecast
 from app.models import Action
 
@@ -100,6 +101,10 @@ def usage_summary(handler: UsageMetadataCallbackHandler) -> dict:
         }
         for model, usage in handler.usage_metadata.items()
     }
+
+
+class BudgetExceeded(RuntimeError):
+    """A run stopped itself at its spending cap (see max_cost_usd)."""
 
 
 def _trading_days(window_start: date, window_end: date) -> list[date]:
@@ -321,6 +326,7 @@ async def run_backtest(
     trading_days: list[date] | None = None,
     execution_prices: ExecutionPrices | None = None,
     resume_backtest_id: int | None = None,
+    max_cost_usd: float | None = None,
 ) -> int:
     """Runs one full backtest (see _run_backtest). If it raises -- an API
     out of credits, a network drop, Ctrl-C -- the `backtests` row is marked
@@ -331,7 +337,11 @@ async def run_backtest(
     completed day instead of starting a new one (see _start_resume). That
     is sound because a run's only cross-day state -- open positions --
     lives in backtest_outcomes, and each day commits as one transaction,
-    so a killed run leaves whole days or nothing."""
+    so a killed run leaves whole days or nothing.
+
+    `max_cost_usd` caps what THIS process spends on LLM calls (priced by
+    app/agent/llm.py); the run stops before a day that would likely cross
+    it, raising BudgetExceeded, and can be resumed later."""
     usage = UsageMetadataCallbackHandler()
     created: list[int] = []
     try:
@@ -349,6 +359,7 @@ async def run_backtest(
             usage=usage,
             created=created,
             resume_backtest_id=resume_backtest_id,
+            max_cost_usd=max_cost_usd,
         )
     except BaseException:
         if created:
@@ -371,6 +382,7 @@ async def _run_backtest(
     usage: UsageMetadataCallbackHandler,
     created: list[int],
     resume_backtest_id: int | None = None,
+    max_cost_usd: float | None = None,
 ) -> int:
     """Runs one full backtest: one simulated decision cycle per trading
     day per symbol across [window_start, window_end], all persisted
@@ -440,7 +452,17 @@ async def _run_backtest(
 
         graph = graph_factory(backtest_id)
 
-        for day in trading_days:
+        for done, day in enumerate(trading_days):
+            if max_cost_usd is not None and done:
+                # Stop BEFORE a day that would likely cross the cap: spent
+                # so far plus this run's average cost per day. The run is
+                # marked FAILED and can be continued with --resume.
+                spent = usage_cost_usd(usage_summary(usage))
+                if spent + spent / done > max_cost_usd:
+                    raise BudgetExceeded(
+                        f"Stopping before {day}: ${spent:.2f} spent over {done} days, "
+                        f"next day would likely pass the ${max_cost_usd:.2f} cap."
+                    )
             # Midday UTC, not midnight — purely so this sits visibly
             # between the prior day's close and this day's open when
             # eyeballing raw rows. Has no effect on what data gets

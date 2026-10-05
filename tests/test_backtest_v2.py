@@ -20,7 +20,7 @@ from langchain_core.messages import AIMessage
 from langgraph.graph import END, START, StateGraph
 from psycopg_pool import AsyncConnectionPool
 
-from app.agent.backtest import DEFAULT_SLIPPAGE_BPS, run_backtest
+from app.agent.backtest import DEFAULT_SLIPPAGE_BPS, BudgetExceeded, run_backtest
 from app.agent.state import AgentOpinion, GraphState, RiskVerdict, TentativeDecision
 
 DATABASE_URL = os.environ.get(
@@ -99,13 +99,13 @@ class Opens:
         return self._opens.get(day)
 
 
-def _usage_model(n_calls: int) -> GenericFakeChatModel:
+def _usage_model(n_calls: int, model_name: str = "fake-model") -> GenericFakeChatModel:
     return GenericFakeChatModel(
         messages=iter(
             AIMessage(
                 content="ok",
                 usage_metadata={"input_tokens": 100, "output_tokens": 10, "total_tokens": 110},
-                response_metadata={"model_name": "fake-model"},
+                response_metadata={"model_name": model_name},
             )
             for _ in range(n_calls)
         )
@@ -235,6 +235,25 @@ async def test_resume_refuses_different_settings(pool):
             config={"sentiment_mode": "categorical"}, trading_days=days,
             resume_backtest_id=backtest_id,
         )
+
+
+async def test_spending_cap_stops_before_crossing(pool):
+    # Each day: one Haiku call, 100 in + 10 out = $0.00015.
+    # Cap $0.0004: after day 2 ($0.0003 spent) a third day would reach
+    # $0.00045, so the run stops before it.
+    days = [date(2022, 1, 10), date(2022, 1, 11), date(2022, 1, 12)]
+    with pytest.raises(BudgetExceeded, match="Stopping before 2022-01-12"):
+        await run_backtest(
+            pool, lambda _id: _graph("HOLD", 0, chat_model=_usage_model(3, "claude-haiku-4-5")),
+            name=NAME, symbols=[SYMBOL], window_start=days[0], window_end=days[-1],
+            trading_days=days, max_cost_usd=0.0004,
+        )
+    async with pool.connection() as conn:
+        cur = await conn.execute(
+            "SELECT b.status, count(r.id) FROM backtests b JOIN runs r ON r.backtest_id = b.id "
+            "WHERE b.name = %s GROUP BY b.id", (NAME,)
+        )
+        assert await cur.fetchall() == [("FAILED", 2)]
 
 
 async def test_missing_open_fails_loudly(pool):

@@ -134,6 +134,15 @@ def _parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--max-cost-usd",
+        type=float,
+        help=(
+            "Spending cap for this run's LLM calls, in USD. The run stops "
+            "before a day that would likely cross it (marked FAILED, "
+            "resumable with --resume). Required with --use-real-llms."
+        ),
+    )
+    parser.add_argument(
         "--allow-dirty",
         action="store_true",
         help=(
@@ -189,6 +198,9 @@ def _fake_llms(sentiment_mode: str = "score"):
 
 async def main() -> None:
     args = _parse_args()
+
+    if args.use_real_llms and args.max_cost_usd is None:
+        raise SystemExit("--use-real-llms needs --max-cost-usd: paid runs must have a spending cap.")
 
     commit, dirty = _git_state()
     if args.use_real_llms and dirty and not args.allow_dirty:
@@ -271,6 +283,7 @@ async def main() -> None:
             trading_days=trading_days,
             execution_prices=OpenPriceBook(price_source, args.start, args.end),
             resume_backtest_id=args.resume,
+            max_cost_usd=args.max_cost_usd,
         )
         metrics = await compute_backtest_metrics(pool, backtest_id)
     finally:
