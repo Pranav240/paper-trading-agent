@@ -936,3 +936,21 @@ ahead leak, holidays, fill at the open, model), so a difference from the
 published V1 numbers can't be attributed to any one of them; no bridge
 run (same config on both providers) is possible without OpenAI credit.
 The VaR-node comparison is unaffected: both sides replay one run.
+
+**Rerun plan (decided 2026-10-05):** Sonnet 5.5 + Haiku 4.5; the two
+repeat runs are skipped (#8 repeated #7, #9 repeated #4), which loses
+the run-to-run noise check they provided. Estimated at ~$0.006 per full
+trading day (Portfolio Manager ~$0.004, sentiment ~$0.002):
+
+| Run | What | Days | Est. |
+|---|---|---|---|
+| step 6 | VaR node, #4's window, current code; V1-rules replay of it is the corrected #14 | 272 | ~$1.60 |
+| #4 | categorical sentiment | 272 | ~$1.60 |
+| #7 | sentiment ablated (PM calls only) | 272 | ~$1.10 |
+| #6 | out-of-sample, categorical | 126 | ~$0.75 |
+| #3 | pilot quarter, categorical | ~64 | ~$0.40 |
+| | **total** | | **~$5.40** |
+
+Open: #3, #4 and #6 used the categorical sentiment prompt, which the
+Phase 04 rewrite removed. Rerunning them faithfully needs it restored
+behind a setting.
