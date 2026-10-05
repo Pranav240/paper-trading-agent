@@ -862,7 +862,7 @@ Stored forecasts were cross-checked against an independent recomputation
 (`evaluate_var.py --check-backtest`): max difference 3.6e-7, the
 NUMERIC(10,6) rounding.
 
-### 6b: VaR node vs rule-based node, blocked
+### 6b: VaR node vs rule-based node, first attempt blocked (result further down)
 
 Plan: one real-LLM rerun of run #4's config with the VaR node, then
 replay both rule sets over the same recorded proposals
@@ -992,9 +992,11 @@ its config. Replay gate: recorded MtM +428.56, replayed +428.56.
   step 6a exactly. The VaR is a good estimate; using it as a binding
   2% budget was the costly part.
 - **V1's rules beat buy-and-hold here, by $83 (3%).** No V1 run did. Not
-  evidence of an edge: one path, one symbol, and smaller than the
-  run-to-run spread of V1's repeat runs ($24-90). It also can't be pinned
-  on any one change (leak fix, holidays, open fills, Claude).
+  evidence of an edge: one path, one symbol. (Corrected: this first said
+  it was within V1's repeat-run spread, "$24-90"; the real replicate
+  spread is $24-34, so $83 exceeds it. See the correction at the end.)
+  It also can't be pinned on any one change (leak fix, holidays, open
+  fills, Claude).
 
 **Cost:** the resumed 52 days measured $0.46 (Sonnet 78k in / 17k out,
 Haiku 97k / 7k tokens), ~$0.0088 per day, ~50% above the estimate. The
@@ -1018,11 +1020,10 @@ $0.96 (Sonnet 138k in / 40k out, Haiku 207k / 15k), $0.0076 per day.
 
 - **The published out-of-sample loss does not survive the corrections:**
   -$63 becomes +$66, in a flat market. That can't be attributed to any
-  single change (leak, holidays, open fills, gpt-4o -> Claude), and one
-  path of ~$65 either side of buy-and-hold is within the noise V1's
-  repeat runs showed ($24-90). The honest reading: on this window the
-  strategy is indistinguishable from buy-and-hold, not a loser and not a
-  winner.
+  single change (leak, holidays, open fills, gpt-4o -> Claude). (Corrected:
+  this first called ~$65 "within the noise V1's repeat runs showed
+  ($24-90)"; see the correction at the end.) The honest reading: V1's loss
+  does not survive, and one path on one stock does not show a gain either.
 - **Here the VaR budget helped:** +$57 P&L and $185 less drawdown, with
   the budget binding on 116 of 126 days. In-sample (backtest 45) it hurt
   (-$492). Same rule, opposite signs on two windows: no evidence either
@@ -1031,3 +1032,20 @@ $0.96 (Sonnet 138k in / 40k out, Haiku 207k / 15k), $0.0076 per day.
 **Budget:** ~$3.36 of $5 spent (step 6 ~$2.40 incl. extrapolated $1.94,
 #6 $0.96). #4 (~$2.1-2.4 at measured rates) does not fit; #3, #4, #7
 remain not rerun.
+
+### Correction: the "within noise" claim was wrong
+
+The two entries above, and the homepage, report, dashboard, README and
+PROJECT.md as first updated, called the corrected results (+$64, +$83 vs
+buy-and-hold) "within the run-to-run noise of V1's repeat runs ($24-90)".
+The $90 came from comparing #4's and #9's *gaps to buy-and-hold*, which
+used different baselines (the two-day window difference above), so it is
+not run-to-run noise. The actual replicate spread is **$24-34**: #7 vs #8
+(same window) differ by $33.69, #4 vs #9 by $24.17.
+
+So the corrected gaps are two to three times model-randomness noise. That
+still doesn't make them an edge: each is one run on one price path, on
+one stock, after four simultaneous changes, and replicates don't sample
+the price path, which dominates any buy-and-hold comparison. Every page
+now says the narrower, true thing: V1's "underperforms" does not survive
+the correction, and an edge is not established.

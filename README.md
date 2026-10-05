@@ -4,12 +4,17 @@
 
 A multi-agent trading decision system — FastAPI over Postgres, a four-node
 LangGraph agent, a LoRA fine-tuning phase, CI, and Terraform on AWS — built
-in six phases and evaluated honestly.
+in six phases and evaluated honestly. V2 has added a VaR risk engine with a
+Kupiec backtest of its own forecasts.
 
-**It has no edge, and establishing that is the point.** Seven backtests
-against real market data and real news. Every run longer than one quarter
-underperformed buy-and-hold. The out-of-sample run — executed once, with no
-changes made after seeing in-sample results — lost $63 in a flat market.
+**No edge has been established, and measuring that honestly is the point.**
+Seven backtests against real market data and real news; as first run, every
+one longer than a quarter underperformed buy-and-hold. V2 then found those
+runs could see each day's own close — a look-ahead leak. Corrected reruns
+land *above* buy-and-hold (+$83 in-sample, +$64 out-of-sample): two to three
+times the spread between V1's repeat runs, but one run per window on one
+stock, with four things changed at once. V1's "underperforms" didn't survive
+the correction; an edge isn't shown either.
 
 > **Paper trading only.** Never touched real capital or a live brokerage
 > account. Nothing here is financial advice.
@@ -41,7 +46,27 @@ The one positive row is a four-trade quarter that beat the baseline because
 AAPL fell — buy-and-hold lost money and a largely idle system didn't. That
 is market conditions, not skill.
 
-## Three findings worth the click
+**Every row above had a look-ahead leak** (found 2026-09-28). Corrected
+reruns — no leak, trading days only, fills at the open, and Claude in place
+of GPT-4o, so four things changed at once:
+
+| Rerun | Configuration | Closed | Result | Buy & hold | Difference |
+|---|---|---|---|---|---|
+| #6 → bt 71 | categorical sentiment, out-of-sample | 11 | +66.35 | +2.20 | +64.15 |
+| #14 → bt 45 | continuous score, #4's window | 29 | +920.81 | +837.80 | +83.01 |
+
+V1's risk rules, replayed exactly over each rerun's decisions. #3, #4 and #7
+are not yet rerun; #8 and #9 repeated #7 and #4 and won't be.
+→ [detail](docs/engineering-log.md#phase-07--risk-engine-v2-step-1-price-look-ahead-in-backtests)
+
+## Four findings worth the click
+
+**Every V1 backtest could see that day's close.** Decisions ran at 12:00
+UTC and asked for bars "up to now"; the price source stamps each day's bar
+at midnight New York, so the decision day's own close came back — confirmed
+for 938 of 938 stored decisions. The written plan required prior-day prices;
+nothing checked it. Correcting it turned the out-of-sample "loss" into a
+small gain over buy-and-hold.
 
 **A component that abstained 96% of the time was making things worse.**
 Ablating the sentiment node improved results by ~60 on a 13-month window, at
@@ -68,9 +93,13 @@ Four nodes, split by whether judgment is actually required.
 | Node | Implementation | Why |
 |---|---|---|
 | [Technical Analyst](app/agent/technical_analyst.py) | rule-based | RSI-14 and SMA-20 are arithmetic; an LLM adds cost, not accuracy |
-| [Sentiment Analyst](app/agent/sentiment_analyst.py) | GPT-4o-mini | Reading headlines is genuine language understanding |
-| [Portfolio Manager](app/agent/portfolio_manager.py) | GPT-4o | Synthesises conflicting evidence — the one call worth a frontier model |
-| [Risk Manager](app/agent/risk_manager.py) | rule-based | Position caps and invalid-trade guards; holds final authority |
+| [Sentiment Analyst](app/agent/sentiment_analyst.py) | Claude Haiku 4.5 (V1: GPT-4o-mini) | Reading headlines is genuine language understanding |
+| [Portfolio Manager](app/agent/portfolio_manager.py) | Claude Sonnet 5.5 (V1: GPT-4o) | Synthesises conflicting evidence — the one call worth a larger model |
+| [Risk Manager](app/agent/risk_manager.py) | rule-based + [VaR](app/agent/risk_math.py) | V1's position caps as a hard floor, plus a pre-registered 2% VaR budget; holds final authority |
+
+The provider is configuration (`LLM_PROVIDER` in `.env`, see
+[`app/agent/llm.py`](app/agent/llm.py)); every backtest records the models,
+settings and git commit that produced it.
 
 The propose-versus-gate split is what made most of the analysis possible.
 Because the Risk Manager is code and every input it consumed is stored,
@@ -98,18 +127,22 @@ docker compose up --build
 pytest -q
 ```
 
-Backtests need Alpaca and OpenAI keys (see [`.env.example`](.env.example)).
-Dataset construction, the TF-IDF baseline and the replay analysis need
-neither — they run on stored data, free.
+Backtests need an Alpaca key and an Anthropic or OpenAI key (see
+[`.env.example`](.env.example)). Dataset construction, the TF-IDF baseline,
+the VaR evaluation and the replay analysis need no LLM key — they run on
+stored or price data, free.
 
 ```bash
 PYTHONPATH=. python scripts/run_backtest.py \
     --name "AAPL in-sample" --symbols AAPL \
-    --start 2022-06-03 --end 2023-06-30 --use-real-llms
+    --start 2022-06-01 --end 2023-06-30 --use-real-llms --max-cost-usd 2
 ```
 
 Without `--use-real-llms` it runs on test doubles — enough to verify the
-pipeline, not to evaluate a strategy.
+pipeline, not to evaluate a strategy. Paid runs must set a spending cap and
+stop themselves before crossing it; an interrupted run continues with
+`--resume <backtest_id>`. `--sentiment-mode categorical` reproduces V1's
+original sentiment prompts for faithful reruns.
 
 ## What this does and doesn't show
 
@@ -126,7 +159,9 @@ assumed; confounds named; and a flaw in the project's own pre-registration
 reported rather than replaced with a split that agreed.
 
 **Does not:** demonstrate a profitable strategy. The system reached its own
-conclusion that it should not trade.
+conclusion that it should not trade — and when a V2 check found a flaw in
+the backtests behind that conclusion, the numbers were corrected in public
+rather than left standing.
 
 ## Limitations
 

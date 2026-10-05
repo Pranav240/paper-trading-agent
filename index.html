@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Paper Trading Agent</title>
-<meta name="description" content="A multi-agent trading decision system, built across six phases and evaluated honestly. Seven backtests, a negative result, and the machinery built to establish it.">
+<meta name="description" content="A multi-agent trading decision system, built across six phases and evaluated honestly. Seven backtests, a negative result, a look-ahead flaw found and corrected, and the machinery built to establish all of it.">
 <meta property="og:title" content="Paper Trading Agent">
-<meta property="og:description" content="Built properly, measured honestly, and found to have no edge. Seven backtests against real market data.">
+<meta property="og:description" content="Built properly, measured honestly, and corrected in public. No edge established, on backtests against real market data.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -210,7 +210,7 @@
   <header class="top">
     <div class="eyebrow">Multi-agent decision system &middot; paper trading only</div>
     <h1>Paper Trading Agent</h1>
-    <p class="tagline">Built properly, measured honestly, and found to have no edge. This site is the record of that result and of the machinery built to establish it.</p>
+    <p class="tagline">Built properly, measured honestly, and corrected in public. No edge has been established. This site is the record of that result, of the flaw that changed it, and of the machinery built to establish both.</p>
     <div class="meta">
       <span>9 real-LLM backtests, 2 of them corrected reruns</span>
       <span>41,701-example fine-tuning dataset</span>
@@ -225,14 +225,14 @@
     <h2 class="sec">What is it</h2>
     <p class="lead">A daily trading decision-support agent. It reads a stock&rsquo;s recent price history and news headlines, has four specialist components argue about them, and produces one paper trade &mdash; every decision, every opinion and every simulated fill recorded and auditable.</p>
     <p>It was built to close six engineering gaps at once: a backend API, a real relational database, agentic orchestration, LLM fine-tuning, containerisation with CI/CD, and cloud deployment. Building one system rather than six tutorials forces the parts to interoperate and produces decisions that only arise when components have to live together.</p>
-    <p>The second half of the project was spent trying to establish whether it actually works. It does not, and that turned out to be the more interesting outcome &mdash; five separate attempts to improve it produced five measured negative results, each of which says something specific about why.</p>
+    <p>The second half of the project was spent trying to establish whether it actually works. As first measured, it did not &mdash; and five separate attempts to improve it produced five measured negative results, each of which says something specific about why. A V2 check then found a flaw in those measurements; corrected, the system no longer trails buy-and-hold, though nothing yet shows an edge.</p>
     <p><strong>Nothing here ever touched real money.</strong> Trades are simulated against historical prices with slippage modelled; the account is fictional by design.</p>
   </section>
 
   <div class="finding">
     <div class="label">The finding</div>
     <p><strong>A V2 check found a flaw in V1&rsquo;s backtests.</strong> Each decision could see that day&rsquo;s own closing price &mdash; a look-ahead leak. It is fixed, together with two smaller issues found alongside it: decisions made on market holidays, and fills at a price already gone by the open.</p>
-    <p>As originally published, every backtest longer than a single quarter underperformed buy-and-hold, by $39 to $225 on a 20-share basis, and the out-of-sample run lost $63 in a flat market. <strong>Two runs have been redone with the fixes so far, and both land just above buy-and-hold</strong>: by $83 in-sample and $64 out-of-sample. Both are smaller than the spread V1&rsquo;s own repeat runs showed, so the conclusion is unchanged in substance: <strong>no edge detected</strong>, now in neither direction.</p>
+    <p>As originally published, every backtest longer than a single quarter underperformed buy-and-hold, by $39 to $225 on a 20-share basis, and the out-of-sample run lost $63 in a flat market. <strong>Two runs have been redone with the fixes so far, and both land above buy-and-hold</strong>: by $83 in-sample and $64 out-of-sample. That is two to three times the $24&ndash;34 spread between V1&rsquo;s repeat runs, so it is not just model randomness. It is also one run per window, on one stock, with four things changed at once &mdash; not enough to establish an edge. What the correction does overturn is V1&rsquo;s &ldquo;underperforms buy-and-hold&rdquo;. <strong>No edge is established; whether one exists is open again.</strong></p>
     <!-- RERUN-PENDING: remove this paragraph once the remaining V1 backtests (#3, #4, #7) are rerun with the fixes (engineering-log, Phase 07). -->
     <p><strong>Rerun partly done.</strong> Runs #3, #4 and #7 have not been redone yet; their figures below still come from the leaky runs. The redone runs also used a different language model (Claude in place of GPT-4o), so a change in result cannot be pinned on the leak alone.</p>
     <!-- /RERUN-PENDING -->
@@ -241,7 +241,7 @@
 
   <div class="stats">
     <div class="stat"><div class="k">Backtests</div><div class="v">9</div><div class="s">7 original + 2 corrected reruns</div></div>
-    <div class="stat"><div class="k">Corrected vs. buy &amp; hold</div><div class="v">+$64</div><div class="s">out-of-sample, within noise</div></div>
+    <div class="stat"><div class="k">Corrected vs. buy &amp; hold</div><div class="v">+$64</div><div class="s">out-of-sample, one run</div></div>
     <div class="stat"><div class="k">Fine-tune attempts</div><div class="v">5</div><div class="s">two framings, all negative</div></div>
     <div class="stat"><div class="k">Tests</div><div class="v pos">93</div><div class="s">CI fails if any skips</div></div>
     <div class="stat"><div class="k">Total cloud spend</div><div class="v">~$0.02</div><div class="s">applied, verified, destroyed</div></div>
@@ -356,7 +356,7 @@
 
     <div class="finding" style="border-left-color:var(--ink-bold); margin-top:24px;">
       <div class="label" style="color:var(--ink-bold);">In planning &mdash; V3</div>
-      <p><strong>V3 moves to Indian markets &mdash; NSE and BSE.</strong> Not as a continuation of a strategy already measured as having no edge, but because it asks a different question: does the same pipeline behave differently on a different market, with different liquidity, different news flow and a different retail-participation profile?</p>
+      <p><strong>V3 moves to Indian markets &mdash; NSE and BSE.</strong> Not as a continuation of a strategy with no established edge, but because it asks a different question: does the same pipeline behave differently on a different market, with different liquidity, different news flow and a different retail-participation profile?</p>
       <p>The architecture is ready for it. Market data and news arrive through swappable protocols rather than hard-coded clients, so an Indian data source is a new implementation of an existing interface, not a rewrite.</p>
     </div>
 
@@ -368,7 +368,7 @@
     <p>Two measurements were left unrun, both deferred on cost rather than on doubt. Each would sharpen a conclusion already drawn; neither changes the headline, which is why neither blocked V1 from closing.</p>
     <ul style="max-width:70ch; padding-left:20px;">
       <li><strong>Separate the score node from the prompt change.</strong> The final sentiment run altered two things at once &mdash; the node and the Portfolio Manager prompt that reads it &mdash; so its heavy trading cannot be attributed to either. One ablation with the new prompt and a neutral score settles it. About $0.87.</li>
-      <li><strong>Test a second symbol.</strong> Every result here is AAPL. Whether &ldquo;no edge&rdquo; describes the strategy or one stock in one period is untested. The headline data for 108 candidate symbols is already prepared and sitting in the repository. About $0.87 per symbol.</li>
+      <li><strong>Test a second symbol.</strong> Every result here is AAPL. Whether any result here describes the strategy or one stock in one period is untested. The headline data for 108 candidate symbols is already prepared and sitting in the repository. About $0.87 per symbol.</li>
     </ul>
     <p class="fig">Both are documented in the repository with the exact commands, so they are picked up rather than re-derived &mdash; by me when there is budget, or by anyone who wants to run them first.</p>
 

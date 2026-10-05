@@ -9,7 +9,7 @@ position, so its proposals don't depend on what the risk node did. Every
 proposal of a VaR-node backtest is therefore exactly what a rule-based
 run over the same days would have been handed. Replaying the V1 rules
 over that tape isolates the risk node's effect; a second LLM run would
-mix it with run-to-run LLM noise ($24-90 between V1's repeat runs).
+mix it with run-to-run LLM noise ($24-34 between V1's repeat runs).
 
 The replay is only trusted if it first reproduces the recorded VaR-node
 run exactly (same gate as replay_risk_rules.py).
