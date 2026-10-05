@@ -1001,3 +1001,33 @@ Haiku 97k / 7k tokens), ~$0.0088 per day, ~50% above the estimate. The
 first 220 days' usage was lost with the killed process; extrapolated
 ~$1.94, so step 6 cost ~$2.40 of the $5 budget. Spending caps are now
 mandatory on paid runs (`a2602e2`).
+
+### V1 #6 rerun (backtest 71): out-of-sample, categorical sentiment, Claude
+
+Jul-Dec 2023, `--sentiment-mode categorical` (V1's prompts verbatim),
+Claude, leak/holiday/open-fill fixes, VaR node recorded; V1's rules
+replayed over the same 126 decisions (gate: drift $0.0001). Cost measured:
+$0.96 (Sonnet 138k in / 40k out, Haiku 207k / 15k), $0.0076 per day.
+
+| Same 126 decisions | MtM P&L | vs buy & hold | Max drawdown | Avg shares |
+|---|---|---|---|---|
+| **V1 rules (corrected #6)** | **+66.35** | **+64.15** | 582.45 | 18.5 |
+| VaR node | +123.20 | +121.00 | 397.39 | 13.9 |
+| Buy & hold, 20 sh | +2.20 | | | 20 |
+| *Original #6 (gpt-4o, leaky)* | *-63.10* | *-65.30* | | |
+
+- **The published out-of-sample loss does not survive the corrections:**
+  -$63 becomes +$66, in a flat market. That can't be attributed to any
+  single change (leak, holidays, open fills, gpt-4o -> Claude), and one
+  path of ~$65 either side of buy-and-hold is within the noise V1's
+  repeat runs showed ($24-90). The honest reading: on this window the
+  strategy is indistinguishable from buy-and-hold, not a loser and not a
+  winner.
+- **Here the VaR budget helped:** +$57 P&L and $185 less drawdown, with
+  the budget binding on 116 of 126 days. In-sample (backtest 45) it hurt
+  (-$492). Same rule, opposite signs on two windows: no evidence either
+  way that the budget improves the strategy.
+
+**Budget:** ~$3.36 of $5 spent (step 6 ~$2.40 incl. extrapolated $1.94,
+#6 $0.96). #4 (~$2.1-2.4 at measured rates) does not fit; #3, #4, #7
+remain not rerun.
