@@ -319,3 +319,7 @@ async def test_graph_without_retriever_has_no_explainer():
     state = await graph.ainvoke({"symbol": "AAPL", "as_of": AS_OF})
     assert state["risk_verdict"].opinion == "SCALE"
     assert "risk_explanation" not in state
+
+
+def test_template_singular_share():
+    assert "cut the buy to 1 share:" in template_explanation(RAW, "SCALE", 1)

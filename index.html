@@ -216,7 +216,7 @@
       <span>41,701-example fine-tuning dataset</span>
       <span>Deployed to AWS, then destroyed</span>
       <span>Never touched real capital</span>
-      <span>V2 in progress &mdash; risk engine shipped</span>
+      <span>V2 in progress &mdash; risk engine &amp; explainer shipped</span>
       <span>V3 in planning &mdash; Indian markets</span>
     </div>
   </header>
@@ -243,7 +243,7 @@
     <div class="stat"><div class="k">Backtests</div><div class="v">9</div><div class="s">7 original + 2 corrected reruns</div></div>
     <div class="stat"><div class="k">Corrected vs. buy &amp; hold</div><div class="v">+$64</div><div class="s">out-of-sample, one run</div></div>
     <div class="stat"><div class="k">Fine-tune attempts</div><div class="v">5</div><div class="s">two framings, all negative</div></div>
-    <div class="stat"><div class="k">Tests</div><div class="v pos">93</div><div class="s">CI fails if any skips</div></div>
+    <div class="stat"><div class="k">Tests</div><div class="v pos">111</div><div class="s">CI fails if any skips</div></div>
     <div class="stat"><div class="k">Total cloud spend</div><div class="v">~$0.02</div><div class="s">applied, verified, destroyed</div></div>
   </div>
 
@@ -325,12 +325,12 @@
         <thead><tr><th>Item</th><th>Spent</th></tr></thead>
         <tbody>
           <tr><td class="l">OpenAI &mdash; 7 backtests and all probes (V1)</td><td>~$4.91</td></tr>
-          <tr><td class="l">Anthropic &mdash; 2 corrected reruns (V2)</td><td>~$3.40</td></tr>
+          <tr><td class="l">Anthropic &mdash; 2 corrected reruns and 20 explanations (V2)</td><td>~$3.45</td></tr>
           <tr><td class="l">AWS &mdash; applied, verified, destroyed same day</td><td>~$0.02</td></tr>
           <tr><td class="l">Kaggle GPU &mdash; fine-tuning, both rounds</td><td>free</td></tr>
           <tr><td class="l">Alpaca market data &mdash; free tier</td><td>free</td></tr>
           <tr><td class="l">Dataset, baseline, replay, every diagnostic</td><td class="pos">$0.00</td></tr>
-          <tr><td class="l"><strong>Total</strong></td><td><strong>about $8.30</strong></td></tr>
+          <tr><td class="l"><strong>Total</strong></td><td><strong>about $8.40</strong></td></tr>
         </tbody>
       </table>
     </div>
@@ -350,7 +350,8 @@
       <div class="label" style="color:var(--ink-bold);">In progress &mdash; V2</div>
       <p><strong>V2 replaces the rule-based Risk Manager with real risk math, and adds an agent that explains its own alerts.</strong> In place of just a hard position cap, the risk layer computes VaR and CVaR, watches for a shift in how the watchlist&rsquo;s holdings move together, and backtests its own risk estimate against what actually happened &mdash; a Kupiec test, the same kind of check that caught this project&rsquo;s own pre-registration flaw in Phase 04.</p>
       <p><strong>Phase 07, the risk engine, has shipped &mdash; with a mixed result, reported as measured.</strong> The value-at-risk forecasts hold up: over the in-sample year they were breached on 4.4% of days against a 5% target, while a naive flat 2% estimate was breached on 10.3% and fails the test. Out of sample they were too cautious, breached on only 1.6% of days. Used as a binding, pre-registered 2% budget, the risk engine cost $492 against V1&rsquo;s rules in-sample and gained $57 out-of-sample. The same rule moving results in opposite directions on two windows is no evidence that it helps. The checks that found the look-ahead leak above were the first step of this phase.</p>
-      <p>When it flags something, a retrieval agent pulls the relevant recent news and writes the reason in plain language, instead of leaving a number on a dashboard for someone to interpret. Every explanation is checked against a hand-labelled set of past events before it is trusted, and every retrieval and reasoning step is traced, not just the output.</p>
+      <p><strong>Phase 08, the explainer, has shipped too.</strong> When the risk engine cuts or blocks a trade, it explains why in plain language from the headlines around the losses its VaR is built from, and every citation must be a headline it was actually shown. On 20 recorded decisions all 20 explanations were fully grounded, at $0.06 in total. Grounded is not the same as right: in a spot check, one cause in five stretched its headline, which is what the next phase grades.</p>
+      <p>Still to come: every explanation graded against a hand-labelled set of past events before it is trusted &mdash; including whether full-text retrieval actually beats plain recency, and whether the language model beats a no-news template stating the same facts &mdash; and every retrieval and reasoning step traced, not just the output.</p>
       <p>This does not depend on the strategy having an edge. It makes the existing system&rsquo;s judgment better and its reasoning visible &mdash; the same gap the rest of this project already cares about.</p>
     </div>
 

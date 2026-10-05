@@ -1095,3 +1095,34 @@ SQL against real Postgres (ranking, New York day bounds, nothing after
   relevance; phase 09's hand labels are the real test.
 - Not yet done: one small real run (~20 decisions, ~$0.06) to measure the
   share of explanations whose citations hold up.
+
+### Phase 08 real run: 20 recorded decisions (`scripts/explain_recorded.py`)
+
+Sample pre-registered and committed before running (`aaca37e`): 10
+evenly spaced VaR-changed decisions each from backtests 45 and 71, fts
+retrieval, Claude Haiku 4.5, $0.15 cap. Only the explainer was paid for;
+decision states were rebuilt from what the backtests stored.
+
+| | Result |
+|---|---|
+| Explanations written | 20 / 20 |
+| All citations grounded (retrieved for that same day) | **20 / 20** |
+| Citations per explanation | 7.4 |
+| No-news driver days left uncited | 27 / 27 |
+| Tokens (Haiku 4.5) | 33,955 in / 6,014 out |
+| Cost, measured | **$0.064** |
+
+**What the check does not cover.** "Grounded" means every cited headline
+was one the model was shown for that day; it does not mean the headline
+supports the stated cause. A manual spot check of one explanation
+(2023-11-28, 5 driver days, 11 citations): 4 of 5 causes match their
+headlines closely (China iPhone curbs, iPhone slump, hawkish Fed, Apple
+falling at the start of 2023); one embellishes — 2022-12-28 says "weak
+economic data" where both cited headlines say recession fears and weak
+*oil prices*. Phase 09's grading has to catch this kind of drift; the
+citation check cannot.
+
+The template baseline in these 20 rows reads "1 shares" where the cut was
+to one share; fixed since in the code (rows left as written).
+
+Budget: ~$3.42 of the $5 spent; ~$1.58 left.

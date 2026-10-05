@@ -96,7 +96,7 @@ This is what makes backtesting possible: swap the live headline source for one r
 
 ### Schema
 
-Eleven tables. The shape follows from one Phase 03 decision: once several agents each hold an opinion, a decisions log can't be one row per cycle.
+Twelve tables. The shape follows from one Phase 03 decision: once several agents each hold an opinion, a decisions log can't be one row per cycle.
 
 | Table | Purpose |
 |---|---|
@@ -109,6 +109,7 @@ Eleven tables. The shape follows from one Phase 03 decision: once several agents
 | `backtests` / `backtest_outcomes` | Simulated runs, **structurally isolated** from live tables |
 | `historical_headlines` | Imported FNSPID corpus |
 | `var_forecasts` | V2: one VaR forecast per decision, scored later against the realized return (breach is a generated column) |
+| `risk_explanations` | V2: the explainer's account of a VaR-changed decision, with retrieved and cited headline ids and the no-news template baseline |
 | `schema_migrations` | Managed by [the project's own runner](https://github.com/Pranav240/paper-trading-agent/blob/master/db/migrate.py) |
 
 **No ORM, deliberately.** The gap being closed was "real database work" — an ORM would have hidden exactly what the exercise existed to practise.
@@ -357,7 +358,7 @@ Not imported from a checklist. Each is traceable to a specific mistake in this p
 
 ```bash
 docker compose up --build     # API + fresh database
-pytest -q                     # 93 tests, none skipped
+pytest -q                     # 111 tests, none skipped
 ```
 
 **A backtest** *(needs Alpaca + an Anthropic or OpenAI key; `LLM_PROVIDER` picks)*
@@ -400,7 +401,7 @@ Then [`phase04_v2_return_regression.ipynb`](https://github.com/Pranav240/paper-t
 | Item | Spend |
 |---|---|
 | OpenAI, V1 (7 backtests + probes) | **< $6** |
-| Anthropic, V2 (2 corrected reruns) | **~$3.40** (part extrapolated: one run was killed and resumed, losing its token count) |
+| Anthropic, V2 (2 corrected reruns, 20 explanations) | **~$3.45** (part extrapolated: one run was killed and resumed, losing its token count) |
 | AWS (applied, verified, destroyed same day) | **~$0.02** |
 | Kaggle GPU (fine-tuning) | free |
 | Alpaca market data | free |

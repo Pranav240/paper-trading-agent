@@ -162,7 +162,8 @@ def template_explanation(raw_output: dict, verdict_opinion: str, final_quantity:
     the headlines. Phase 09 asks whether the LLM version beats this."""
     tail = raw_output.get("var_tail") or []
     worst = ", ".join(f"{t['date']} {t['return']:+.1%}" for t in tail[:3])
-    action = "blocked the buy" if verdict_opinion == "VETO" else f"cut the buy to {final_quantity} shares"
+    unit = "share" if final_quantity == 1 else "shares"
+    action = "blocked the buy" if verdict_opinion == "VETO" else f"cut the buy to {final_quantity} {unit}"
     return (
         f"The risk engine {action}: 95% one-day VaR is {raw_output['var_95']:.2%}, above the "
         f"{raw_output['var_budget']:.0%} budget for a {MAX_POSITION_QTY}-share position, so at "
