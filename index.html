@@ -212,11 +212,11 @@
     <h1>Paper Trading Agent</h1>
     <p class="tagline">Built properly, measured honestly, and found to have no edge. This site is the record of that result and of the machinery built to establish it.</p>
     <div class="meta">
-      <span>7 real-LLM backtests</span>
+      <span>9 real-LLM backtests, 2 of them corrected reruns</span>
       <span>41,701-example fine-tuning dataset</span>
       <span>Deployed to AWS, then destroyed</span>
       <span>Never touched real capital</span>
-      <span>V2 in planning &mdash; real risk engine &amp; explainability</span>
+      <span>V2 in progress &mdash; risk engine shipped</span>
       <span>V3 in planning &mdash; Indian markets</span>
     </div>
   </header>
@@ -231,18 +231,19 @@
 
   <div class="finding">
     <div class="label">The finding</div>
-    <!-- RERUN-PENDING: remove this paragraph once the V1 backtests are rerun with the look-ahead fix (engineering-log, Phase 07 step 1). -->
-    <p><strong>Rerun pending.</strong> A V2 check found that these backtests could see each decision day&rsquo;s own closing price &mdash; a look-ahead leak, now fixed. Every figure on this page came from the leaky runs and will be replaced once they are rerun.</p>
+    <p><strong>A V2 check found a flaw in V1&rsquo;s backtests.</strong> Each decision could see that day&rsquo;s own closing price &mdash; a look-ahead leak. It is fixed, together with two smaller issues found alongside it: decisions made on market holidays, and fills at a price already gone by the open.</p>
+    <p>As originally published, every backtest longer than a single quarter underperformed buy-and-hold, by $39 to $225 on a 20-share basis, and the out-of-sample run lost $63 in a flat market. <strong>Two runs have been redone with the fixes so far, and both land just above buy-and-hold</strong>: by $83 in-sample and $64 out-of-sample. Both are smaller than the spread V1&rsquo;s own repeat runs showed, so the conclusion is unchanged in substance: <strong>no edge detected</strong>, now in neither direction.</p>
+    <!-- RERUN-PENDING: remove this paragraph once the remaining V1 backtests (#3, #4, #7) are rerun with the fixes (engineering-log, Phase 07). -->
+    <p><strong>Rerun partly done.</strong> Runs #3, #4 and #7 have not been redone yet; their figures below still come from the leaky runs. The redone runs also used a different language model (Claude in place of GPT-4o), so a change in result cannot be pinned on the leak alone.</p>
     <!-- /RERUN-PENDING -->
-    <p>Every backtest longer than a single quarter underperformed buy-and-hold, by <strong>$39 to $225</strong> on a 20-share basis. The out-of-sample run &mdash; executed once, with nothing changed after seeing the in-sample result &mdash; lost <strong>$63</strong> in a market that was essentially flat.</p>
-    <p>The project&rsquo;s founding rule was that an honestly evaluated failure is the correct thing to report. So it is reported, and the evaluation discipline that caught it is the actual deliverable.</p>
+    <p>The project&rsquo;s founding rule was that an honestly evaluated result is the correct thing to report, including when a correction moves it. So it is reported, and the evaluation discipline that caught it is the actual deliverable.</p>
   </div>
 
   <div class="stats">
-    <div class="stat"><div class="k">Backtests</div><div class="v">7</div><div class="s">real LLM calls throughout</div></div>
-    <div class="stat"><div class="k">Best vs. buy &amp; hold</div><div class="v neg">&minus;$39</div><div class="s">over a full window</div></div>
+    <div class="stat"><div class="k">Backtests</div><div class="v">9</div><div class="s">7 original + 2 corrected reruns</div></div>
+    <div class="stat"><div class="k">Corrected vs. buy &amp; hold</div><div class="v">+$64</div><div class="s">out-of-sample, within noise</div></div>
     <div class="stat"><div class="k">Fine-tune attempts</div><div class="v">5</div><div class="s">two framings, all negative</div></div>
-    <div class="stat"><div class="k">Tests</div><div class="v pos">39</div><div class="s">CI fails if any skips</div></div>
+    <div class="stat"><div class="k">Tests</div><div class="v pos">93</div><div class="s">CI fails if any skips</div></div>
     <div class="stat"><div class="k">Total cloud spend</div><div class="v">~$0.02</div><div class="s">applied, verified, destroyed</div></div>
   </div>
 
@@ -271,7 +272,7 @@
   </section>
 
   <section>
-    <h2 class="sec">The seven runs</h2>
+    <h2 class="sec">The runs</h2>
     <div class="scroll">
       <table>
         <thead><tr><th>Run</th><th>Configuration</th><th>Closed</th><th>Result</th><th>Buy &amp; hold</th><th>Gap</th></tr></thead>
@@ -279,15 +280,18 @@
           <tr><td>#3</td><td class="l">categorical sentiment, pilot quarter</td><td>4</td><td>+6.21<span class="pct">+0.22%</span></td><td class="neg">&minus;15.40<span class="pct">&minus;0.55%</span></td><td class="pos">+0.78%</td></tr>
           <tr><td>#4</td><td class="l">categorical sentiment, in-sample</td><td>32</td><td>+864.62<span class="pct">+29.07%</span></td><td>+903.80<span class="pct">+30.38%</span></td><td class="neg">&minus;1.32%</td></tr>
           <tr><td>#6</td><td class="l">categorical sentiment, out-of-sample</td><td>2</td><td class="neg">&minus;63.10<span class="pct">&minus;1.64%</span></td><td>+2.20<span class="pct">+0.06%</span></td><td class="neg">&minus;1.70%</td></tr>
+          <tr><td>#6 &rarr;</td><td class="l"><strong>corrected rerun</strong>, same configuration (backtest 71)</td><td>11</td><td>+66.35<span class="pct">+1.71%</span></td><td>+2.20<span class="pct">+0.06%</span></td><td class="pos">+1.66%</td></tr>
           <tr><td>#7</td><td class="l">sentiment ablated</td><td>33</td><td>+929.84<span class="pct">+31.98%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;1.40%</td></tr>
           <tr><td>#8</td><td class="l">sentiment ablated</td><td>33</td><td>+896.15<span class="pct">+30.82%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;2.56%</td></tr>
           <tr><td>#9</td><td class="l">categorical sentiment, replicate of #4</td><td>31</td><td>+840.45<span class="pct">+28.90%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;4.48%</td></tr>
           <tr><td>#14</td><td class="l">continuous score node</td><td>62</td><td>+745.86<span class="pct">+25.65%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;7.73%</td></tr>
+          <tr><td>#14 &rarr;</td><td class="l"><strong>corrected rerun</strong>, on #4&rsquo;s window (backtest 45)</td><td>29</td><td>+920.81<span class="pct">+30.71%</span></td><td>+837.80<span class="pct">+27.94%</span></td><td class="pos">+2.77%</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="fig">AAPL, mark-to-market, each measured against buy-and-hold over its own window. Percentages are against the capital the position cap implies &mdash; see below. The single positive row is a four-trade quarter that beat the baseline mainly because AAPL fell: buy-and-hold lost money and a largely idle system did not. That is not evidence of skill.</p>
-    <p class="fig"><strong>The percentages are the more honest read.</strong> In dollars, run #4 looks like &ldquo;+864 against +903&rdquo;. In percent it is <strong>29.1% earned in a market that rose 33.4%</strong> &mdash; a strategy tracking a bull run and lagging it, rather than one generating returns of its own.</p>
+    <p class="fig"><strong>Rows marked &rarr; are corrected reruns</strong>: no look-ahead, trading days only, fills at the decision day&rsquo;s open, and Claude (Sonnet 5.5 and Haiku 4.5) in place of GPT-4o and GPT-4o-mini. Four things changed at once, so a difference from the original row cannot be attributed to any one of them. Both show V1&rsquo;s own risk rules, replayed exactly over the decisions of a run made with V2&rsquo;s risk engine &mdash; the Portfolio Manager never sees positions, so its proposals are the same either way. The other rows are the original, leaky runs; #8 and #9 repeated #7 and #4 and will not be redone.</p>
+    <p class="fig">AAPL, mark-to-market, each measured against buy-and-hold over its own window. Percentages are against the capital the position cap implies &mdash; see below. Among the original runs, the single positive row is a four-trade quarter that beat the baseline mainly because AAPL fell: buy-and-hold lost money and a largely idle system did not. That is not evidence of skill.</p>
+    <p class="fig"><strong>The percentages are the more honest read.</strong> In dollars, the original run #4 looks like &ldquo;+864 against +903&rdquo;. In percent it is <strong>29.1% earned in a market that rose 33.4%</strong> &mdash; a strategy tracking a bull run and lagging it, rather than one generating returns of its own.</p>
   </section>
 
   <section>
@@ -306,6 +310,8 @@
           <tr><td class="l">Jun 2022&ndash;Jun 2023 (in-sample)</td><td>$148.73</td><td>$2,975</td></tr>
           <tr><td class="l">Jun 2022&ndash;Jun 2023 (281-day runs)</td><td>$145.39</td><td>$2,908</td></tr>
           <tr><td class="l">Jul&ndash;Dec 2023 (out-of-sample)</td><td>$192.50</td><td>$3,850</td></tr>
+          <tr><td class="l">Jun 2022&ndash;Jun 2023 (corrected rerun, priced at the open)</td><td>$149.91</td><td>$2,998</td></tr>
+          <tr><td class="l">Jul&ndash;Dec 2023 (corrected rerun, priced at the open)</td><td>$193.76</td><td>$3,875</td></tr>
         </tbody>
       </table>
     </div>
@@ -318,29 +324,32 @@
       <table>
         <thead><tr><th>Item</th><th>Spent</th></tr></thead>
         <tbody>
-          <tr><td class="l">OpenAI &mdash; 7 backtests and all probes</td><td>~$4.91</td></tr>
+          <tr><td class="l">OpenAI &mdash; 7 backtests and all probes (V1)</td><td>~$4.91</td></tr>
+          <tr><td class="l">Anthropic &mdash; 2 corrected reruns (V2)</td><td>~$3.40</td></tr>
           <tr><td class="l">AWS &mdash; applied, verified, destroyed same day</td><td>~$0.02</td></tr>
           <tr><td class="l">Kaggle GPU &mdash; fine-tuning, both rounds</td><td>free</td></tr>
           <tr><td class="l">Alpaca market data &mdash; free tier</td><td>free</td></tr>
           <tr><td class="l">Dataset, baseline, replay, every diagnostic</td><td class="pos">$0.00</td></tr>
-          <tr><td class="l"><strong>Total</strong></td><td><strong>under $5</strong></td></tr>
+          <tr><td class="l"><strong>Total</strong></td><td><strong>about $8.30</strong></td></tr>
         </tbody>
       </table>
     </div>
-    <p class="fig">Starting budget was $4.95, and $0.04 remained at the end &mdash; so the entire evaluation, including the work that established it does not work, cost less than a coffee. The offline replay tooling exists precisely because it made a whole class of question answerable for nothing.</p>
+    <p class="fig">V1&rsquo;s budget was $4.95, and $0.04 remained at the end. V2&rsquo;s reruns had a hard $5 cap; every paid run now carries a spending limit and stops itself before crossing it. Part of the Anthropic figure is extrapolated: one run was killed partway and resumed, and the killed part&rsquo;s token count was lost. The offline replay tooling exists precisely because it made a whole class of question answerable for nothing &mdash; both corrected V1 rows above came from it.</p>
   </section>
 
   <section>
     <h2 class="sec">How it works</h2>
-    <p>Four nodes, split by whether judgment is actually required. A <strong>Technical Analyst</strong> computes RSI-14 and SMA-20 in plain Python &mdash; arithmetic is not worth a language model. A <strong>Sentiment Analyst</strong> reads headlines through GPT-4o-mini. A <strong>Portfolio Manager</strong> on GPT-4o synthesises both into a proposal. A rule-based <strong>Risk Manager</strong> holds final authority and can veto or scale any trade.</p>
+    <p>Four nodes, split by whether judgment is actually required. A <strong>Technical Analyst</strong> computes RSI-14 and SMA-20 in plain Python &mdash; arithmetic is not worth a language model. A <strong>Sentiment Analyst</strong> reads headlines through a small language model. A <strong>Portfolio Manager</strong> on a larger one synthesises both into a proposal. A <strong>Risk Manager</strong> holds final authority and can veto or scale any trade: V1&rsquo;s hard position rules, plus, since V2, a budget on the position&rsquo;s value-at-risk.</p>
+    <p>V1 ran on GPT-4o-mini and GPT-4o. Since V2 the same two nodes run on Claude Haiku 4.5 and Sonnet 5.5 &mdash; a configuration setting, not a code change, and every run records which models produced it.</p>
     <p>That last split &mdash; propose versus gate &mdash; was the most valuable structural decision in the project. Because the risk layer is code and every input it consumed is stored, alternative risk rules could later be replayed against recorded decisions for free, without a single new API call.</p>
   </section>
 
   <section>
     <h2 class="sec">What&rsquo;s next &mdash; V2, then V3</h2>
     <div class="finding" style="border-left-color:var(--ink-bold);">
-      <div class="label" style="color:var(--ink-bold);">In planning &mdash; V2</div>
+      <div class="label" style="color:var(--ink-bold);">In progress &mdash; V2</div>
       <p><strong>V2 replaces the rule-based Risk Manager with real risk math, and adds an agent that explains its own alerts.</strong> In place of just a hard position cap, the risk layer computes VaR and CVaR, watches for a shift in how the watchlist&rsquo;s holdings move together, and backtests its own risk estimate against what actually happened &mdash; a Kupiec test, the same kind of check that caught this project&rsquo;s own pre-registration flaw in Phase 04.</p>
+      <p><strong>Phase 07, the risk engine, has shipped &mdash; with a mixed result, reported as measured.</strong> The value-at-risk forecasts hold up: over the in-sample year they were breached on 4.4% of days against a 5% target, while a naive flat 2% estimate was breached on 10.3% and fails the test. Out of sample they were too cautious, breached on only 1.6% of days. Used as a binding, pre-registered 2% budget, the risk engine cost $492 against V1&rsquo;s rules in-sample and gained $57 out-of-sample. The same rule moving results in opposite directions on two windows is no evidence that it helps. The checks that found the look-ahead leak above were the first step of this phase.</p>
       <p>When it flags something, a retrieval agent pulls the relevant recent news and writes the reason in plain language, instead of leaving a number on a dashboard for someone to interpret. Every explanation is checked against a hand-labelled set of past events before it is trusted, and every retrieval and reasoning step is traced, not just the output.</p>
       <p>This does not depend on the strategy having an edge. It makes the existing system&rsquo;s judgment better and its reasoning visible &mdash; the same gap the rest of this project already cares about.</p>
     </div>

@@ -295,7 +295,7 @@
     <span class="eyebrow">Build sequence · paper trading only</span>
     <h1>V1 first. V2 doesn&rsquo;t need an edge. V4 does.</h1>
     <p class="dek">Six phases build the daily decision-support agent (V1). Four more replace its rule-based risk gate with real risk math and an agent that explains its own alerts (V2) — this doesn&rsquo;t require V1 to have found an edge, only to exist. Six further phases would turn it into a continuous intraday system (V4), and that one stays gated: it only starts if V1&rsquo;s strategy logic backtests with a real edge.
-      <strong>Status as of 28 Sep 2026: all six V1 phases are settled, the honest-backtest gate has been reached and answered — no edge on this evidence — so V4 stays on hold. V2 does not depend on that gate and is next.</strong>
+      <strong>Status as of 5 Oct 2026: all six V1 phases are settled, the honest-backtest gate has been reached and answered — no edge on this evidence — so V4 stays on hold. V2 does not depend on that gate: phase 07, the risk engine, has shipped, and phase 08 is next.</strong>
       <span class="note">V3 — a pivot to Indian markets — is a separate, parallel track driven by data sourcing rather than build phases, and isn&rsquo;t diagrammed here. See the homepage.</span>
     </p>
     <div class="legend">
@@ -313,7 +313,7 @@
     <h2>Block diagram</h2>
     <div class="diagram-frame">
       <figure>
-        <svg viewBox="0 0 1240 410" role="img" aria-label="Roadmap showing six V1 blocks built in sequence with status markers, then four V2 blocks that do not need a gate, then a gate ribbon, then six V4 blocks. Dashed lines show which earlier block each later block extends. Phases 1, 2, 3, 5 and 6 are done, phase 4 is closed on a negative result, and every V2 and V4 phase is not started.">
+        <svg viewBox="0 0 1240 410" role="img" aria-label="Roadmap showing six V1 blocks built in sequence with status markers, then four V2 blocks that do not need a gate, then a gate ribbon, then six V4 blocks. Dashed lines show which earlier block each later block extends. Phases 1, 2, 3, 5, 6 and 7 are done, phase 4 is closed on a negative result, and phases 8 to 10 and every V4 phase are not started.">
           <defs>
             <marker id="arrowV1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M0,0 L10,5 L0,10 z" fill="var(--v1)"/>
@@ -436,13 +436,14 @@
             <circle cx="1180" cy="44" r="5" fill="var(--done)"/>
           </g>
 
-          <!-- ===== Row 2 boxes (V2) — none started ===== -->
-          <!-- 07 Risk Engine -->
+          <!-- ===== Row 2 boxes (V2) — 07 done, 08-10 not started ===== -->
+          <!-- 07 Risk Engine — done -->
           <g>
-            <rect x="420" y="150" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
-            <text x="432" y="165" class="mono" font-size="10" fill="var(--pending)">07</text>
+            <rect x="420" y="150" width="176" height="60" rx="6" fill="var(--v2-soft)" stroke="var(--v2)"/>
+            <text x="432" y="165" class="mono" font-size="10" fill="var(--v2)">07</text>
             <text x="432" y="183" font-size="14" font-weight="600" fill="var(--ink)">Risk Engine</text>
             <text x="432" y="200" class="mono" font-size="11" fill="var(--muted)">VaR · CVaR · Kupiec</text>
+            <circle cx="580" cy="164" r="5" fill="var(--done)"/>
           </g>
           <!-- 08 Explainer Agent -->
           <g>
@@ -543,12 +544,12 @@
           <span class="sub">unblocked — no gate to clear</span>
         </div>
         <ol class="steps">
-          <li><span class="num">07</span><div><div class="label">Risk engine<span class="tag pending">not started</span></div><div class="desc">Replaces the rule-based Risk Manager with VaR, CVaR, a rolling correlation-regime check, and a Kupiec backtest of the risk model itself against realized P&amp;L.</div></div></li>
+          <li><span class="num">07</span><div><div class="label">Risk engine<span class="tag done">done</span></div><div class="desc">Historical and normal VaR/CVaR, a 60-day correlation check, and a Kupiec backtest of the risk model itself, layered on V1&rsquo;s rules as a hard floor with a pre-registered 2% VaR budget. The forecasts pass Kupiec in-sample (4.4% breaches vs a naive 2% VaR&rsquo;s 10.3%) but are too cautious out-of-sample. As a budget it cost $492 in-sample and gained $57 out-of-sample: no evidence it helps. Its first step found the look-ahead leak in V1&rsquo;s backtests.</div></div></li>
           <li><span class="num">08</span><div><div class="label">Explainer agent<span class="tag pending">not started</span></div><div class="desc">A new LangGraph node that retrieves recent news via RAG when the risk engine flags something, and writes the reason in plain language instead of leaving a number on a dashboard.</div></div></li>
           <li><span class="num">09</span><div><div class="label">Eval harness<span class="tag pending">not started</span></div><div class="desc">A hand-labelled set of past risk events with known-correct explanations, scored with LLM-as-judge, run as a regression check before any change ships.</div></div></li>
           <li><span class="num">10</span><div><div class="label">Reasoning trace<span class="tag pending">not started</span></div><div class="desc">Full trace of every retrieval and reasoning step behind an explanation, so a flagged decision can be audited, not just trusted.</div></div></li>
         </ol>
-        <div class="gate-note">None of this depends on the strategy having an edge — it makes the existing system's judgment better and its reasoning visible. None of it is started.</div>
+        <div class="gate-note">None of this depends on the strategy having an edge — it makes the existing system's judgment better and its reasoning visible. Phase 07 shipped with a mixed result; 08 to 10 are not started.</div>
       </div>
 
       <div class="track v4">
