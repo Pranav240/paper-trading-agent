@@ -49,10 +49,11 @@ from __future__ import annotations
 
 from typing import Awaitable, Callable
 
-from langchain_openai import ChatOpenAI
+from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, Field
 
 from app.agent.data_sources import HeadlineSource
+from app.agent.llm import default_llm, structured
 from app.agent.state import AgentOpinion, GraphState
 
 SYSTEM_PROMPT = """You are a sentiment analyst for a stock paper-trading \
@@ -111,12 +112,9 @@ def format_score(score: float) -> str:
     return f"{score:+.2f}"
 
 
-SENTIMENT_MODEL = "gpt-4o-mini"
-
-
 def make_sentiment_analyst_node(
     headline_source: HeadlineSource,
-    llm: ChatOpenAI | None = None,
+    llm: BaseChatModel | None = None,
 ) -> Callable[[GraphState], Awaitable[dict]]:
     # `llm` is injectable so tests can pass a fake/mock instead of hitting
     # the OpenAI API — same reason price_source/headline_source are
@@ -148,8 +146,9 @@ def make_sentiment_analyst_node(
             )
             return {"sentiment_opinion": opinion}
 
-        model = llm or ChatOpenAI(model=SENTIMENT_MODEL, temperature=0)
-        structured_model = model.with_structured_output(SentimentScore)
+        # Provider and model come from app/agent/llm.py (LLM_PROVIDER env).
+        model = llm or default_llm("sentiment_analyst")
+        structured_model = structured(model, SentimentScore)
 
         headline_block = "\n".join(f"- {h.headline}" for h in headlines)
         user_prompt = (

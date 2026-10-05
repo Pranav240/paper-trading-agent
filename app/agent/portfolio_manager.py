@@ -20,8 +20,9 @@ from __future__ import annotations
 
 from typing import Awaitable, Callable
 
-from langchain_openai import ChatOpenAI
+from langchain_core.language_models import BaseChatModel
 
+from app.agent.llm import default_llm, structured
 from app.agent.state import AgentOpinion, GraphState, TentativeDecision
 
 # Fixed paper-trade lot size. Keeping this a flat number (rather than a
@@ -74,14 +75,12 @@ combined conviction, not a copy of either specialist's number.
 English a human could audit."""
 
 
-PORTFOLIO_MODEL = "gpt-4o"
-
-
 def make_portfolio_manager_node(
-    llm: ChatOpenAI | None = None,
+    llm: BaseChatModel | None = None,
 ) -> Callable[[GraphState], Awaitable[dict]]:
-    model = llm or ChatOpenAI(model=PORTFOLIO_MODEL, temperature=0)
-    structured_model = model.with_structured_output(TentativeDecision)
+    # Provider and model come from app/agent/llm.py (LLM_PROVIDER env).
+    model = llm or default_llm("portfolio_manager")
+    structured_model = structured(model, TentativeDecision)
 
     async def node(state: GraphState) -> dict:
         technical = state["technical_opinion"]

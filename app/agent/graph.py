@@ -21,7 +21,7 @@ this graph with fakes/mocks instead of hitting Alpaca/OpenAI/Postgres.
 
 from __future__ import annotations
 
-from langchain_openai import ChatOpenAI
+from langchain_core.language_models import BaseChatModel
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
@@ -39,8 +39,8 @@ def build_decision_graph(
     price_source: PriceDataSource,
     headline_source: HeadlineSource,
     repository: Repository,
-    sentiment_llm: ChatOpenAI | None = None,
-    portfolio_llm: ChatOpenAI | None = None,
+    sentiment_llm: BaseChatModel | None = None,
+    portfolio_llm: BaseChatModel | None = None,
 ) -> CompiledStateGraph:
     graph = StateGraph(GraphState)
 

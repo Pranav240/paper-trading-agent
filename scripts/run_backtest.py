@@ -56,9 +56,8 @@ from app.agent.data_sources import (
     build_historical_data_sources,
 )
 from app.agent.graph import build_decision_graph
-from app.agent.portfolio_manager import PORTFOLIO_MODEL
+from app.agent.llm import describe as describe_llms
 from app.agent.risk_manager import MAX_POSITION_QTY, VAR_BUDGET
-from app.agent.sentiment_analyst import SENTIMENT_MODEL
 from app.agent.state import TentativeDecision
 from app.repository.backtest import BacktestRepository
 
@@ -90,8 +89,9 @@ def _parse_args() -> argparse.Namespace:
         "--use-real-llms",
         action="store_true",
         help=(
-            "Use real ChatOpenAI calls for the Sentiment Analyst and "
-            "Portfolio Manager (needs OPENAI_API_KEY, costs real money, "
+            "Use real LLM calls for the Sentiment Analyst and Portfolio "
+            "Manager, from LLM_PROVIDER (app/agent/llm.py; needs "
+            "OPENAI_API_KEY or ANTHROPIC_API_KEY, costs real money, "
             "one call per node per symbol per simulated day). Without "
             "this flag, both nodes use fixed neutral test doubles instead "
             "— enough to verify the pipeline runs and persists correctly, "
@@ -203,13 +203,18 @@ async def main() -> None:
 
     trading_days = alpaca_trading_days(args.start, args.end)
     real = args.use_real_llms
+    llms = describe_llms()
     # Everything needed to say exactly how this result was produced.
     config = {
         "symbols": [s.upper() for s in args.symbols],
+        # Provider and models from LLM_PROVIDER / *_MODEL env (app/agent/llm.py).
+        "llm": describe_llms(),
         "models": {
-            "portfolio_manager": PORTFOLIO_MODEL if real else "fake:HOLD",
+            "portfolio_manager": llms["portfolio_manager"]["model"] if real else "fake:HOLD",
             "sentiment_analyst": (
-                "fake:neutral" if (args.no_sentiment or not real) else SENTIMENT_MODEL
+                "fake:neutral"
+                if (args.no_sentiment or not real)
+                else llms["sentiment_analyst"]["model"]
             ),
         },
         "no_sentiment_ablation": args.no_sentiment,
