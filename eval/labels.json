@@ -1,0 +1,944 @@
+{
+ "labeller": "Claude (Opus 5.5), at the owner's request; see docs/engineering-log.md, phase 09 deviations",
+ "labelled": "2026-10-06",
+ "golden_built": "2026-10-06T05:03:57+00:00",
+ "rules": "docs/phase09-plan.md section 2; relevant = reports or carries a cause of this day's AAPL move (company news dated D-1 or D, or market-wide news on D); reports of the previous day's market move, listicles and other companies' news = not relevant",
+ "complete_days": 40,
+ "days": [
+  {
+   "date": "2022-09-13",
+   "relevant_ids": [
+    7366,
+    7348,
+    7344,
+    7349,
+    7346,
+    7358,
+    7354
+   ],
+   "not_relevant_ids": [
+    7342,
+    7343,
+    7345,
+    7347,
+    7350
+   ],
+   "cause": "Hotter-than-expected August CPI report set off a broad market sell-off on bets of large Fed rate hikes.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-09-29",
+   "relevant_ids": [
+    7115,
+    7128,
+    7132,
+    7083,
+    7085,
+    7087
+   ],
+   "not_relevant_ids": [
+    7080,
+    7081,
+    7082,
+    7084,
+    7086,
+    7091,
+    7118,
+    7122,
+    7134
+   ],
+   "cause": "Fears of weakening iPhone 14 demand (Apple reportedly dropped a planned production increase) plus a renewed broad sell-off on worries about the economy.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2023-08-04",
+   "relevant_ids": [
+    2441,
+    2455,
+    2487,
+    2436,
+    2440,
+    2505
+   ],
+   "not_relevant_ids": [
+    2434,
+    2435,
+    2437,
+    2438,
+    2439,
+    2444,
+    2445,
+    2509,
+    2518
+   ],
+   "cause": "Fiscal Q3 results showed declining revenue and an iPhone sales slump, sending Apple lower and dragging the market.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": true
+  },
+  {
+   "date": "2022-12-15",
+   "relevant_ids": [
+    5974,
+    5970,
+    5978,
+    5972
+   ],
+   "not_relevant_ids": [
+    5969,
+    5971,
+    5973,
+    5975,
+    5976,
+    5979,
+    5980,
+    5992,
+    5996
+   ],
+   "cause": "Broad market sell-off on a hawkish Fed signalling more rate hikes, hitting big tech including Apple.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": true
+  },
+  {
+   "date": "2022-11-03",
+   "relevant_ids": [
+    6542,
+    6548,
+    6547,
+    6546,
+    6560,
+    6544,
+    6559,
+    6549
+   ],
+   "not_relevant_ids": [
+    6543,
+    6545,
+    6554
+   ],
+   "cause": "The Fed signalled more and longer rate hikes, extending a broad market sell-off.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-06-16",
+   "relevant_ids": [
+    8648,
+    8636
+   ],
+   "not_relevant_ids": [
+    8635,
+    8637,
+    8638,
+    8639,
+    8640,
+    8641,
+    8642,
+    8658,
+    8659,
+    8669
+   ],
+   "cause": "Recession fears drove a broad sell-off in big tech stocks.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-06-03",
+   "relevant_ids": [
+    8856,
+    8854,
+    8860,
+    8861
+   ],
+   "not_relevant_ids": [
+    8855,
+    8857,
+    8859,
+    8862
+   ],
+   "cause": "Strong jobs data raised bets on aggressive rate hikes, pushing tech lower; Apple was the Dow's worst performer.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-06-10",
+   "relevant_ids": [
+    8734,
+    8725,
+    8737,
+    8728
+   ],
+   "not_relevant_ids": [
+    8724,
+    8726,
+    8727,
+    8729,
+    8730,
+    8731,
+    8732,
+    8755,
+    8757,
+    8768
+   ],
+   "cause": "Hot May CPI data intensified inflation and rate-hike fears, causing a broad market sell-off.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-06-13",
+   "relevant_ids": [
+    8696,
+    8706,
+    8699,
+    8695
+   ],
+   "not_relevant_ids": [
+    8691,
+    8692,
+    8693,
+    8694,
+    8698,
+    8701,
+    8709
+   ],
+   "cause": "Recession fears and bets on aggressive Fed hikes pushed the S&P 500 into a bear market.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-08-26",
+   "relevant_ids": [
+    7584,
+    7592,
+    7587
+   ],
+   "not_relevant_ids": [
+    7585,
+    7586,
+    7588,
+    7589,
+    7590,
+    7591,
+    7594,
+    7603,
+    7606,
+    7611
+   ],
+   "cause": "Powell's hawkish speech weighed on the market, and a report said the DOJ is drafting an antitrust suit against Apple.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-11-02",
+   "relevant_ids": [
+    6573,
+    6582,
+    6587
+   ],
+   "not_relevant_ids": [
+    6561,
+    6562,
+    6563,
+    6564,
+    6565,
+    6566,
+    6567,
+    6568,
+    6576,
+    6579
+   ],
+   "cause": "Fresh COVID lockdowns around Apple's main iPhone plant in China raised supply worries.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2023-01-03",
+   "relevant_ids": [
+    5739,
+    5742,
+    5730,
+    5747,
+    5737,
+    5735
+   ],
+   "not_relevant_ids": [
+    5731,
+    5732,
+    5733,
+    5734,
+    5736,
+    5740,
+    5743,
+    5751
+   ],
+   "cause": "Apple and Tesla shares fell sharply, dragging Wall Street lower on the first trading day of 2023.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": true
+  },
+  {
+   "date": "2022-10-07",
+   "relevant_ids": [
+    6961,
+    6956
+   ],
+   "not_relevant_ids": [
+    6957,
+    6958,
+    6959,
+    6960,
+    6962,
+    6963,
+    6976,
+    6978,
+    6979,
+    6983
+   ],
+   "cause": "A strong jobs report cemented bets on big rate hikes, sending Wall Street sharply lower.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-06-09",
+   "relevant_ids": [
+    8755
+   ],
+   "not_relevant_ids": [
+    8749,
+    8750,
+    8751,
+    8752,
+    8753,
+    8754,
+    8756,
+    8757,
+    8768,
+    8791
+   ],
+   "cause": "Growth stocks fell ahead of the next day's inflation report.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2023-09-06",
+   "relevant_ids": [
+    1926,
+    1953,
+    1936,
+    1925,
+    1929,
+    1927,
+    1930,
+    1928,
+    1948,
+    1950
+   ],
+   "not_relevant_ids": [
+    1924,
+    1931
+   ],
+   "cause": "Report that China banned government officials from using iPhones at work, on top of a market slide on inflation worries after strong services data.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": true
+  },
+  {
+   "date": "2022-11-09",
+   "relevant_ids": [
+    6486,
+    6467
+   ],
+   "not_relevant_ids": [
+    6465,
+    6466,
+    6468,
+    6469,
+    6470,
+    6471,
+    6472,
+    6473,
+    6478,
+    6483
+   ],
+   "cause": "Supply-chain worries: a supplier lost an order and Foxconn faced China COVID curbs.",
+   "no_explaining_headline": false,
+   "note": "weak: only supplier headlines; no market-wide headline in the window",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-10-14",
+   "relevant_ids": [],
+   "not_relevant_ids": [
+    6873,
+    6874,
+    6875,
+    6876,
+    6877,
+    6878,
+    6879,
+    6880,
+    6885,
+    6886,
+    6893,
+    6899
+   ],
+   "cause": "",
+   "no_explaining_headline": true,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-09-30",
+   "relevant_ids": [
+    7067
+   ],
+   "not_relevant_ids": [
+    7065,
+    7066,
+    7068,
+    7069,
+    7070,
+    7071,
+    7072,
+    7073,
+    7077,
+    7084,
+    7091
+   ],
+   "cause": "Broad market decline at quarter-end on inflation and recession worries.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-12-28",
+   "relevant_ids": [
+    5822,
+    5821,
+    5823,
+    5824,
+    5827
+   ],
+   "not_relevant_ids": [
+    5820,
+    5825,
+    5826,
+    5829,
+    5841,
+    5845,
+    5846
+   ],
+   "cause": "Recession fears and mixed economic data pushed stocks lower; the Nasdaq closed at a new bear-market low.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": true
+  },
+  {
+   "date": "2022-10-27",
+   "relevant_ids": [
+    6662
+   ],
+   "not_relevant_ids": [
+    6654,
+    6655,
+    6657,
+    6658,
+    6659,
+    6660,
+    6661,
+    6666,
+    6673,
+    6688,
+    6695,
+    6710
+   ],
+   "cause": "Apple's iPhone sales fell short of expectations despite an overall earnings beat.",
+   "no_explaining_headline": false,
+   "note": "timing ambiguous from headlines: the earnings headlines may describe an after-hours reaction rather than the regular-session move",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-06-28",
+   "relevant_ids": [
+    8480,
+    8477,
+    8478,
+    8484
+   ],
+   "not_relevant_ids": [
+    8476,
+    8479,
+    8481,
+    8482,
+    8483,
+    8486,
+    8487,
+    8502
+   ],
+   "cause": "Weak consumer-confidence data stoked growth fears and a broad market drop.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2023-09-07",
+   "relevant_ids": [
+    1895,
+    1874,
+    1871,
+    1872,
+    1881,
+    1891,
+    1898,
+    1903,
+    1875
+   ],
+   "not_relevant_ids": [
+    1870,
+    1873,
+    1876,
+    1877
+   ],
+   "cause": "China moved to widen iPhone bans for state employees, deepening fears over Apple's China sales.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-11-28",
+   "relevant_ids": [
+    6237,
+    6236,
+    6248,
+    6252,
+    6255,
+    6230,
+    6234,
+    6239,
+    6246
+   ],
+   "not_relevant_ids": [
+    6231,
+    6232,
+    6233,
+    6235,
+    6254
+   ],
+   "cause": "Protests over COVID curbs in China, including at Foxconn's iPhone plant, raised fears of an iPhone Pro shortfall.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2023-08-24",
+   "relevant_ids": [
+    2115,
+    2117
+   ],
+   "not_relevant_ids": [
+    2113,
+    2114,
+    2116,
+    2118,
+    2119,
+    2120,
+    2124,
+    2130,
+    2134,
+    2135,
+    2153
+   ],
+   "cause": "A sell-off in mega-cap tech as the Nvidia boost faded and caution grew ahead of Powell's speech.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2023-02-21",
+   "relevant_ids": [
+    5012,
+    5014,
+    5009,
+    5004,
+    5006
+   ],
+   "not_relevant_ids": [
+    5003,
+    5005,
+    5008,
+    5010,
+    5011,
+    5018
+   ],
+   "cause": "Disappointing Walmart and Home Depot forecasts sent the market sharply lower.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2023-10-26",
+   "relevant_ids": [
+    904
+   ],
+   "not_relevant_ids": [
+    870,
+    871,
+    872,
+    873,
+    874,
+    875,
+    876,
+    877,
+    896,
+    908,
+    918,
+    926
+   ],
+   "cause": "Research showed Apple's China smartphone sales declining while Huawei's surged.",
+   "no_explaining_headline": false,
+   "note": "weak: one day-before company headline, no market headline for the day",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-12-06",
+   "relevant_ids": [
+    6089,
+    6092,
+    6093
+   ],
+   "not_relevant_ids": [
+    6087,
+    6088,
+    6090,
+    6091,
+    6094,
+    6096,
+    6118
+   ],
+   "cause": "Recession talk weighed on Wall Street, extending the S&P 500's losing streak.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-12-22",
+   "relevant_ids": [
+    5897,
+    5891
+   ],
+   "not_relevant_ids": [
+    5887,
+    5888,
+    5889,
+    5890,
+    5893,
+    5894,
+    5895,
+    5910,
+    5911
+   ],
+   "cause": "Strong economic data fanned rate-hike worries, and chipmaker woes hit tech.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2023-09-26",
+   "relevant_ids": [
+    1430,
+    1433,
+    1412,
+    1408,
+    1415,
+    1410
+   ],
+   "not_relevant_ids": [
+    1409,
+    1411,
+    1413,
+    1414,
+    1423,
+    1426,
+    1443,
+    1446,
+    1449,
+    1450
+   ],
+   "cause": "Treasury yields near 16-year highs and waning confidence in the economy sent stocks lower.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-08-22",
+   "relevant_ids": [
+    7658,
+    7649,
+    7650,
+    7663
+   ],
+   "not_relevant_ids": [
+    7651,
+    7652,
+    7653,
+    7654,
+    7655,
+    7656,
+    7659
+   ],
+   "cause": "Fears of aggressive Fed rate hikes sent the Nasdaq down more than 2%.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-11-21",
+   "relevant_ids": [
+    6331
+   ],
+   "not_relevant_ids": [
+    6326,
+    6327,
+    6328,
+    6329,
+    6330,
+    6332,
+    6333,
+    6335,
+    6338
+   ],
+   "cause": "",
+   "no_explaining_headline": true,
+   "note": "one headline reports the drop but none gives a cause",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-11-29",
+   "relevant_ids": [
+    6252,
+    6212,
+    6205,
+    6215
+   ],
+   "not_relevant_ids": [
+    6206,
+    6207,
+    6208,
+    6209,
+    6210,
+    6211,
+    6220,
+    6230,
+    6239,
+    6248,
+    6255
+   ],
+   "cause": "Continued worries about an iPhone Pro shortfall from China protests; an analyst said shipments may miss estimates by 20 million units.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-09-21",
+   "relevant_ids": [],
+   "not_relevant_ids": [
+    7235,
+    7236,
+    7237,
+    7238,
+    7239,
+    7240,
+    7241,
+    7242,
+    7246,
+    7247,
+    7249,
+    7252,
+    7265
+   ],
+   "cause": "",
+   "no_explaining_headline": true,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2023-09-20",
+   "relevant_ids": [
+    1523
+   ],
+   "not_relevant_ids": [
+    1516,
+    1517,
+    1518,
+    1519,
+    1520,
+    1521,
+    1522,
+    1525,
+    1532,
+    1543,
+    1547,
+    1550,
+    1552
+   ],
+   "cause": "The Fed held rates but signalled 'higher for longer', and Wall Street closed lower.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2023-01-30",
+   "relevant_ids": [
+    5341,
+    5334,
+    5359,
+    5339,
+    5363
+   ],
+   "not_relevant_ids": [
+    5333,
+    5335,
+    5336,
+    5338,
+    5340,
+    5344,
+    5349,
+    5350,
+    5364
+   ],
+   "cause": "Megacap tech fell ahead of a busy week of earnings and a Fed decision.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-11-25",
+   "relevant_ids": [
+    6280,
+    6286,
+    6269,
+    6272,
+    6267,
+    6271
+   ],
+   "not_relevant_ids": [
+    6264,
+    6265,
+    6266,
+    6268,
+    6270,
+    6276
+   ],
+   "cause": "Reports that Foxconn's troubles could cut up to 30% of November iPhone shipments from its Chinese plant.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-07-18",
+   "relevant_ids": [
+    8215,
+    8213,
+    8217
+   ],
+   "not_relevant_ids": [
+    8214,
+    8216,
+    8218,
+    8219,
+    8220,
+    8232,
+    8234
+   ],
+   "cause": "A report that Apple will slow hiring and spending drained a market rally.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-09-15",
+   "relevant_ids": [
+    7305,
+    7301,
+    7298,
+    7300
+   ],
+   "not_relevant_ids": [
+    7299,
+    7302,
+    7304,
+    7306,
+    7319,
+    7324,
+    7337
+   ],
+   "cause": "Fed tightening worries and economic warnings sent Wall Street lower.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2022-10-26",
+   "relevant_ids": [
+    6690,
+    6709,
+    6691,
+    6688,
+    6705
+   ],
+   "not_relevant_ids": [
+    6689,
+    6693,
+    6694,
+    6695,
+    6696,
+    6699,
+    6701,
+    6710,
+    6718
+   ],
+   "cause": "Weak Big Tech earnings fanned economic slowdown fears and pulled the Nasdaq lower.",
+   "no_explaining_headline": false,
+   "note": "",
+   "seen_explainer_output": false
+  },
+  {
+   "date": "2023-02-24",
+   "relevant_ids": [],
+   "not_relevant_ids": [
+    4965,
+    4966,
+    4967,
+    4968,
+    4969,
+    4970,
+    4971,
+    4972,
+    4974,
+    4977,
+    4978,
+    4979,
+    4981,
+    4983
+   ],
+   "cause": "",
+   "no_explaining_headline": true,
+   "note": "",
+   "seen_explainer_output": false
+  }
+ ]
+}
