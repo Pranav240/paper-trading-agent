@@ -10,12 +10,11 @@ was cut, citing only headlines it was actually shown.
 
 **No edge has been established, and measuring that honestly is the point.**
 Seven backtests against real market data and real news; as first run, every
-one longer than a quarter underperformed buy-and-hold. V2 then found those
-runs could see each day's own close — a look-ahead leak. Corrected reruns
-land *above* buy-and-hold (+$83 in-sample, +$64 out-of-sample): two to three
-times the spread between V1's repeat runs, but one run per window on one
-stock, with four things changed at once. V1's "underperforms" didn't survive
-the correction; an edge isn't shown either.
+one longer than a quarter underperformed buy-and-hold. V2 then found **two
+look-ahead leaks**: each decision saw that day's own closing price, and —
+because the news data has dates, not times — that day's headlines too,
+including after-the-close reports. Every published result had at least one
+leak; reruns with both fixed are under way.
 
 > **Paper trading only.** Never touched real capital or a live brokerage
 > account. Nothing here is financial advice.
@@ -47,27 +46,34 @@ The one positive row is a four-trade quarter that beat the baseline because
 AAPL fell — buy-and-hold lost money and a largely idle system didn't. That
 is market conditions, not skill.
 
-**Every row above had a look-ahead leak** (found 2026-09-28). Corrected
-reruns — no leak, trading days only, fills at the open, and Claude in place
-of GPT-4o, so four things changed at once:
+**Every row above had both look-ahead leaks.** The first reruns fixed the
+price leak (plus trading days only, fills at the open, Claude in place of
+GPT-4o) but **still saw same-day headlines**, so they are a record, not a
+result:
 
 | Rerun | Configuration | Closed | Result | Buy & hold | Difference |
 |---|---|---|---|---|---|
 | #6 → bt 71 | categorical sentiment, out-of-sample | 11 | +66.35 | +2.20 | +64.15 |
 | #14 → bt 45 | continuous score, #4's window | 29 | +920.81 | +837.80 | +83.01 |
 
-V1's risk rules, replayed exactly over each rerun's decisions. #3, #4 and #7
-are not yet rerun; #8 and #9 repeated #7 and #4 and won't be.
+V1's risk rules, replayed exactly over each rerun's decisions. Reruns with
+both leaks fixed are pending; #8 and #9 repeated #7 and #4 and won't be.
 → [detail](docs/engineering-log.md#phase-07--risk-engine-v2-step-1-price-look-ahead-in-backtests)
 
-## Four findings worth the click
+## Five findings worth the click
 
 **Every V1 backtest could see that day's close.** Decisions ran at 12:00
 UTC and asked for bars "up to now"; the price source stamps each day's bar
 at midnight New York, so the decision day's own close came back — confirmed
 for 938 of 938 stored decisions. The written plan required prior-day prices;
-nothing checked it. Correcting it turned the out-of-sample "loss" into a
-small gain over buy-and-hold.
+nothing checked it.
+
+**…and every backtest read that day's news before it happened.** 99.7% of
+the news data's timestamps are dates at midnight UTC, so a decision at 8 a.m.
+New York counted a headline dated that day as already published. At 8 a.m.
+on Friday 2022-06-03 the sentiment analyst was reading "Apple Was the Worst
+Stock in the Dow Friday". Found while building phase 09's test set, after
+the first "corrected" reruns had already been published.
 
 **A component that abstained 96% of the time was making things worse.**
 Ablating the sentiment node improved results by ~60 on a 13-month window, at

@@ -14,7 +14,7 @@ Seven backtests against real market data and real news, with slippage modelled a
 
 **As first run, every backtest longer than a single quarter underperformed buy-and-hold, by $39 to $225 on a 20-share basis.** The out-of-sample run — executed once, with nothing changed after seeing the in-sample result — lost $63 in a market that was essentially flat.
 
-**Correction (5 October 2026).** The first step of V2 found that every one of those runs could see each decision day's own closing price — a look-ahead leak, confirmed for 938 of 938 stored decisions. Two runs have been redone with it fixed (plus trading days only, fills at the open, and Claude in place of GPT-4o — four changes at once). With V1's own risk rules they land *above* buy-and-hold: **+$64 out-of-sample, +$83 in-sample** — two to three times the $24–34 spread between V1's repeat runs, so not just model randomness, but one run per window on one stock. **V1's "underperforms buy-and-hold" does not survive the correction; an edge is not established either.** See [the corrected reruns](#corrected-reruns-v2).
+**Corrections (5 and 6 October 2026).** V2 found **two look-ahead leaks**. First, every run could see each decision day's own closing price (938 of 938 stored decisions). Then, while those runs were being redone, a second: 99.7% of the news data's timestamps are dates at midnight UTC, so a decision at 8 a.m. read headlines dated that same day — on 98–100% of decisions in every run, including the first reruns, whose +$64 / +$83 against buy-and-hold were published on 5 October as corrected. **No figure in this document is free of look-ahead yet**; reruns with both leaks fixed are pending. No edge has been established. See [the reruns](#corrected-reruns-v2) and defects 8 and 9.
 
 The project's founding rule was that an honestly evaluated result is the correct thing to report, including when a correction moves it. So it is reported, and the machinery built to establish it is the actual deliverable.
 
@@ -134,7 +134,9 @@ The single positive row is a 4-trade quarter that beat the baseline mainly becau
 
 **Every row above had the look-ahead leak described below.** They are left as published.
 
-### Corrected reruns (V2)
+### Corrected reruns (V2) — price leak only
+
+**Superseded:** these reruns still read same-day headlines (defect 9). Kept as a record of the first fix, not as results.
 
 Fixed: prices only from sessions closed before the decision; trading days from the market calendar (V1 also ran on 11 holidays in #4's window); fills at the decision day's open. Run on Claude Sonnet 5.5 + Haiku 4.5 instead of GPT-4o + GPT-4o-mini. Each rerun was recorded with V2's VaR risk engine; V1's rules were then replayed exactly over the same decisions (the Portfolio Manager never sees positions, so its proposals don't depend on the risk node).
 
@@ -313,7 +315,7 @@ Keeping it running would cost ~$13/month to trade a strategy already measured as
 
 ---
 
-## Eight defects, and what each one hid
+## Nine defects, and what each one hid
 
 Every one passed type checks, linting and any amount of re-reading.
 
@@ -327,8 +329,9 @@ Every one passed type checks, linting and any amount of re-reading.
 | 6 | OIDC subject carries numeric IDs | Documented form is `repo:owner/name`; the real one appends immutable account IDs. AWS returns only "not authorized" — uninformative *by design*. CloudTrail has the actual claim. |
 | 7 | A threshold below its own resolving power | The pre-registered bar sat at ~1 standard error of the split chosen to test it |
 | 8 | Price bars fetched "up to now" at 12:00 UTC (found in V2) | The data source stamps a day's bar at midnight New York, so every backtest decision saw that day's own close. Seven backtests and every conclusion drawn from them. The plan required prior-day prices from the start; nothing checked it. |
+| 9 | Headline dates treated as times (found in V2) | 99.7% of FNSPID stamps are dates at 00:00 UTC; `published_at < as_of` read them as published at midnight, so a decision at 8 a.m. saw headlines dated that day — after-the-close reports included. Every backtest, including the reruns that fixed defect 8. |
 
-**Four of eight were findable only by running the system for real** — against a live database, cloud account, or identity provider. That's the argument for spending a few cents on an actual deployment rather than shipping validated infrastructure code. The eighth was visible in the code all along and confirmed with one real API call: it survived because a written requirement never became a test.
+**Four of nine were findable only by running the system for real** — against a live database, cloud account, or identity provider. That's the argument for spending a few cents on an actual deployment rather than shipping validated infrastructure code. The eighth and ninth were visible in the code and data all along: each survived because a written requirement never became a test — and the ninth survived the fix for the eighth.
 
 ---
 
@@ -348,6 +351,7 @@ Not imported from a checklist. Each is traceable to a specific mistake in this p
 | Fail loudly rather than skip quietly | Six tests reported green while never running |
 | Replay recorded decisions before paying for new runs | A standing hypothesis died for free, using data already on disk |
 | Turn every written requirement into a test | "Decide on the prior day's close" was in the backtesting plan from day one; the code never honoured it, and seven backtests ran on future prices |
+| Check what a timestamp actually encodes | The headline rule was right for times and silently wrong for dates; the first data look at the raw stamps (99.7% at exactly midnight) would have shown it |
 | Cap and record the cost of every paid run | A run killed partway lost its token count, so part of its cost can only be estimated |
 
 ---
