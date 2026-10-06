@@ -34,7 +34,7 @@ if sys.platform == "win32":
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
-from app.agent.data_sources import NEW_YORK, AlpacaPriceSource
+from app.agent.data_sources import HEADLINE_DATE, NEW_YORK, AlpacaPriceSource
 from app.agent.explainer import DRIVER_DAYS, TRIGGER_FLAGS, HEADLINES_PER_DAY, HeadlineRetriever
 from app.agent.risk_math import simple_returns, tail_losses
 
@@ -49,13 +49,6 @@ DRIVER_BACKTESTS = (45, 71)
 OUT = Path("eval")
 
 
-def window(day: date) -> tuple[datetime, datetime]:
-    return (
-        datetime.combine(day - timedelta(days=1), time.min, tzinfo=NEW_YORK),
-        datetime.combine(day + timedelta(days=1), time.min, tzinfo=NEW_YORK),
-    )
-
-
 async def main() -> None:
     pool = AsyncConnectionPool(DATABASE_URL, open=False)
     await pool.open(wait=True, timeout=10)
@@ -68,13 +61,14 @@ async def main() -> None:
     daily = [(d, r) for d, r in zip(days[1:], rets) if START <= d <= END]
 
     async def headlines_in(day: date) -> list[dict]:
-        lo, hi = window(day)
+        # Headlines DATED day-1 or day: the explainer's retrieval window
+        # (HEADLINE_DATE; FNSPID stamps are dates, not times).
         async with pool.connection() as conn:
             async with conn.cursor(row_factory=dict_row) as cur:
                 await cur.execute(
-                    "SELECT id, symbol, published_at, headline FROM historical_headlines "
-                    "WHERE symbol = %s AND published_at >= %s AND published_at < %s ORDER BY id",
-                    (SYMBOL, lo, hi),
+                    f"SELECT id, symbol, published_at, headline FROM historical_headlines "
+                    f"WHERE symbol = %s AND {HEADLINE_DATE} BETWEEN %s AND %s ORDER BY id",
+                    (SYMBOL, day - timedelta(days=1), day),
                 )
                 return await cur.fetchall()
 
@@ -99,7 +93,8 @@ async def main() -> None:
         in_window = await headlines_in(day)
         if not in_window:
             continue
-        as_of = window(day)[1] + timedelta(days=1)  # window fully in the past
+        # Two days after D: every headline dated D has become available.
+        as_of = datetime.combine(day + timedelta(days=2), time(12), tzinfo=timezone.utc)
         a = await fts.around(SYMBOL, day, as_of, HEADLINES_PER_DAY)
         b = await recent.around(SYMBOL, day, as_of, HEADLINES_PER_DAY)
         ranks: dict[int, dict] = {}
@@ -127,8 +122,8 @@ async def main() -> None:
 
     OUT.mkdir(exist_ok=True)
     meta = {
-        "rule": f"{SYMBOL}'s {N_DAYS} largest daily losses {START}..{END} with >=1 headline in "
-                "[D-1, D+1) New York; candidates = union of fts and recent top "
+        "rule": f"{SYMBOL}'s {N_DAYS} largest daily losses {START}..{END} with >=1 headline "
+                "dated D-1 or D; candidates = union of fts and recent top "
                 f"{HEADLINES_PER_DAY}; see docs/phase09-plan.md",
         "built": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }

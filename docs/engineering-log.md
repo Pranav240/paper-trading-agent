@@ -1194,3 +1194,16 @@ Not affected: the VaR forecasts and Kupiec results (prices only), and
 the VaR-node vs V1-rules comparisons as risk-rule comparisons (both sides
 replay the same decisions) — though those decisions were themselves made
 with the leak.
+
+### Phase 09 — second deviation: test set rebuilt on headline dates (before any label)
+
+`docs/phase09-plan.md` defines each day's candidates by the explainer's
+window "[D-1, D+1) New York". On FNSPID's midnight-UTC date stamps that
+window held headlines *dated D and D+1* (see the headline-date finding
+above). Fixed in the explainer, so the test set was rebuilt with the
+corrected window, headlines dated D-1 or D, by the same selection rule
+otherwise: still 40 days (13 of them explainer driver days), 498
+candidates (was 520), 1,415 fixture headlines. No label existed for the
+first version.
+
+Fixes and public corrections for the leak itself: `6bebc48`, `fd99811`.
