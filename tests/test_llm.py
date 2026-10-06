@@ -21,6 +21,7 @@ def anthropic_env(monkeypatch):
     monkeypatch.delenv("PORTFOLIO_MODEL", raising=False)
     monkeypatch.delenv("SENTIMENT_MODEL", raising=False)
     monkeypatch.delenv("EXPLAINER_MODEL", raising=False)
+    monkeypatch.delenv("JUDGE_MODEL", raising=False)
 
 
 def _payload(model):
@@ -30,13 +31,14 @@ def _payload(model):
 
 
 def test_default_provider_is_openai(monkeypatch):
-    for key in ("LLM_PROVIDER", "PORTFOLIO_MODEL", "SENTIMENT_MODEL", "EXPLAINER_MODEL"):
+    for key in ("LLM_PROVIDER", "PORTFOLIO_MODEL", "SENTIMENT_MODEL", "EXPLAINER_MODEL", "JUDGE_MODEL"):
         monkeypatch.delenv(key, raising=False)
     assert describe() == {
         "provider": "openai",
         "portfolio_manager": {"model": "gpt-4o", "temperature": 0.0},
         "sentiment_analyst": {"model": "gpt-4o-mini", "temperature": 0.0},
         "explainer": {"model": "gpt-4o-mini", "temperature": 0.0},
+        "judge": {"model": "gpt-4o", "temperature": 0.0},
     }
 
 
@@ -62,6 +64,9 @@ def test_claude_defaults_are_the_chosen_models(anthropic_env):
         },
         "explainer": {
             "model": "claude-haiku-4-5", "temperature": 0.0, "thinking": "model default",
+        },
+        "judge": {
+            "model": "claude-sonnet-5-5", "temperature": None, "thinking": "between_tools",
         },
     }
 

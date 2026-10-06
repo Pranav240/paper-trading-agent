@@ -12,6 +12,7 @@ Environment (all optional):
     PORTFOLIO_MODEL            overrides the provider's default for the PM
     SENTIMENT_MODEL            overrides the provider's default for sentiment
     EXPLAINER_MODEL            overrides the provider's default for the explainer
+    JUDGE_MODEL                overrides the provider's default for the phase 09 judge
 
 Two Claude API details this module exists to get right:
 
@@ -29,12 +30,13 @@ from __future__ import annotations
 import os
 from typing import Any, Literal
 
-Role = Literal["portfolio_manager", "sentiment_analyst", "explainer"]
-ROLES: tuple[Role, ...] = ("portfolio_manager", "sentiment_analyst", "explainer")
+Role = Literal["portfolio_manager", "sentiment_analyst", "explainer", "judge"]
+ROLES: tuple[Role, ...] = ("portfolio_manager", "sentiment_analyst", "explainer", "judge")
 ENV_KEYS: dict[Role, str] = {
     "portfolio_manager": "PORTFOLIO_MODEL",
     "sentiment_analyst": "SENTIMENT_MODEL",
     "explainer": "EXPLAINER_MODEL",
+    "judge": "JUDGE_MODEL",
 }
 
 DEFAULT_MODELS: dict[str, dict[Role, str]] = {
@@ -42,6 +44,7 @@ DEFAULT_MODELS: dict[str, dict[Role, str]] = {
         "portfolio_manager": "gpt-4o",
         "sentiment_analyst": "gpt-4o-mini",
         "explainer": "gpt-4o-mini",
+        "judge": "gpt-4o",
     },
     # Chosen 2026-10-05: the same large/small split V1 had (gpt-4o /
     # gpt-4o-mini), at ~$1.60 per 272-day run (engineering-log, phase 07).
@@ -50,6 +53,8 @@ DEFAULT_MODELS: dict[str, dict[Role, str]] = {
         "sentiment_analyst": "claude-haiku-4-5",
         # Phase 08: short grounded summaries; the small model, by default.
         "explainer": "claude-haiku-4-5",
+        # Phase 09: grades the explainer; a stronger tier than what it grades.
+        "judge": "claude-sonnet-5-5",
     },
 }
 
