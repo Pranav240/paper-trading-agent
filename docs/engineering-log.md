@@ -1266,3 +1266,17 @@ Commit `b13093a`. Cost measured: $0.93 (Sonnet 138k in / 40k out, Haiku
 - **VaR budget, again on identical decisions:** +$59 and $188 less
   drawdown (bt 71: +$57, $185). Out-of-sample it helps; in-sample (on
   leaky decisions) it cost $492.
+
+### Phase 09 — third deviation: judge check scored by Claude (before any judging)
+
+`docs/phase09-plan.md` section 5: the owner hand-scores 20 judge items,
+and the judge's scores count only if judge-human agreement is >= 80%.
+**At the owner's request the 20 items are scored by Claude (Opus 5.5)
+instead.** As noted when the labelling deviation was logged, this makes
+the check Claude agreeing with Claude: the explainer (Haiku 4.5), the
+judge (Sonnet 5.5), the labels and the check-scores are all one model
+family. Consequence, fixed now: **the agreement figure is reported, but
+it is not treated as validating the judge.** The explanation test's
+results are reported as "LLM-judged against LLM labels" and nothing
+stronger. Scores are written blind to the judge's output and committed
+before the judge runs.
