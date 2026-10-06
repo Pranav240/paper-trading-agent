@@ -1126,3 +1126,31 @@ The template baseline in these 20 rows reads "1 shares" where the cut was
 to one share; fixed since in the code (rows left as written).
 
 Budget: ~$3.42 of the $5 spent; ~$1.58 left.
+
+## Phase 09 — deviation from the pre-registration (2026-10-06), before any label
+
+The plan (`docs/phase09-plan.md`, section 2) says the 40 test days are
+labelled by the project owner, by hand. **Changed at the owner's request:
+the labels are written by Claude (Opus 5.5), the coding assistant.**
+Recorded here, before any label exists, as the plan requires.
+
+What this costs, stated plainly:
+
+- **Independence.** The explainer (Haiku 4.5) and the judge (Sonnet 5.5)
+  are Claude models too. Labels from the same model family share its
+  blind spots, so agreement between explainer, judge and labels is weaker
+  evidence than agreement with a person would be.
+- **Contamination.** The labeller had already seen the explainer's
+  output and cited headlines for 5 test days during the phase 08 spot
+  check (2022-12-15, 2022-12-28, 2023-01-03, 2023-08-04, 2023-09-06).
+  Those days are flagged in `eval/labels.json` (`seen_explainer_output`)
+  so results can be reported with and without them.
+- **Mitigations.** Labelling from the blind view only (headline text and
+  time, shuffled, no retrieval method or rank — the same view the page
+  shows); by the plan's written rules; before any new explanation exists.
+  The retrieval test (fts vs recency) is affected least: neither method
+  is a language model.
+- **Judge check (section 5).** If the same labeller also scored the 20
+  judge items, the check would be Claude agreeing with Claude. Proposed:
+  the owner still scores those 20 (~10 minutes); otherwise the judge
+  check is reported as LLM-only and not counted as validation.
