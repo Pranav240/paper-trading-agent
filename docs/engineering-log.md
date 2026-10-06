@@ -1235,3 +1235,34 @@ recent, two-sided exact sign test.
 1,415-headline fixture under a separate symbol and requires both methods
 to reproduce the recorded rankings exactly, so CI fails on any retrieval
 change until the test set is rebuilt and this test re-run on purpose.
+
+### #6 rerun with both leaks fixed (backtest 136)
+
+Out-of-sample window (Jul-Dec 2023), V1's categorical prompts, Claude,
+prices and headlines both look-ahead-free (verified on the run itself:
+0 of 400 headlines it read had first appeared on or after the decision
+day; the old runs, measured the same strict way, 98-100% of decisions).
+Commit `b13093a`. Cost measured: $0.93 (Sonnet 138k in / 40k out, Haiku
+190k / 15k). Budget: ~$4.36 of $5 spent.
+
+| Same 126 decisions | MtM P&L | vs buy & hold | Max drawdown | Avg shares |
+|---|---|---|---|---|
+| **V1 rules (corrected #6)** | **+73.88** (1.91%) | **+71.68** | 581.50 | 18.6 |
+| VaR node | +132.64 | +130.44 | 393.70 | 14.0 |
+| Buy & hold, 20 sh | +2.20 (0.06%) | | | 20 |
+| *price leak fixed only (bt 71)* | *+66.35* | *+64.15* | | |
+| *original #6 (both leaks, gpt-4o)* | *-63.10* | *-65.30* | | |
+
+- **The headline leak barely moved this window**: +$66 with it, +$74
+  without. The categorical sentiment voted HOLD almost always, so the
+  leaked news had little channel into decisions here. The in-sample
+  score-node run (bt 45), whose sentiment is a continuous score, may not
+  be so lucky; it is not rerun (~$2.40, over budget).
+- **Reading:** one out-of-sample path, one stock, a flat market: +$72
+  over buy-and-hold, about twice the replicate spread ($24-34). Not
+  evidence of an edge; it does mean the original "-$63 out-of-sample
+  loss" was an artefact of the look-ahead and the other corrections, not
+  the strategy.
+- **VaR budget, again on identical decisions:** +$59 and $188 less
+  drawdown (bt 71: +$57, $185). Out-of-sample it helps; in-sample (on
+  leaky decisions) it cost $492.
