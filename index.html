@@ -217,7 +217,7 @@
       <span>Deployed to AWS, then destroyed</span>
       <span>Never touched real capital</span>
       <span>V2 shipped &mdash; risk engine, explainer, eval &amp; trace</span>
-      <span>V3 in planning &mdash; Indian markets</span>
+      <span>V3 &mdash; Indian markets, a future track</span>
     </div>
   </header>
 
@@ -346,7 +346,7 @@
   </section>
 
   <section>
-    <h2 class="sec">What&rsquo;s next &mdash; V2, then V3</h2>
+    <h2 class="sec">V2, and what comes later</h2>
     <div class="finding" style="border-left-color:var(--ink-bold);">
       <div class="label" style="color:var(--ink-bold);">Shipped &mdash; V2</div>
       <p><strong>V2 replaces the rule-based Risk Manager with real risk math, and adds an agent that explains its own alerts.</strong> In place of just a hard position cap, the risk layer computes VaR and CVaR, watches for a shift in how the watchlist&rsquo;s holdings move together, and backtests its own risk estimate against what actually happened &mdash; a Kupiec test, the same kind of check that caught this project&rsquo;s own pre-registration flaw in Phase 04.</p>
@@ -358,8 +358,8 @@
     </div>
 
     <div class="finding" style="border-left-color:var(--ink-bold); margin-top:24px;">
-      <div class="label" style="color:var(--ink-bold);">In planning &mdash; V3</div>
-      <p><strong>V3 moves to Indian markets &mdash; NSE and BSE.</strong> Not as a continuation of a strategy with no established edge, but because it asks a different question: does the same pipeline behave differently on a different market, with different liquidity, different news flow and a different retail-participation profile?</p>
+      <div class="label" style="color:var(--ink-bold);">Future &mdash; V3, not scheduled</div>
+      <p><strong>V3 would move to Indian markets &mdash; NSE and BSE.</strong> It is not scheduled: the project pauses with V2 complete, and this is recorded as a direction for later rather than work in progress. Not as a continuation of a strategy with no established edge, but because it asks a different question: does the same pipeline behave differently on a different market, with different liquidity, different news flow and a different retail-participation profile?</p>
       <p>The architecture is ready for it. Market data and news arrive through swappable protocols rather than hard-coded clients, so an Indian data source is a new implementation of an existing interface, not a rewrite.</p>
     </div>
 

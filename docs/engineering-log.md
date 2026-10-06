@@ -1383,3 +1383,18 @@ explained by Claude Haiku 4.5 with tracing on; $0.018 measured.
 **Phase 10 done** by its pre-registered definition: code and tests,
 completeness 100% on the dry run and the real run, overhead reported.
 Budget: ~$4.62 of $5 spent, ~$0.38 left.
+
+## Status, 2026-10-06: V2 complete; project paused
+
+- **V2 shipped:** phases 07-10 (risk engine, explainer, eval harness,
+  reasoning trace).
+- **Phase 09's human check declined by the owner.** The labels stay
+  Claude-written, and the caveat stays on every page that reports phase
+  09: the result shows that the Claude explainer, judge and labels agree,
+  not that a person would. The blind labelling page and a fixed 12-day
+  sample remain ready if someone does it later.
+- **Not rerun, over budget:** the in-sample runs with both look-ahead
+  leaks fixed (~$2.40). The homepage says so.
+- **V3 (Indian markets) is future work, not scheduled.** V4 stays on hold
+  behind its gate.
+- Budget: ~$4.62 of the $5 cap spent.
