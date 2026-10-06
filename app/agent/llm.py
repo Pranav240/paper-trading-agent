@@ -75,6 +75,9 @@ PRICES_PER_MTOK: dict[str, tuple[float, float]] = {
     "claude-sonnet-5-5": (2.00, 10.00),
     "claude-haiku-4-5": (1.00, 5.00),
     "claude-opus-5-5": (4.00, 20.00),
+    # Test doubles (tests/agent_fakes.JsonFakeChatModel) report token usage
+    # so traces look real; they cost nothing.
+    "fake": (0.0, 0.0),
 }
 
 

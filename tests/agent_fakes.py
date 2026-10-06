@@ -97,3 +97,71 @@ class FakeLLM:
 
     def with_structured_output(self, schema):
         return FakeStructuredModel(self._response)
+
+
+# --------------------------------------------------------------------------
+# Phase 10: a fake that IS a LangChain chat model, so callbacks fire exactly
+# as they do for a real one (the trace recorder captures its prompt,
+# response and token counts). Structured output parses its JSON reply.
+# --------------------------------------------------------------------------
+
+import re
+from typing import Any, Callable
+
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import AIMessage
+from langchain_core.outputs import ChatGeneration, ChatResult
+from langchain_core.runnables import RunnableLambda
+
+
+class JsonFakeChatModel(BaseChatModel):
+    """`respond(messages) -> pydantic object`; the reply is its JSON."""
+
+    respond: Any
+    model_name: str = "fake-json"
+
+    @property
+    def _llm_type(self) -> str:
+        return "fake-json"
+
+    def _generate(self, messages, stop=None, run_manager=None, **kwargs) -> ChatResult:
+        content = self.respond(messages).model_dump_json()
+        prompt_chars = sum(len(str(m.content)) for m in messages)
+        message = AIMessage(
+            content=content,
+            usage_metadata={"input_tokens": prompt_chars // 4, "output_tokens": len(content) // 4,
+                            "total_tokens": prompt_chars // 4 + len(content) // 4},
+            response_metadata={"model_name": self.model_name},
+        )
+        return ChatResult(generations=[ChatGeneration(message=message)])
+
+    def with_structured_output(self, schema, **kwargs):
+        return self | RunnableLambda(lambda m: schema.model_validate_json(m.content))
+
+
+def fixed_json_model(obj, model_name: str = "fake-json") -> JsonFakeChatModel:
+    return JsonFakeChatModel(respond=lambda messages: obj, model_name=model_name)
+
+
+def grounded_explainer_model() -> JsonFakeChatModel:
+    """Fake explainer that cites the first headline shown for each driver
+    day (or nothing when a day shows none), so its explanations pass the
+    citation check the way a well-behaved model's would."""
+    from app.agent.explainer import DriverExplanation, ExplanationCall
+
+    def respond(messages):
+        text = str(messages[-1].content)
+        drivers = []
+        for block in re.split(r"\n\n(?=\d{4}-\d{2}-\d{2} \()", text):
+            m = re.match(r"(\d{4}-\d{2}-\d{2}) \(", block)
+            if not m:
+                continue
+            ids = [int(i) for i in re.findall(r"^\s+\[(\d+)\]", block, flags=re.M)]
+            drivers.append(DriverExplanation(
+                date=m.group(1),
+                cause="dry run" if ids else "no headline on record",
+                headline_ids=ids[:1],
+            ))
+        return ExplanationCall(summary="dry run", drivers=drivers)
+
+    return JsonFakeChatModel(respond=respond, model_name="fake-explainer")

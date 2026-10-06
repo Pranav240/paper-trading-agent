@@ -51,6 +51,7 @@ from app.agent.risk_math import (
     simple_returns,
     tail_losses,
 )
+from app.agent import trace
 from app.agent.state import AgentOpinion, GraphState, RiskVerdict, TentativeDecision
 from app.repository.base import Repository
 
@@ -273,6 +274,22 @@ def make_risk_manager_node(
             raw_output["correlation_window"] = CORRELATION_WINDOW
             raw_output["correlations"] = correlations
             raw_output["risk_flags"] = flags
+            trace.record(
+                node="risk_manager", kind="rule",
+                input={
+                    "bars": len(bars),
+                    "first_bar": bars[0].timestamp.isoformat() if bars else None,
+                    "last_bar": bars[-1].timestamp.isoformat() if bars else None,
+                    "returns": len(returns), "var_window": VAR_WINDOW,
+                    "var_tail": raw_output["var_tail"], "current_qty": current_qty,
+                    "proposed": {"action": tentative.action, "quantity": tentative.quantity},
+                },
+                output={
+                    "var_95": var, "var_budget": VAR_BUDGET, "var_max_qty": raw_output["var_max_qty"],
+                    "max_position_qty": MAX_POSITION_QTY, "flags": flags,
+                    "verdict": verdict.opinion, "final": {"action": final_action, "quantity": final_quantity},
+                },
+            )
 
         risk_opinion = AgentOpinion(
             agent_name="risk_manager",

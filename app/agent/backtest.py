@@ -58,6 +58,7 @@ from psycopg_pool import AsyncConnectionPool
 
 from app.agent.graph import CompiledStateGraph
 from app.agent.llm import usage_cost_usd
+from app.agent.trace import TraceRecorder, record_trace
 from app.agent.explainer import record_explanation
 from app.agent.var_forecasts import record_var_forecast
 from app.models import Action
@@ -328,6 +329,7 @@ async def run_backtest(
     execution_prices: ExecutionPrices | None = None,
     resume_backtest_id: int | None = None,
     max_cost_usd: float | None = None,
+    trace: bool = True,
 ) -> int:
     """Runs one full backtest (see _run_backtest). If it raises -- an API
     out of credits, a network drop, Ctrl-C -- the `backtests` row is marked
@@ -361,6 +363,7 @@ async def run_backtest(
             created=created,
             resume_backtest_id=resume_backtest_id,
             max_cost_usd=max_cost_usd,
+            trace=trace,
         )
     except BaseException:
         if created:
@@ -384,6 +387,7 @@ async def _run_backtest(
     created: list[int],
     resume_backtest_id: int | None = None,
     max_cost_usd: float | None = None,
+    trace: bool = True,
 ) -> int:
     """Runs one full backtest: one simulated decision cycle per trading
     day per symbol across [window_start, window_end], all persisted
@@ -486,10 +490,18 @@ async def _run_backtest(
                     run_id = (await cur.fetchone())["id"]
 
                 for symbol in symbols:
-                    result = await graph.ainvoke(
-                        {"symbol": symbol, "as_of": as_of},
-                        config={"callbacks": [usage]},
-                    )
+                    # Phase 10: one recorder per decision; it is both a
+                    # callback (LLM calls) and the target of trace.record().
+                    recorder = TraceRecorder() if trace else None
+                    token = recorder.activate() if recorder else None
+                    try:
+                        result = await graph.ainvoke(
+                            {"symbol": symbol, "as_of": as_of},
+                            config={"callbacks": [usage] + ([recorder] if recorder else [])},
+                        )
+                    finally:
+                        if token is not None:
+                            TraceRecorder.deactivate(token)
 
                     execution_price = None
                     if execution_prices is not None:
@@ -556,6 +568,9 @@ async def _run_backtest(
                                     psycopg.types.json.Json(op.raw_output),
                                 ),
                             )
+
+                    if recorder is not None:
+                        await record_trace(conn, decision_id=decision_id, recorder=recorder)
 
                     await record_var_forecast(
                         conn,

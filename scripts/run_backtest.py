@@ -155,6 +155,21 @@ def _parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--dry-run-pm",
+        choices=["HOLD", "BUY"],
+        default="HOLD",
+        help=(
+            "Without --use-real-llms: what the fake Portfolio Manager proposes "
+            "every day. BUY lets the VaR budget, and so the explainer, fire "
+            "in a dry run."
+        ),
+    )
+    parser.add_argument(
+        "--no-trace",
+        action="store_true",
+        help="Don't store the phase 10 reasoning trace (the overhead baseline).",
+    )
+    parser.add_argument(
         "--allow-dirty",
         action="store_true",
         help=(
@@ -180,7 +195,7 @@ def _git_state() -> tuple[str, bool]:
     return commit, dirty
 
 
-def _fake_llms(sentiment_mode: str = "score"):
+def _fake_llms(sentiment_mode: str = "score", pm_action: str = "HOLD"):
     """Fixed neutral stand-ins (sentiment score 0.00, or a HOLD vote in
     categorical mode as V1's dry run used; Portfolio Manager action HOLD),
     imported from the test suite rather than redefined
@@ -188,33 +203,39 @@ def _fake_llms(sentiment_mode: str = "score"):
     two that can drift apart. Only meant for a dry-run
     smoke test of the pipeline; --use-real-llms is what actually
     evaluates the strategy."""
+    # Real LangChain chat models (fakes), so the phase 10 trace captures
+    # their calls exactly as it would a real model's.
     from app.agent.sentiment_analyst import SentimentScore
     from app.agent.v1_categorical import SentimentCall
-    from tests.agent_fakes import FakeLLM
+    from tests.agent_fakes import fixed_json_model
 
     if sentiment_mode == "categorical":
-        sentiment_llm = FakeLLM(
-            SentimentCall(opinion="HOLD", confidence=0.5, reasoning="dry run — no real LLM")
+        sentiment_llm = fixed_json_model(
+            SentimentCall(opinion="HOLD", confidence=0.5, reasoning="dry run — no real LLM"),
+            "fake-sentiment",
         )
     else:
-        sentiment_llm = FakeLLM(
-            SentimentScore(score=0.0, confidence=0.5, reasoning="dry run — no real LLM")
+        sentiment_llm = fixed_json_model(
+            SentimentScore(score=0.0, confidence=0.5, reasoning="dry run — no real LLM"),
+            "fake-sentiment",
         )
-    portfolio_llm = FakeLLM(
+    portfolio_llm = fixed_json_model(
         TentativeDecision(
-            action="HOLD", quantity=0, confidence=0.5, reasoning="dry run — no real LLM"
-        )
+            action=pm_action, quantity=5 if pm_action == "BUY" else 0,
+            confidence=0.5, reasoning="dry run — no real LLM",
+        ),
+        "fake-pm",
     )
     return sentiment_llm, portfolio_llm
 
 
 def _fake_explainer_llm():
-    """Dry-run explainer: a fixed summary citing nothing. Valid by the
-    grounding check, so a dry run exercises retrieval and persistence."""
-    from app.agent.explainer import ExplanationCall
-    from tests.agent_fakes import FakeLLM
+    """Dry-run explainer: cites the first headline shown for each driver
+    day, so a dry run exercises retrieval, the citation check, persistence
+    and the trace the way a well-behaved model would."""
+    from tests.agent_fakes import grounded_explainer_model
 
-    return FakeLLM(ExplanationCall(summary="dry run — no real LLM", drivers=[]))
+    return grounded_explainer_model()
 
 
 async def main() -> None:
@@ -237,7 +258,7 @@ async def main() -> None:
 
     sentiment_llm = portfolio_llm = explainer_llm = None
     if not args.use_real_llms:
-        sentiment_llm, portfolio_llm = _fake_llms(args.sentiment_mode)
+        sentiment_llm, portfolio_llm = _fake_llms(args.sentiment_mode, args.dry_run_pm)
         explainer_llm = _fake_explainer_llm()
         print(
             "NOTE: --use-real-llms not passed — running with fixed "
@@ -278,7 +299,7 @@ async def main() -> None:
         # Provider and models from LLM_PROVIDER / *_MODEL env (app/agent/llm.py).
         "llm": describe_llms(),
         "models": {
-            "portfolio_manager": llms["portfolio_manager"]["model"] if real else "fake:HOLD",
+            "portfolio_manager": llms["portfolio_manager"]["model"] if real else f"fake:{args.dry_run_pm}",
             "sentiment_analyst": (
                 "fake:neutral"
                 if (args.no_sentiment or not real)
@@ -286,12 +307,13 @@ async def main() -> None:
             ),
         },
         "sentiment_mode": args.sentiment_mode,
+        "trace": not args.no_trace,
         "explainer": (
             None
             if args.explain == "off"
             else {
                 "retrieval": args.explain,
-                "model": llms["explainer"]["model"] if real else "fake:no-citations",
+                "model": llms["explainer"]["model"] if real else "fake:grounded",
                 "prompt_version": EXPLAINER_PROMPT_VERSION,
             }
         ),
@@ -319,6 +341,7 @@ async def main() -> None:
             execution_prices=OpenPriceBook(price_source, args.start, args.end),
             resume_backtest_id=args.resume,
             max_cost_usd=args.max_cost_usd,
+            trace=not args.no_trace,
         )
         metrics = await compute_backtest_metrics(pool, backtest_id)
     finally:

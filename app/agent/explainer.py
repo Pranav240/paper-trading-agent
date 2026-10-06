@@ -47,6 +47,7 @@ from pydantic import BaseModel, Field
 from app.agent.data_sources import HEADLINE_AVAILABLE_AT, HEADLINE_DATE
 from app.agent.llm import default_llm, model_name, structured
 from app.agent.risk_manager import MAX_POSITION_QTY
+from app.agent import trace
 from app.agent.state import GraphState, RiskExplanation
 
 EXPLAINER_PROMPT_VERSION = "v1"
@@ -99,12 +100,14 @@ class HeadlineRetriever:
         if self.method == "fts":
             company = self._company_terms or COMPANY_TERMS.get(symbol, [symbol.lower()])
             terms = company + FTS_TERMS
-            order = (
+            score = (
                 "ts_rank_cd(to_tsvector('english', headline), "
-                "websearch_to_tsquery('english', %(q)s)) DESC, published_at DESC, id"
+                "websearch_to_tsquery('english', %(q)s))"
             )
+            order = "score DESC, published_at DESC, id"
             params = {"q": " OR ".join(terms)}
         else:
+            score = "NULL::real"
             order = "published_at DESC, id"
             params = {}
         params.update(
@@ -116,7 +119,7 @@ class HeadlineRetriever:
             async with conn.cursor(row_factory=dict_row) as cur:
                 await cur.execute(
                     f"""
-                    SELECT id, published_at, headline
+                    SELECT id, published_at, headline, {score} AS score
                     FROM historical_headlines
                     WHERE symbol = %(symbol)s
                       AND published_at >= %(scan_from)s AND published_at < %(scan_to)s
@@ -127,7 +130,19 @@ class HeadlineRetriever:
                     """,
                     params,
                 )
-                return [RetrievedHeadline(**row) for row in await cur.fetchall()]
+                rows = await cur.fetchall()
+        trace.record(
+            node="explainer", kind="retrieval",
+            input={"symbol": symbol, "day": str(day), "dates": [str(params["first"]), str(params["last"])],
+                   "as_of": as_of.isoformat(), "method": self.method, "query": params.get("q"),
+                   "limit": limit},
+            output={"results": [
+                {"rank": i, "id": r["id"], "published_at": r["published_at"].isoformat(),
+                 "headline": r["headline"], "score": r["score"]}
+                for i, r in enumerate(rows, start=1)
+            ]},
+        )
+        return [RetrievedHeadline(id=r["id"], published_at=r["published_at"], headline=r["headline"]) for r in rows]
 
 
 class DriverExplanation(BaseModel):
@@ -252,6 +267,12 @@ def make_explainer_node(
             ]
         )
         cited, problems = validate(call, retrieved)
+        trace.record(
+            node="explainer", kind="check",
+            input={"retrieved": retrieved,
+                   "drivers": [d.model_dump() for d in call.drivers]},
+            output={"cited": cited, "problems": problems, "citations_valid": not problems},
+        )
         returns = {t["date"]: t["return"] for t in tail}
         return {
             "risk_explanation": RiskExplanation(

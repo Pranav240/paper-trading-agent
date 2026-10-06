@@ -246,6 +246,17 @@ class HistoricalHeadlineSource:
                     },
                 )
                 rows = await cur.fetchall()
+        from app.agent import trace  # local: trace imports nothing from here
+
+        trace.record(
+            node="sentiment_analyst", kind="retrieval",
+            input={"symbol": symbol, "as_of": as_of.isoformat(), "lookback_days": lookback_days,
+                   "rule": "available (HEADLINE_AVAILABLE_AT) strictly before as_of"},
+            output={"results": [
+                {"published_at": r["published_at"].isoformat(), "headline": r["headline"]}
+                for r in rows
+            ]},
+        )
         return [Headline(**row) for row in rows]
 
 

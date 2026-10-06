@@ -38,6 +38,7 @@ from psycopg_pool import AsyncConnectionPool
 
 from app.agent.graph import CompiledStateGraph
 from app.agent.explainer import record_explanation
+from app.agent.trace import TraceRecorder, record_trace
 from app.agent.var_forecasts import record_var_forecast
 from app.models import Action, Decision, RunResult, RunStatus
 
@@ -217,7 +218,15 @@ async def run_decision_cycle(
                 run_id = run_row["id"]
 
             for symbol in symbols:
-                result = await graph.ainvoke({"symbol": symbol, "as_of": started_at})
+                recorder = TraceRecorder()  # phase 10: every live decision is traced
+                token = recorder.activate()
+                try:
+                    result = await graph.ainvoke(
+                        {"symbol": symbol, "as_of": started_at},
+                        config={"callbacks": [recorder]},
+                    )
+                finally:
+                    TraceRecorder.deactivate(token)
 
                 technical = result["technical_opinion"]
                 sentiment = result["sentiment_opinion"]
@@ -274,6 +283,8 @@ async def run_decision_cycle(
                                 psycopg.types.json.Json(op.raw_output),
                             ),
                         )
+
+                await record_trace(conn, decision_id=decision.id, recorder=recorder)
 
                 await record_var_forecast(
                     conn,
