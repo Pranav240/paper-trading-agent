@@ -296,7 +296,7 @@
     <span class="eyebrow">Build sequence · paper trading only</span>
     <h1>V1 first. V2 doesn&rsquo;t need an edge. V4 does.</h1>
     <p class="dek">Six phases build the daily decision-support agent (V1). Four more replace its rule-based risk gate with real risk math and an agent that explains its own alerts (V2) — this doesn&rsquo;t require V1 to have found an edge, only to exist. Six further phases would turn it into a continuous intraday system (V4), and that one stays gated: it only starts if V1&rsquo;s strategy logic backtests with a real edge.
-      <strong>Status as of 5 Oct 2026: all six V1 phases are settled, the honest-backtest gate has been reached and answered — no edge on this evidence — so V4 stays on hold. V2 does not depend on that gate: phases 07 (risk engine), 08 (explainer agent) and 09 (eval harness) have shipped, and phase 10 is next.</strong>
+      <strong>Status as of 5 Oct 2026: all six V1 phases are settled, the honest-backtest gate has been reached and answered — no edge on this evidence — so V4 stays on hold. V2 does not depend on that gate: all four V2 phases have shipped: risk engine, explainer agent, eval harness and reasoning trace.</strong>
       <span class="note">V3 — a pivot to Indian markets — is a separate, parallel track driven by data sourcing rather than build phases, and isn&rsquo;t diagrammed here. See the homepage.</span>
     </p>
     <div class="legend">
@@ -314,7 +314,7 @@
     <h2>Block diagram</h2>
     <div class="diagram-frame">
       <figure>
-        <svg viewBox="0 0 1240 410" role="img" aria-label="Roadmap showing six V1 blocks built in sequence with status markers, then four V2 blocks that do not need a gate, then a gate ribbon, then six V4 blocks. Dashed lines show which earlier block each later block extends. Phases 1, 2, 3, 5, 6, 7, 8 and 9 are done, phase 4 is closed on a negative result, and phase 10 and every V4 phase are not started.">
+        <svg viewBox="0 0 1240 410" role="img" aria-label="Roadmap showing six V1 blocks built in sequence with status markers, then four V2 blocks that do not need a gate, then a gate ribbon, then six V4 blocks. Dashed lines show which earlier block each later block extends. Phases 1, 2, 3, 5 and 6 to 10 are done, phase 4 is closed on a negative result, and every V4 phase is not started.">
           <defs>
             <marker id="arrowV1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M0,0 L10,5 L0,10 z" fill="var(--v1)"/>
@@ -437,7 +437,7 @@
             <circle cx="1180" cy="44" r="5" fill="var(--done)"/>
           </g>
 
-          <!-- ===== Row 2 boxes (V2) — 07-09 done, 10 not started ===== -->
+          <!-- ===== Row 2 boxes (V2) — all done ===== -->
           <!-- 07 Risk Engine — done -->
           <g>
             <rect x="420" y="150" width="176" height="60" rx="6" fill="var(--v2-soft)" stroke="var(--v2)"/>
@@ -462,10 +462,11 @@
             <text x="832" y="183" font-size="14" font-weight="600" fill="var(--ink)">Eval Harness</text>
             <text x="832" y="200" class="mono" font-size="11" fill="var(--muted)">Golden set + judge</text>
           </g>
-          <!-- 10 Reasoning Trace -->
+          <!-- 10 Reasoning Trace — done -->
           <g>
-            <rect x="1020" y="150" width="176" height="60" rx="6" fill="var(--surface)" stroke="var(--pending)" stroke-dasharray="4 3"/>
-            <text x="1032" y="165" class="mono" font-size="10" fill="var(--pending)">10</text>
+            <rect x="1020" y="150" width="176" height="60" rx="6" fill="var(--v2-soft)" stroke="var(--v2)"/>
+            <text x="1032" y="165" class="mono" font-size="10" fill="var(--v2)">10</text>
+            <circle cx="1180" cy="164" r="5" fill="var(--done)"/>
             <text x="1032" y="183" font-size="14" font-weight="600" fill="var(--ink)">Reasoning Trace</text>
             <text x="1032" y="200" class="mono" font-size="11" fill="var(--muted)">Langfuse / Phoenix</text>
           </g>
@@ -550,9 +551,9 @@
           <li><span class="num">07</span><div><div class="label">Risk engine<span class="tag done">done</span></div><div class="desc">Historical and normal VaR/CVaR, a 60-day correlation check, and a Kupiec backtest of the risk model itself, layered on V1&rsquo;s rules as a hard floor with a pre-registered 2% VaR budget. The forecasts pass Kupiec in-sample (4.4% breaches vs a naive 2% VaR&rsquo;s 10.3%) but are too cautious out-of-sample. As a budget it cost $492 in-sample and gained $57 out-of-sample: no evidence it helps. Its first step found the look-ahead leak in V1&rsquo;s backtests.</div></div></li>
           <li><span class="num">08</span><div><div class="label">Explainer agent<span class="tag done">done</span></div><div class="desc">A node after the risk engine that explains, in plain language, why a trade was cut or blocked, from headlines around the losses the VaR is built from. Retrieval is Postgres full-text search, with a recency-only baseline; every citation must be a headline the model was actually shown, or the explanation is flagged. On 20 recorded decisions: 20 of 20 explanations fully grounded, every no-news day left uncited, $0.06 in total &mdash; with a news window later found to sit a day late (headline dates read as times), since fixed. Whether the explanations are <em>right</em>, not just grounded, is phase 09&rsquo;s job.</div></div></li>
           <li><span class="num">09</span><div><div class="label">Eval harness<span class="tag done">done</span></div><div class="desc">40 of AAPL&rsquo;s worst days, every candidate headline labelled, plan and every stage committed before its results. Retrieval: full-text ranking beat recency on every measure (top headline relevant 50% vs 30%) but missed the pre-registered significance bar (p&nbsp;=&nbsp;0.12). Explanations: matched the labelled cause 65% of the time against 22% for quoting the best headline, 17 wins to 0, with 92% of causes supported. CI fails on any retrieval change until the set is re-scored. <strong>Caveat:</strong> the labels were written by Claude, not a person, and the judge and explainer are Claude models too &mdash; so this shows the three agree, not that a human would.</div></div></li>
-          <li><span class="num">10</span><div><div class="label">Reasoning trace<span class="tag pending">not started</span></div><div class="desc">Full trace of every retrieval and reasoning step behind an explanation, so a flagged decision can be audited, not just trusted.</div></div></li>
+          <li><span class="num">10</span><div><div class="label">Reasoning trace<span class="tag done">done</span></div><div class="desc">Every decision stores its full trace in the same transaction: each model call&rsquo;s exact prompt and reply, model, tokens and time; every headline retrieval with ranks and scores; the VaR arithmetic; the citation check. A pre-registered check rebuilds each explanation from the trace alone: 19 of 19 on a dry run and 5 of 5 on real model output. Overhead within run-to-run noise; about 16 kB per decision. Credentials can&rsquo;t reach it. Audited with one command.</div></div></li>
         </ol>
-        <div class="gate-note">None of this depends on the strategy having an edge — it makes the existing system's judgment better and its reasoning visible. Phases 07 to 09 shipped; 10 is not started.</div>
+        <div class="gate-note">None of this depends on the strategy having an edge — it makes the existing system's judgment better and its reasoning visible. All four shipped.</div>
       </div>
 
       <div class="track v4">
