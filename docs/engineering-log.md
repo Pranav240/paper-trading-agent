@@ -1362,3 +1362,24 @@ the explainer fires, fts retrieval):
   only headlines dated before the decision.
 
 Not yet done: the small real check (~5 explanations, ~$0.02).
+
+### Phase 10 real check: 5 traced explanations (backtest 136)
+
+`scripts/explain_recorded.py 136 --per-backtest 5 --trace` (`adb2582`):
+5 evenly spaced VaR-changed decisions from the clean out-of-sample run,
+explained by Claude Haiku 4.5 with tracing on; $0.018 measured.
+
+- **Completeness: 5 / 5 rebuilt exactly from the trace (100%)** — real
+  model output, same check as the dry run's 19 / 19.
+- Stored LLM steps carry the real model id (`claude-haiku-4-5-20251001`),
+  token counts identical to the run's measured usage (9,414 in / 1,692
+  out), node tag `explainer`, ~4.7 s per call. 25 retrieval steps with
+  ranks and scores, 5 check steps. Secret scan over every stored step:
+  0 hits.
+- These decisions predate tracing, so their traces hold only the
+  explainer's steps (logged in the script's help); every decision made
+  from now on is traced in full, in its own transaction.
+
+**Phase 10 done** by its pre-registered definition: code and tests,
+completeness 100% on the dry run and the real run, overhead reported.
+Budget: ~$4.62 of $5 spent, ~$0.38 left.
