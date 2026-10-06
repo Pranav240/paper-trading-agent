@@ -212,7 +212,7 @@
     <h1>Paper Trading Agent</h1>
     <p class="tagline">Built properly, measured honestly, and corrected in public. No edge has been established. This site is the record of that result, of the flaws that changed it, and of the machinery built to establish both.</p>
     <div class="meta">
-      <span>9 real-LLM backtests, 2 of them partial reruns</span>
+      <span>10 real-LLM backtests, 1 fully corrected</span>
       <span>41,701-example fine-tuning dataset</span>
       <span>Deployed to AWS, then destroyed</span>
       <span>Never touched real capital</span>
@@ -232,18 +232,18 @@
   <div class="finding">
     <div class="label">The finding</div>
     <p><strong>V2 found two look-ahead flaws in the backtests.</strong> First, each decision could see that day&rsquo;s own closing price. Then, while those runs were being redone, a second: the news data carries dates, not times, so a decision at 8&nbsp;a.m. was reading headlines from later that day &mdash; &ldquo;Apple was the worst stock in the Dow Friday&rdquo;, at 8&nbsp;a.m. Friday. That happened on 98&ndash;100% of decisions in every run. Both are fixed, along with two smaller issues: decisions on market holidays, and fills at a price already gone by the open.</p>
-    <p>As originally published, every backtest longer than a single quarter underperformed buy-and-hold, by $39 to $225 on a 20-share basis, and the out-of-sample run lost $63 in a flat market. <strong>None of those figures, nor the two reruns made after the first fix, are valid</strong>: the reruns still had the headline leak. A rerun with both fixed is under way. <strong>No edge has been established, and none of the current figures shows either an edge or its absence.</strong></p>
+    <p>As originally published, every backtest longer than a single quarter underperformed buy-and-hold, by $39 to $225 on a 20-share basis, and the out-of-sample run lost $63 in a flat market. <strong>None of those figures, nor the two reruns made after the first fix, are valid</strong>: the reruns still had the headline leak. <strong>The out-of-sample run has now been redone with both fixed: it finished $72 ahead of buy-and-hold in a flat market</strong> (+$73.88 against +$2.20), where it had been published as a $63 loss. That is one run on one stock &mdash; about twice the spread between V1&rsquo;s repeat runs, not evidence of an edge &mdash; but the published loss was an artefact of the flaws, not the strategy. <strong>No edge has been established.</strong> The in-sample runs are not yet redone.</p>
     <!-- RERUN-PENDING: remove this paragraph once the remaining V1 backtests (#3, #4, #7) are rerun with the fixes (engineering-log, Phase 07). -->
-    <p><strong>Reruns pending.</strong> Every figure in the table below comes from a run with at least one leak. Reruns also use a different language model (Claude in place of GPT-4o), so a change in result cannot be pinned on the leaks alone.</p>
+    <p><strong>Reruns pending.</strong> Apart from the one row marked clean, every figure in the table below comes from a run with at least one leak. Reruns also use a different language model (Claude in place of GPT-4o), so a change in result cannot be pinned on the leaks alone.</p>
     <!-- /RERUN-PENDING -->
     <p>The project&rsquo;s founding rule was that an honestly evaluated result is the correct thing to report, including when a correction moves it. So it is reported, and the evaluation discipline that caught it is the actual deliverable.</p>
   </div>
 
   <div class="stats">
-    <div class="stat"><div class="k">Backtests</div><div class="v">9</div><div class="s">7 original + 2 corrected reruns</div></div>
+    <div class="stat"><div class="k">Backtests</div><div class="v">10</div><div class="s">7 original, 3 reruns (1 clean)</div></div>
     <div class="stat"><div class="k">Look-ahead leaks found</div><div class="v">2</div><div class="s">prices, then headline dates</div></div>
     <div class="stat"><div class="k">Fine-tune attempts</div><div class="v">5</div><div class="s">two framings, all negative</div></div>
-    <div class="stat"><div class="k">Tests</div><div class="v pos">111</div><div class="s">CI fails if any skips</div></div>
+    <div class="stat"><div class="k">Tests</div><div class="v pos">117</div><div class="s">CI fails if any skips</div></div>
     <div class="stat"><div class="k">Total cloud spend</div><div class="v">~$0.02</div><div class="s">applied, verified, destroyed</div></div>
   </div>
 
@@ -280,6 +280,7 @@
           <tr><td>#3</td><td class="l">categorical sentiment, pilot quarter</td><td>4</td><td>+6.21<span class="pct">+0.22%</span></td><td class="neg">&minus;15.40<span class="pct">&minus;0.55%</span></td><td class="pos">+0.78%</td></tr>
           <tr><td>#4</td><td class="l">categorical sentiment, in-sample</td><td>32</td><td>+864.62<span class="pct">+29.07%</span></td><td>+903.80<span class="pct">+30.38%</span></td><td class="neg">&minus;1.32%</td></tr>
           <tr><td>#6</td><td class="l">categorical sentiment, out-of-sample</td><td>2</td><td class="neg">&minus;63.10<span class="pct">&minus;1.64%</span></td><td>+2.20<span class="pct">+0.06%</span></td><td class="neg">&minus;1.70%</td></tr>
+          <tr><td>#6 &rArr;</td><td class="l"><strong>clean rerun: both leaks fixed</strong> (backtest 136)</td><td>9</td><td>+73.88<span class="pct">+1.91%</span></td><td>+2.20<span class="pct">+0.06%</span></td><td class="pos">+1.85%</td></tr>
           <tr><td>#6 &rarr;</td><td class="l"><strong>price-corrected rerun</strong> (backtest 71) &mdash; headline leak remained</td><td>11</td><td>+66.35<span class="pct">+1.71%</span></td><td>+2.20<span class="pct">+0.06%</span></td><td class="pos">+1.66%</td></tr>
           <tr><td>#7</td><td class="l">sentiment ablated</td><td>33</td><td>+929.84<span class="pct">+31.98%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;1.40%</td></tr>
           <tr><td>#8</td><td class="l">sentiment ablated</td><td>33</td><td>+896.15<span class="pct">+30.82%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;2.56%</td></tr>
@@ -289,7 +290,7 @@
         </tbody>
       </table>
     </div>
-    <p class="fig"><strong>Every row has a leak.</strong> Original rows saw both the day&rsquo;s close and that day&rsquo;s news; rows marked &rarr; fixed the price leak but still saw same-day news, and are kept here as a record, not a result. They differ from the originals in four ways: no price look-ahead, trading days only, fills at the decision day&rsquo;s open, and Claude (Sonnet 5.5 and Haiku 4.5) in place of GPT-4o and GPT-4o-mini. Four things changed at once, so a difference from the original row cannot be attributed to any one of them. Both show V1&rsquo;s own risk rules, replayed exactly over the decisions of a run made with V2&rsquo;s risk engine &mdash; the Portfolio Manager never sees positions, so its proposals are the same either way. The other rows are the original, leaky runs; #8 and #9 repeated #7 and #4 and will not be redone.</p>
+    <p class="fig"><strong>Only the row marked &rArr; is clean.</strong> Original rows saw both the day&rsquo;s close and that day&rsquo;s news; rows marked &rarr; fixed the price leak but still saw same-day news, and are kept here as a record, not a result. They differ from the originals in four ways: no price look-ahead, trading days only, fills at the decision day&rsquo;s open, and Claude (Sonnet 5.5 and Haiku 4.5) in place of GPT-4o and GPT-4o-mini. Four things changed at once, so a difference from the original row cannot be attributed to any one of them. Both show V1&rsquo;s own risk rules, replayed exactly over the decisions of a run made with V2&rsquo;s risk engine &mdash; the Portfolio Manager never sees positions, so its proposals are the same either way. The other rows are the original, leaky runs; #8 and #9 repeated #7 and #4 and will not be redone.</p>
     <p class="fig">AAPL, mark-to-market, each measured against buy-and-hold over its own window. Percentages are against the capital the position cap implies &mdash; see below. Among the original runs, the single positive row is a four-trade quarter that beat the baseline mainly because AAPL fell: buy-and-hold lost money and a largely idle system did not. That is not evidence of skill.</p>
     <p class="fig"><strong>The percentages are the more honest read.</strong> In dollars, the original run #4 looks like &ldquo;+864 against +903&rdquo;. In percent it is <strong>29.1% earned in a market that rose 33.4%</strong> &mdash; a strategy tracking a bull run and lagging it, rather than one generating returns of its own.</p>
   </section>
@@ -325,12 +326,12 @@
         <thead><tr><th>Item</th><th>Spent</th></tr></thead>
         <tbody>
           <tr><td class="l">OpenAI &mdash; 7 backtests and all probes (V1)</td><td>~$4.91</td></tr>
-          <tr><td class="l">Anthropic &mdash; 2 corrected reruns and 20 explanations (V2)</td><td>~$3.45</td></tr>
+          <tr><td class="l">Anthropic &mdash; 3 reruns and 20 explanations (V2)</td><td>~$4.40</td></tr>
           <tr><td class="l">AWS &mdash; applied, verified, destroyed same day</td><td>~$0.02</td></tr>
           <tr><td class="l">Kaggle GPU &mdash; fine-tuning, both rounds</td><td>free</td></tr>
           <tr><td class="l">Alpaca market data &mdash; free tier</td><td>free</td></tr>
           <tr><td class="l">Dataset, baseline, replay, every diagnostic</td><td class="pos">$0.00</td></tr>
-          <tr><td class="l"><strong>Total</strong></td><td><strong>about $8.40</strong></td></tr>
+          <tr><td class="l"><strong>Total</strong></td><td><strong>about $9.30</strong></td></tr>
         </tbody>
       </table>
     </div>

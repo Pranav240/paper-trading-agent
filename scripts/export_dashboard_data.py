@@ -40,7 +40,7 @@ DATABASE_URL = os.environ.get(
     "postgresql://pta:pta_dev_password@127.0.0.1:5432/paper_trading_agent",
 )
 OUT_PATH = Path("data/dashboard_data.json")
-DEFAULT_IDS = [3, 4, 6, 7, 8, 9, 14, 45, 71]  # 45, 71: V2 corrected reruns
+DEFAULT_IDS = [3, 4, 6, 7, 8, 9, 14, 45, 71, 136]  # 45, 71: price leak fixed; 136: both leaks fixed
 
 BACKTESTS = """
 SELECT id, name, window_start, window_end, status

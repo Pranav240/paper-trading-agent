@@ -14,7 +14,7 @@ Seven backtests against real market data and real news, with slippage modelled a
 
 **As first run, every backtest longer than a single quarter underperformed buy-and-hold, by $39 to $225 on a 20-share basis.** The out-of-sample run — executed once, with nothing changed after seeing the in-sample result — lost $63 in a market that was essentially flat.
 
-**Corrections (5 and 6 October 2026).** V2 found **two look-ahead leaks**. First, every run could see each decision day's own closing price (938 of 938 stored decisions). Then, while those runs were being redone, a second: 99.7% of the news data's timestamps are dates at midnight UTC, so a decision at 8 a.m. read headlines dated that same day — on 98–100% of decisions in every run, including the first reruns, whose +$64 / +$83 against buy-and-hold were published on 5 October as corrected. **No figure in this document is free of look-ahead yet**; reruns with both leaks fixed are pending. No edge has been established. See [the reruns](#corrected-reruns-v2) and defects 8 and 9.
+**Corrections (5 and 6 October 2026).** V2 found **two look-ahead leaks**. First, every run could see each decision day's own closing price (938 of 938 stored decisions). Then, while those runs were being redone, a second: 99.7% of the news data's timestamps are dates at midnight UTC, so a decision at 8 a.m. read headlines dated that same day — on 98–100% of decisions in every run, including the first reruns, whose +$64 / +$83 against buy-and-hold were published on 5 October as corrected. **Redone with both fixed (backtest 136), the out-of-sample run finished $72 ahead of buy-and-hold in a flat market** (+$73.88 vs +$2.20), where it had been published as a $63 loss: one run on one stock, about twice the replicate spread, not evidence of an edge. The in-sample runs are not yet redone. No edge has been established. See [the reruns](#corrected-reruns-v2) and defects 8 and 9.
 
 The project's founding rule was that an honestly evaluated result is the correct thing to report, including when a correction moves it. So it is reported, and the machinery built to establish it is the actual deliverable.
 
@@ -133,6 +133,16 @@ All AAPL. Mark-to-market, each against buy-and-hold **over its own window**.
 The single positive row is a 4-trade quarter that beat the baseline mainly because **AAPL fell** over that window — buy-and-hold lost money and a largely idle system didn't. That's not evidence of skill.
 
 **Every row above had the look-ahead leak described below.** They are left as published.
+
+### Clean rerun: both leaks fixed (backtest 136)
+
+Out-of-sample window, V1's categorical prompts, Claude; verified on the run itself that no headline it read first appeared on or after the decision day.
+
+| Run | Closed | Result (V1 rules) | Buy & hold | Difference | VaR node instead |
+|---|---|---|---|---|---|
+| #6 ⇒ bt 136 | 9 | **+73.88** (1.91%) | +2.20 | **+71.68** | +132.64, $188 less drawdown |
+
+The headline leak barely moved this window (+$66 with it, bt 71): the categorical sentiment voted HOLD almost always. The in-sample score-node run may differ more; it is not rerun (over budget).
 
 ### Corrected reruns (V2) — price leak only
 
@@ -362,7 +372,7 @@ Not imported from a checklist. Each is traceable to a specific mistake in this p
 
 ```bash
 docker compose up --build     # API + fresh database
-pytest -q                     # 111 tests, none skipped
+pytest -q                     # 117 tests, none skipped
 ```
 
 **A backtest** *(needs Alpaca + an Anthropic or OpenAI key; `LLM_PROVIDER` picks)*
@@ -405,7 +415,7 @@ Then [`phase04_v2_return_regression.ipynb`](https://github.com/Pranav240/paper-t
 | Item | Spend |
 |---|---|
 | OpenAI, V1 (7 backtests + probes) | **< $6** |
-| Anthropic, V2 (2 corrected reruns, 20 explanations) | **~$3.45** (part extrapolated: one run was killed and resumed, losing its token count) |
+| Anthropic, V2 (3 reruns, 20 explanations) | **~$4.40** (part extrapolated: one run was killed and resumed, losing its token count) |
 | AWS (applied, verified, destroyed same day) | **~$0.02** |
 | Kaggle GPU (fine-tuning) | free |
 | Alpaca market data | free |

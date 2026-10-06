@@ -13,8 +13,11 @@ Seven backtests against real market data and real news; as first run, every
 one longer than a quarter underperformed buy-and-hold. V2 then found **two
 look-ahead leaks**: each decision saw that day's own closing price, and —
 because the news data has dates, not times — that day's headlines too,
-including after-the-close reports. Every published result had at least one
-leak; reruns with both fixed are under way.
+including after-the-close reports. Every originally published result had
+at least one leak. **Redone with both fixed, the out-of-sample run finished
+$72 ahead of buy-and-hold in a flat market** (it had been published as a
+$63 loss): one run on one stock, not evidence of an edge. The in-sample
+runs are not yet redone.
 
 > **Paper trading only.** Never touched real capital or a live brokerage
 > account. Nothing here is financial advice.
@@ -49,10 +52,11 @@ is market conditions, not skill.
 **Every row above had both look-ahead leaks.** The first reruns fixed the
 price leak (plus trading days only, fills at the open, Claude in place of
 GPT-4o) but **still saw same-day headlines**, so they are a record, not a
-result:
+result; only bt 136 has both fixed:
 
 | Rerun | Configuration | Closed | Result | Buy & hold | Difference |
 |---|---|---|---|---|---|
+| **#6 ⇒ bt 136** | **both leaks fixed**, out-of-sample | 9 | **+73.88** | +2.20 | **+71.68** |
 | #6 → bt 71 | categorical sentiment, out-of-sample | 11 | +66.35 | +2.20 | +64.15 |
 | #14 → bt 45 | continuous score, #4's window | 29 | +920.81 | +837.80 | +83.01 |
 
