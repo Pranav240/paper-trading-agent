@@ -1,0 +1,537 @@
+{
+ "judge": {
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "thinking": "between_tools"
+ },
+ "llm_usage": {
+  "claude-sonnet-5-5": {
+   "input_tokens": 48367,
+   "output_tokens": 6882,
+   "total_tokens": 55249
+  }
+ },
+ "cost_usd": 0.1656,
+ "judgements": [
+  {
+   "date": "2022-09-13",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cited headlines directly state that inflation data and bets on large Fed rate hikes drove a broad Wall Street selloff, matching the reference driver."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cause restates the cited headline, which attributes the slide to CPI data locking in a hefty Fed rate hike, matching the reference's CPI/Fed-hike driver."
+   }
+  },
+  {
+   "date": "2022-09-29",
+   "explainer": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "Both claims (shelved iPhone 14 production boost on lower demand, slowing demand fears) are stated in the cited headlines and match the reference's iPhone driver, but the answer omits the broad economic sell-off."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "The cause restates the cited headline, which says Apple dropped a production increase while futures fell, so it is supported; it captures the Apple production news and the market decline but does not explain the demand worry or the economic fears."
+   }
+  },
+  {
+   "date": "2023-08-04",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "Every claim (earnings beat, Y/Y revenue decline, iPhone slump dragging the stock) is stated in the two cited headlines and matches the reference's revenue decline and iPhone slump."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "The cause restates the cited headline, so it is supported and captures the revenue decline, but it omits the iPhone sales slump named in the reference."
+   }
+  },
+  {
+   "date": "2022-12-15",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cited headlines directly state Wall Street fell on angst over a hawkish Fed, and Apple falling with big tech, matching the reference driver."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The cause merely repeats the headline title and names no driver such as the hawkish Fed, so it does not identify the reference cause."
+   }
+  },
+  {
+   "date": "2022-11-03",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cited headlines directly state that the Fed signaled more rate hikes and that Wall Street fell on rate-path worries, matching the reference's main driver."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cause restates the cited headline that Wall St fell on concerns over the Fed rate path, which is the same main driver as the reference, though it adds no detail about signalled further hikes."
+   }
+  },
+  {
+   "date": "2022-06-16",
+   "quote": {
+    "supported": false,
+    "matches": "no",
+    "reason": "The cause is just a headline title about the Fed starting a bull market, which does not explain a fall and is not the recession-fear sell-off in the reference."
+   },
+   "explainer": {
+    "supported": false,
+    "matches": "yes",
+    "reason": "The recession-fear sell-off in growth/big tech matches the reference, but the claims about the Fed rate decision and China COVID controls pressuring Apple go beyond what the cited headlines state (the Pegatron headline only says it is emphasising expansion elsewhere)."
+   }
+  },
+  {
+   "date": "2022-06-03",
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The cause restates the cited headline about Block using Apple's Tap to Pay, which is supported by its own citation, but it says nothing about jobs data or rate hikes and so does not match the reference driver."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "Each claim (strong jobs data, rate hike expectations, broad decline, Apple among the Dow's worst) is stated in the cited headlines and matches the reference cause."
+   }
+  },
+  {
+   "date": "2022-06-10",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cause (hot inflation data driving a Wall Street selloff, with growth stock weakness and the biggest weekly loss since January) is directly stated in the cited headlines and matches the reference driver."
+   },
+   "quote": {
+    "supported": false,
+    "matches": "no",
+    "reason": "The cited headline is about a new Apple TV+ series, which does not explain a stock decline, and the cause ignores the CPI-driven market selloff in the reference."
+   }
+  },
+  {
+   "date": "2022-06-13",
+   "quote": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "The cause restates a cited headline about aggressive Fed hike bets, so it is supported, but it omits the recession fears and bear-market confirmation that the reference names as main drivers."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "Fed hike expectations, recession concerns and the S&P 500 bear market confirmation are all stated in the cited headlines and match the reference's main drivers."
+   }
+  },
+  {
+   "date": "2022-08-26",
+   "quote": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "The DOJ antitrust report is directly stated in the cited headline and is one of the two main drivers, but the answer omits Powell's hawkish speech."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "The DOJ antitrust suit claim is supported by the cited headlines, and the smartphone slowdown is stated in the cited headline, but the answer omits Powell's speech and adds a driver not in the reference."
+   }
+  },
+  {
+   "date": "2022-11-02",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The lockdown and worker-departure claims come directly from the cited headlines, and the jobs-data weakness is implied by the cited Wall St headline; the main driver (China lockdown at the iPhone plant) matches the reference."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The Qualcomm earnings forecast claim is stated in the cited headline, but it names a different driver than the reference's China lockdown supply concerns."
+   }
+  },
+  {
+   "date": "2023-01-03",
+   "quote": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "The cause just restates the cited headline's title, which implies Apple dropped that day but names no driver, so it overlaps the reference without capturing the broad market decline or Tesla."
+   },
+   "explainer": {
+    "supported": false,
+    "matches": "partly",
+    "reason": "The market decline and Apple's fall are supported by the cited headlines, but the Foxconn 90% production capacity claim is only supported if the Foxconn headline links it to Apple's drop, and it is not in the reference, which attributes the move to Apple and Tesla dragging the market."
+   }
+  },
+  {
+   "date": "2022-10-07",
+   "explainer": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "Rate hike expectations match the reference, but the answer leads with inflation concerns and omits the strong jobs report as the driver, though the cited jobs headlines do support the rate-hike claim."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "It repeats a headline citing inflation and rate hike worries, which overlaps on rate hikes but omits the strong jobs report that the reference names as the main driver."
+   }
+  },
+  {
+   "date": "2022-06-09",
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The cause is directly stated by its cited headline about Apple Pay Later, but it does not explain the price drop and is unrelated to the reference cause of growth stocks falling ahead of the inflation report."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "Both claims are drawn from the cited headlines (growth stocks struggling with inflation in focus; Asian stocks lower with U.S. CPI in focus), matching the reference driver of growth stocks falling ahead of inflation data."
+   }
+  },
+  {
+   "date": "2023-09-06",
+   "quote": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "The cause restates the cited headline (futures fall awaiting data on Fed rate path), so it is supported, but it captures only the broad rate/inflation backdrop and omits the China iPhone ban, the main Apple-specific driver."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "Both the China iPhone ban and the inflation/rate-driven market slide with Apple as a drag are stated directly in the cited headlines and match the reference cause."
+   }
+  },
+  {
+   "date": "2022-11-09",
+   "explainer": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "It covers the reference's Foxconn COVID curbs and Goertek order suspension, but adds the lawsuit and Asian market weakness as drivers, and these extra claims are implied by its cited headlines (though 'Goertek suspended orders' slightly misframes the client suspending the order)."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "It attributes the drop solely to the collusion lawsuit, which is supported by its cited headline but misses the reference's supply-chain drivers entirely."
+   }
+  },
+  {
+   "date": "2022-10-14",
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The cause is just the cited headline, so it is supported, but the reference says no headline explains the move while A asserts the broad market selloff on hot inflation as the cause."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The cited headline supports a broad market selloff on hot inflation and rate hike fears, with Apple falling being a reasonable implication, but it contradicts the reference's claim that no headline explains the move."
+   }
+  },
+  {
+   "date": "2022-09-30",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cause restates the cited headline (third straight quarterly loss, inflation, recession fears) and matches the reference's broad-market driver."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cause is the cited headline itself, which directly states the broad market decline on inflation and recession worries, matching the reference."
+   }
+  },
+  {
+   "date": "2022-12-28",
+   "quote": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cause restates the cited headline, which names recession fears and the Nasdaq's new bear-market low, matching the reference's main driver."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "Recession fears and weak/mixed economic data come from the cited headlines, and AAPL underperforming the market is implied by the 'Dips More Than Broader Markets' headline; this matches the reference driver."
+   }
+  },
+  {
+   "date": "2022-10-27",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "Both claims (iPhone shortfall despite earnings beat, and broader Big Tech weakness) are stated in the cited headlines, and the main driver matches the reference, with the Big Tech context as a minor addition."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cause restates the cited headline, which supports it directly, and it matches the reference's iPhone sales shortfall as the main driver."
+   }
+  },
+  {
+   "date": "2022-06-28",
+   "quote": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "The cause restates the cited Nike-guidance headline, but the reference driver is consumer-confidence data stoking growth fears, which this answer omits, so it overlaps only through the broad market drop."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "Consumer data fueling recession worries and the broad selloff are stated in the cited headlines and match the reference's main driver, with Nike guidance as a supported secondary factor."
+   }
+  },
+  {
+   "date": "2023-09-07",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The China iPhone curbs headlines support the main driver and the inflation/rate-worry headlines support the broader market weakness it adds."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "It attributes the move only to macro inflation concerns (supported by its cited headline) and omits the China iPhone curbs, which is the reference's main driver."
+   }
+  },
+  {
+   "date": "2022-11-28",
+   "quote": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "The cause just repeats the headline's 'China fears', which is supported, but it omits the COVID protests and iPhone Pro shortfall that make up the main driver."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "Its claims about China COVID lockdown protests, supply chain concerns and iPhone Pro shortfalls are all stated or implied by the cited headlines, and they match the reference driver."
+   }
+  },
+  {
+   "date": "2023-08-24",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "Answer A restates the two cited headlines (mega-cap tech sell-off, Nvidia boost fading, caution before Powell's speech), which is the same driver as the reference."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The cited headline about an unusual put option trade supports the claim, but it names a different cause than the reference's mega-cap tech sell-off and pre-Powell caution."
+   }
+  },
+  {
+   "date": "2023-02-21",
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The Foxconn headline does say the chairman will visit a COVID-hit iPhone plant, so the claim is supported, but it names a different driver than the reference's Walmart/Home Depot-led market selloff."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "It names the Walmart and Home Depot forecast-driven market selloff as the main driver, matching the reference, and its added Apple-specific points (Foxconn COVID disruption, Apple Watch import ban) are stated in the cited headlines."
+   }
+  },
+  {
+   "date": "2023-10-26",
+   "quote": {
+    "supported": false,
+    "matches": "no",
+    "reason": "The cause is just the cited headline's title, which names no driver for the decline, and it does not match the reference cause of declining China sales versus Huawei."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "It includes the Huawei/China sales driver from the reference, supported by the cited headlines, but adds market-wide declines and price hikes as additional drivers."
+   }
+  },
+  {
+   "date": "2022-12-06",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The recession-talk selloff and fourth straight S&P decline come straight from the cited headlines, and 'among the most active' is supported by the After Hours Most Active headline listing AAPL."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "It restates the cited headline about recession talk and the S&P's fourth decline, which is the same main driver as the reference."
+   }
+  },
+  {
+   "date": "2022-12-22",
+   "explainer": {
+    "supported": false,
+    "matches": "partly",
+    "reason": "The rate-hike and chipmaker claims are backed by the cited headlines, but the claim that Apple faced supply chain disruptions is not stated by the cited China/COVID headline, which as shown names no Apple link; the reference cause also omits the China driver."
+   },
+   "quote": {
+    "supported": false,
+    "matches": "no",
+    "reason": "The cause only restates a China COVID supply/demand headline, with no stated link to Apple's fall, and it misses the reference drivers of rate-hike worries and chipmaker woes."
+   }
+  },
+  {
+   "date": "2023-09-26",
+   "explainer": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "The broad decline from rate and Treasury yield concerns is supported by the cited headlines and matches the reference's main driver, but it omits waning economic confidence and adds mixed analyst sentiment, which is only loosely supported by the Neutral/Overweight reiterations."
+   },
+   "quote": {
+    "supported": false,
+    "matches": "no",
+    "reason": "The cited headline is a bullish iPhone 15 revenue piece that does not explain a price drop, and it ignores the Treasury yield and economic confidence drivers in the reference."
+   }
+  },
+  {
+   "date": "2022-08-22",
+   "quote": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cause restates the cited headline, which is the same Fed-hike-fears driver as the reference."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The Fed-rate-hike fears and the Nasdaq/Wall Street selloff come directly from the cited headlines, and attributing Apple's drop to the broader selloff is a reasonable implication matching the reference."
+   }
+  },
+  {
+   "date": "2022-11-21",
+   "quote": {
+    "supported": false,
+    "matches": "no",
+    "reason": "The cause is just the headline text of an after-hours most-active list, which states no explanation for the decline, and it does not say no headline explains the move."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "no",
+    "reason": "A market selloff is implied by the cited 'Market Selloff Accelerates' headline, but the reference says no headline explains the move, so asserting a selloff cause does not match."
+   }
+  },
+  {
+   "date": "2022-11-29",
+   "quote": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "The cause 'Apple falls on China fears' is directly stated by the cited headline, but it is vague and omits the specific iPhone Pro shipment shortfall driver."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cited headlines cover China COVID woes, the 20 million unit iPhone Pro shortfall, and Wall Street weakness tied to Apple and China, matching the reference driver."
+   }
+  },
+  {
+   "date": "2022-09-21",
+   "explainer": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The cited headline supports the Wall Street/Fed claim and the iPhone 14 and investor-interest headlines support the positive offsets, but the reference says no headline explains the move, so attributing it to the Fed-driven market fall does not agree."
+   },
+   "quote": {
+    "supported": false,
+    "matches": "no",
+    "reason": "The cited headline says Wall Street rises, which does not explain a decline in AAPL and contradicts the stated cause, and it also differs from the reference that no headline explains the move."
+   }
+  },
+  {
+   "date": "2023-09-20",
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The cause (iPhone 15 Pro Max demand) is stated in its cited headline, but it is a positive story that does not explain a decline and ignores the Fed/market-wide driver."
+   },
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The main driver (Fed holding rates but signalling higher for longer, with a broad market decline) matches the reference and is stated in the cited headlines, and the offsetting positive iPhone demand and analyst support are also in the cited headlines."
+   }
+  },
+  {
+   "date": "2023-01-30",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The megacap/earnings/Fed claim is stated in the cited Nasdaq and Wall Street headlines, the China smartphone decline is in its own headline, and the Apple-specific earnings concern is implied by the Apple earnings preview headline; the main driver matches the reference."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cause restates the cited headline, which directly states megacaps dropping ahead of earnings and the Fed meeting, matching the reference's main driver."
+   }
+  },
+  {
+   "date": "2022-11-25",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The Foxconn production crisis threatening iPhone shipments is the same main driver as the reference, and the Nasdaq weakness, investor caution, China infections and Black Friday claims are all in the cited headlines."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The cause is just the cited market headline about the Nasdaq falling, which supports it but omits the Foxconn iPhone shipment driver named in the reference."
+   }
+  },
+  {
+   "date": "2022-07-18",
+   "explainer": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "It includes the spending-cuts rally drain from the reference, but adds an Apple Pay antitrust lawsuit and broad market/bank factors as co-drivers, so it overlaps without isolating the main cause."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "It attributes the move solely to the Apple Pay antitrust lawsuit, which is not the reference cause of slowed hiring and spending."
+   }
+  },
+  {
+   "date": "2022-09-15",
+   "explainer": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cause cites Fed tightening jitters, economic concerns, and Apple investor sentiment, all stated in the cited headlines, and the main driver matches the reference."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "yes",
+    "reason": "The cause restates the cited headline about Fed tightening jitters and economic rumblings, which is directly supported and matches the reference's main driver."
+   }
+  },
+  {
+   "date": "2022-10-26",
+   "explainer": {
+    "supported": true,
+    "matches": "partly",
+    "reason": "It names the same main driver (weak Big Tech earnings and slowdown fears hitting the Nasdaq) but adds Apple-specific causes (holiday-quarter pressure, China demand, services growth) beyond the reference, though these are directly stated in its cited headlines."
+   },
+   "quote": {
+    "supported": false,
+    "matches": "no",
+    "reason": "The 'cause' is just a question headline that asserts no explanation, and it omits the weak tech earnings and slowdown fears that drove the decline."
+   }
+  },
+  {
+   "date": "2023-02-24",
+   "explainer": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The cause is directly stated by the two cited headlines, but the reference says no headline explains the move, so naming market and technical drivers disagrees with it."
+   },
+   "quote": {
+    "supported": true,
+    "matches": "no",
+    "reason": "The cause restates the cited headline, so it is supported, but the reference says no headline explains the move, so asserting a cause disagrees."
+   }
+  }
+ ]
+}

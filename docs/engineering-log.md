@@ -1280,3 +1280,46 @@ it is not treated as validating the judge.** The explanation test's
 results are reported as "LLM-judged against LLM labels" and nothing
 stronger. Scores are written blind to the judge's output and committed
 before the judge runs.
+
+### Phase 09 explanation test (`scripts/eval_explanations.py`)
+
+Staged, each committed before the next ran: script and fixed item set
+(`f14e21f`), 44 explanations (`a9d7437`, Haiku 4.5, $0.080), the 20
+check scores (`9917ef5`), then the judge (Sonnet 5.5, $0.166).
+
+**Explanations:** all 40 news-day explanations fully grounded (every
+citation retrieved for that day); on all 4 no-news days the explainer
+cited nothing, as required.
+
+| Judged on 40 news days | Explainer | Quote baseline (top fts headline) |
+|---|---|---|
+| matches reference cause: yes | **26 (65%)** | 9 (22%) |
+| matches: partly | 10 | 10 |
+| supported by its own citations | **37 (92%)** | 32 (80%)* |
+
+- **Primary, pre-registered: met.** Paired on "matches = yes": explainer
+  wins 17 days, quote 0, ties 23; sign test p < 0.0001; and 92% of the
+  explainer's causes are supported (bar: 90%). Without the 5 days the
+  labeller had seen: 14 wins vs 0, p = 0.0001, 94% supported.
+- **The explainer's 3 unsupported causes are real overreach**: each
+  asserts a link the cited headlines don't state (China COVID controls
+  pressuring Apple; Foxconn capacity linked to the drop; Apple supply
+  disruptions). ~7.5% of explanations, the kind of drift the phase 08
+  spot check found once in five causes.
+- *The judge read "supported" more strictly for quotes than defined: it
+  marked a quoted headline unsupported when the headline doesn't explain
+  a fall (e.g. an Apple TV+ series). By the definition a verbatim quote
+  is supported; this only lowers the quote's 80%, not the primary test.
+- **Judge check:** agreement with the 20 Claude-scored items, 18/20 on
+  supported and 18/20 on matches (90%). As fixed in the third deviation,
+  this is Claude agreeing with Claude and **is not treated as validating
+  the judge.**
+
+**What this does and doesn't show.** An explanation from Haiku, grounded
+in retrieved headlines, names the labelled cause far more often than
+quoting the best-ranked headline does, by a margin no tie-heavy small
+sample could produce by chance. But the labels, the judge and the
+explainer are all Claude models; the result says the three agree, not
+that a person would. One human pass over the labels would change that.
+
+Budget: ~$4.60 of the $5 cap spent; ~$0.40 left.
