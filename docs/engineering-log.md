@@ -1154,3 +1154,43 @@ What this costs, stated plainly:
   judge items, the check would be Claude agreeing with Claude. Proposed:
   the owner still scores those 20 (~10 minutes); otherwise the judge
   check is reported as LLM-only and not counted as validation.
+
+## A second look-ahead leak: date-only headline timestamps (found 2026-10-06)
+
+Found while preparing phase 09's labels: every candidate headline was
+stamped at exactly midnight UTC. Across `historical_headlines`, **99.66%
+of rows are stamped 00:00 UTC** (AAPL: 100% in 2022, 99.6% in 2023). The
+FNSPID `Date` field carries a date, not a time of publication.
+
+**Consequence 1 — sentiment look-ahead in every backtest.** The headline
+filter is `published_at < as_of` with `as_of` = D 12:00 UTC (08:00 New
+York, before the open). A headline dated D is stamped D 00:00 UTC and
+passes, whenever on D it was actually published. Measured from stored
+opinions, the share of decisions whose sentiment input included
+headlines dated that same day:
+
+| Run | #4 | #6 | #9 | #14 | **45** | **71** |
+|---|---|---|---|---|---|---|
+| Same-day headlines seen | 100% | 98% | 100% | 100% | **100%** | **98%** |
+
+Concrete case, run #14 and corrected run 45, decision at 2022-06-03 08:00
+New York: the sentiment analyst read "Apple Was the Worst Stock in the Dow
+Friday", "US STOCKS-Wall St ends down with strong jobs data…" and "Why
+Nvidia, Amazon, and Apple Stocks Slumped Friday" — all published after
+that day's close. **This affects the two "corrected" reruns as well**:
+their +$64 / +$83 against buy-and-hold were produced with it.
+
+The backtesting plan's headline rule, `published_at < as_of` strictly,
+was correct for timestamps with times and silently wrong for dates.
+
+**Consequence 2 — the explainer's window is a day late.** The window
+[D-1 00:00, D+1 00:00) New York is [D-1 04:00, D+1 04:00) UTC in summer,
+so with midnight-UTC stamps it holds headlines *dated D and D+1*, not
+D-1 and D. Phase 08's coverage numbers, its 20 explanations and phase
+09's candidate set were all built on the shifted window. No phase 09
+label exists yet.
+
+Not affected: the VaR forecasts and Kupiec results (prices only), and
+the VaR-node vs V1-rules comparisons as risk-rule comparisons (both sides
+replay the same decisions) — though those decisions were themselves made
+with the leak.
