@@ -216,7 +216,7 @@
       <span>41,701-example fine-tuning dataset</span>
       <span>Deployed to AWS, then destroyed</span>
       <span>Never touched real capital</span>
-      <span>V2 in progress &mdash; risk engine &amp; explainer shipped</span>
+      <span>V2 in progress &mdash; risk engine, explainer &amp; eval shipped</span>
       <span>V3 in planning &mdash; Indian markets</span>
     </div>
   </header>
@@ -352,7 +352,8 @@
       <p><strong>V2 replaces the rule-based Risk Manager with real risk math, and adds an agent that explains its own alerts.</strong> In place of just a hard position cap, the risk layer computes VaR and CVaR, watches for a shift in how the watchlist&rsquo;s holdings move together, and backtests its own risk estimate against what actually happened &mdash; a Kupiec test, the same kind of check that caught this project&rsquo;s own pre-registration flaw in Phase 04.</p>
       <p><strong>Phase 07, the risk engine, has shipped &mdash; with a mixed result, reported as measured.</strong> The value-at-risk forecasts hold up: over the in-sample year they were breached on 4.4% of days against a 5% target, while a naive flat 2% estimate was breached on 10.3% and fails the test. Out of sample they were too cautious, breached on only 1.6% of days. Used as a binding, pre-registered 2% budget, the risk engine cost $492 against V1&rsquo;s rules in-sample and gained $57 out-of-sample, both compared on identical decisions &mdash; decisions that, it later turned out, still had the headline leak. The same rule moving results in opposite directions on two windows is no evidence that it helps. The checks that found the look-ahead leak above were the first step of this phase.</p>
       <p><strong>Phase 08, the explainer, has shipped too.</strong> When the risk engine cuts or blocks a trade, it explains why in plain language from the headlines around the losses its VaR is built from, and every citation must be a headline it was actually shown. On 20 recorded decisions all 20 explanations were fully grounded, at $0.06 in total &mdash; though its news window turned out to sit a day late (the headline-date flaw above), since fixed. Grounded is not the same as right: in a spot check, one cause in five stretched its headline, which is what the next phase grades.</p>
-      <p>Still to come: every explanation graded against a hand-labelled set of past events before it is trusted &mdash; including whether full-text retrieval actually beats plain recency, and whether the language model beats a no-news template stating the same facts &mdash; and every retrieval and reasoning step traced, not just the output.</p>
+      <p><strong>Phase 09, the evaluation harness, has shipped.</strong> On 40 of AAPL&rsquo;s worst days, with every candidate headline labelled and every stage committed before its result: the explainer named the labelled cause 65% of the time, against 22% for simply quoting the best-ranked headline &mdash; 17 days won, none lost &mdash; and 92% of its causes were backed by what it cited. Full-text retrieval beat plain recency on every measure but missed its pre-registered significance bar. <strong>The caveat is stated, not buried:</strong> the labels were written by Claude rather than a person, and the judge and the explainer are Claude models too, so this shows the three agree, not that a human would. Building it is also what exposed the second look-ahead leak.</p>
+      <p>Still to come: every retrieval and reasoning step traced, not just the output.</p>
       <p>This does not depend on the strategy having an edge. It makes the existing system&rsquo;s judgment better and its reasoning visible &mdash; the same gap the rest of this project already cares about.</p>
     </div>
 

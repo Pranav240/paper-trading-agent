@@ -170,6 +170,18 @@ Fixed: prices only from sessions closed before the decision; trading days from t
 
 The forecasts beat the trivial baseline in-sample and are too conservative out-of-sample. As a binding, pre-registered 2% budget they hurt in one window and helped in the other — no evidence either way that the budget improves the strategy. Kupiec's power was checked first: over ~280 days it catches a model breaching 10% of days 92% of the time, but one breaching 7.5% only 46% of the time.
 
+### Phase 09: grading the explainer
+
+On 40 of AAPL's worst days (every candidate headline labelled; plan, labels and each stage committed before its result — [`docs/phase09-plan.md`](docs/phase09-plan.md)):
+
+| | Result |
+|---|---|
+| Retrieval: top headline relevant, full-text vs recency | 50% vs 30% — **not significant** by the pre-registered test (p = 0.12) |
+| Explanation names the labelled cause, explainer vs quoting the top headline | **65% vs 22%**, 17 days won, 0 lost (p < 0.0001) |
+| Explainer causes supported by its own citations | 92% (bar: 90%) |
+
+**Caveat:** the labels were written by Claude (Opus 5.5) at the owner's request, not by a person, and the judge (Sonnet 5.5) and explainer (Haiku 4.5) are Claude models too. The result shows they agree; whether a person would is untested. All three deviations from the plan are logged in the engineering log before the step they changed.
+
 ### Methodology
 
 | Assumption | Treatment |

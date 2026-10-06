@@ -5,8 +5,9 @@
 A multi-agent trading decision system — FastAPI over Postgres, a four-node
 LangGraph agent, a LoRA fine-tuning phase, CI, and Terraform on AWS — built
 in six phases and evaluated honestly. V2 has added a VaR risk engine with a
-Kupiec backtest of its own forecasts, and an explainer that says why a trade
-was cut, citing only headlines it was actually shown.
+Kupiec backtest of its own forecasts, an explainer that says why a trade
+was cut citing only headlines it was actually shown, and an evaluation
+harness that grades it (against Claude-written labels — see below).
 
 **No edge has been established, and measuring that honestly is the point.**
 Seven backtests against real market data and real news; as first run, every
