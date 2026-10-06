@@ -323,3 +323,31 @@ async def test_graph_without_retriever_has_no_explainer():
 
 def test_template_singular_share():
     assert "cut the buy to 1 share:" in template_explanation(RAW, "SCALE", 1)
+
+
+
+async def test_date_only_stamps_use_their_dates_not_utc_midnight(pool):
+    # FNSPID-style stamps: date only, 00:00 UTC. For driver day D = Sep 13,
+    # the window is headlines DATED Sep 12 or 13; dated Sep 14 is the next
+    # day's news even though its stamp (Sep 14 00:00 UTC) is still Sep 13
+    # evening in New York.
+    async with pool.connection() as conn:
+        for day, text in ((12, "date-only Sep 12"), (13, "date-only Sep 13"), (14, "date-only Sep 14")):
+            await conn.execute(
+                "INSERT INTO historical_headlines (symbol, published_at, headline) VALUES (%s, %s, %s)",
+                (SYMBOL, datetime(2022, 9, day, tzinfo=timezone.utc), text),
+            )
+    got = {h.headline for h in await HeadlineRetriever(pool, "recent").around(SYMBOL, NY_DAY, LATER, limit=50)}
+    assert {"date-only Sep 12", "date-only Sep 13"} <= got
+    assert "date-only Sep 14" not in got
+
+
+async def test_date_only_headline_not_used_before_its_date_ends(pool):
+    async with pool.connection() as conn:
+        await conn.execute(
+            "INSERT INTO historical_headlines (symbol, published_at, headline) VALUES (%s, %s, %s)",
+            (SYMBOL, datetime(2022, 9, 13, tzinfo=timezone.utc), "date-only Sep 13"),
+        )
+    noon_ny = datetime(2022, 9, 13, 16, tzinfo=timezone.utc)
+    got = {h.headline for h in await HeadlineRetriever(pool, "fts").around(SYMBOL, NY_DAY, noon_ny, limit=50)}
+    assert "date-only Sep 13" not in got  # available only from Sep 14 00:00 New York

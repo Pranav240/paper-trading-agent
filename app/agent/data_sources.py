@@ -175,6 +175,33 @@ class AlpacaHeadlineSource:
         ]
 
 
+# FNSPID timestamps are dates, not times: 99.7% of `historical_headlines`
+# rows are stamped exactly 00:00 UTC (found 2026-10-06; see the engineering
+# log). A headline stamped D 00:00 UTC was published at some unknown time
+# ON date D -- possibly after the close -- so treating the stamp as the
+# publication time let a decision at D 08:00 New York read that evening's
+# "Apple was the worst stock in the Dow today". These two SQL expressions
+# are the fix, shared by every query that reads headlines:
+#
+# HEADLINE_AVAILABLE_AT: when a headline could first have been read. A
+# date-only stamp becomes available only once its whole date has ended in
+# New York, the latest time zone the date could be in; a stamp with a real
+# time is available from that time. (A genuine 00:00:00 UTC publication is
+# delayed a day: conservative, never a leak.)
+HEADLINE_AVAILABLE_AT = (
+    "(CASE WHEN (published_at AT TIME ZONE 'UTC')::time = time '00:00' "
+    "THEN (((published_at AT TIME ZONE 'UTC')::date + 1)::timestamp "
+    "AT TIME ZONE 'America/New_York') ELSE published_at END)"
+)
+# HEADLINE_DATE: the calendar date a headline belongs to -- its stamped
+# date if date-only, its New York date otherwise.
+HEADLINE_DATE = (
+    "(CASE WHEN (published_at AT TIME ZONE 'UTC')::time = time '00:00' "
+    "THEN (published_at AT TIME ZONE 'UTC')::date "
+    "ELSE (published_at AT TIME ZONE 'America/New_York')::date END)"
+)
+
+
 class HistoricalHeadlineSource:
     """Backtest implementation of HeadlineSource, backed by the imported
     FNSPID data in `historical_headlines` (see
@@ -192,23 +219,31 @@ class HistoricalHeadlineSource:
     async def get_recent_headlines(
         self, symbol: str, as_of: datetime, lookback_days: int = 3
     ) -> list[Headline]:
-        # `published_at < as_of` (strictly less than, not <=) is the
-        # look-ahead-bias guard from docs/backtesting-plan.md's checklist:
-        # a headline published exactly at as_of wasn't necessarily readable
-        # yet at decision time, so treat as_of as the earliest excluded
-        # moment rather than the latest included one.
+        # Look-ahead guard: a headline is visible only if it was AVAILABLE
+        # strictly before as_of (HEADLINE_AVAILABLE_AT above), not merely
+        # stamped before it. For a backtest decision at D 12:00 UTC this
+        # means headlines dated D-1 or earlier; the lookback window is
+        # measured on availability too. The plain `published_at` bounds
+        # only narrow the scan for the index.
         async with self._pool.connection() as conn:
             async with conn.cursor(row_factory=dict_row) as cur:
                 await cur.execute(
-                    """
+                    f"""
                     SELECT symbol, published_at, headline, source
                     FROM historical_headlines
-                    WHERE symbol = %s
-                      AND published_at < %s
-                      AND published_at >= %s
+                    WHERE symbol = %(symbol)s
+                      AND published_at < %(as_of)s
+                      AND published_at >= %(scan_from)s
+                      AND {HEADLINE_AVAILABLE_AT} < %(as_of)s
+                      AND {HEADLINE_AVAILABLE_AT} >= %(from)s
                     ORDER BY published_at DESC
                     """,
-                    (symbol, as_of, as_of - timedelta(days=lookback_days)),
+                    {
+                        "symbol": symbol,
+                        "as_of": as_of,
+                        "from": as_of - timedelta(days=lookback_days),
+                        "scan_from": as_of - timedelta(days=lookback_days + 2),
+                    },
                 )
                 rows = await cur.fetchall()
         return [Headline(**row) for row in rows]

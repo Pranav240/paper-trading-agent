@@ -166,7 +166,7 @@ The forecasts beat the trivial baseline in-sample and are too conservative out-o
 | Commission | Zero, modelled explicitly rather than silently omitted |
 | Lots | FIFO, oldest first, partial-lot splitting |
 | Position cap | Hard 20 shares, enforced by the Risk Manager |
-| Look-ahead | Headlines: `published_at < as_of`, strictly — a headline published *at* the decision moment wasn't necessarily readable then. Prices: **not enforced in V1** (see defect 8); since V2, only bars whose 16:00 New York session closed before `as_of`. |
+| Look-ahead | Headlines: **not enforced through V2's first reruns** (see defect 9) — `published_at < as_of` assumed real timestamps, but FNSPID's are dates; since 2026-10-06 a date-only headline is available only once its date has ended in New York. Prices: **not enforced in V1** (see defect 8); since V2, only bars whose 16:00 New York session closed before `as_of`. |
 | Open positions | Marked at the window's last price before any comparison |
 
 ### A baseline error, found by checking a number that looked wrong

@@ -11,9 +11,11 @@ PRE-REGISTERED (before any real run)
   on a one-symbol watchlist.
 - What is explained: the DRIVER_DAYS worst losses in the VaR window (the
   risk node's `var_tail`, i.e. the days the VaR number is made of).
-- Retrieval: for each driver day D, headlines for the symbol published in
-  [D-1 00:00, D+1 00:00) New York and strictly before the decision's
-  `as_of`, ranked by Postgres full-text relevance to the company and to
+- Retrieval: for each driver day D, headlines for the symbol dated D-1
+  or D, and available before the decision's `as_of` (FNSPID stamps are
+  dates, not times: see HEADLINE_DATE / HEADLINE_AVAILABLE_AT in
+  data_sources.py; corrected 2026-10-06 from a New York time window that,
+  on midnight-UTC stamps, held the dates D and D+1), ranked by Postgres full-text relevance to the company and to
   market-moving terms (FTS_TERMS), HEADLINES_PER_DAY per day. Baseline:
   the same window ordered by recency only ("recent"). Phase 09 compares
   them on hand-labelled days.
@@ -34,7 +36,7 @@ e.g. May 2022); the prompt requires saying so rather than guessing.
 
 from __future__ import annotations
 
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Awaitable, Callable, Literal
 
 from langchain_core.language_models import BaseChatModel
@@ -42,7 +44,7 @@ from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 from pydantic import BaseModel, Field
 
-from app.agent.data_sources import NEW_YORK
+from app.agent.data_sources import HEADLINE_AVAILABLE_AT, HEADLINE_DATE
 from app.agent.llm import default_llm, model_name, structured
 from app.agent.risk_manager import MAX_POSITION_QTY
 from app.agent.state import GraphState, RiskExplanation
@@ -83,10 +85,9 @@ class HeadlineRetriever:
     async def around(
         self, symbol: str, day: date, as_of: datetime, limit: int = HEADLINES_PER_DAY
     ) -> list[RetrievedHeadline]:
-        start = datetime.combine(day - timedelta(days=1), time.min, tzinfo=NEW_YORK)
-        end = min(datetime.combine(day + timedelta(days=1), time.min, tzinfo=NEW_YORK), as_of)
-        if end <= start:
-            return []
+        # Headlines DATED day-1 or day (HEADLINE_DATE: FNSPID stamps are dates,
+        # not times), and only ones available before the decision
+        # (HEADLINE_AVAILABLE_AT). The published_at bounds narrow the scan.
         if self.method == "fts":
             terms = COMPANY_TERMS.get(symbol, [symbol.lower()]) + FTS_TERMS
             order = (
@@ -97,7 +98,11 @@ class HeadlineRetriever:
         else:
             order = "published_at DESC, id"
             params = {}
-        params.update(symbol=symbol, start=start, end=end, limit=limit)
+        params.update(
+            symbol=symbol, first=day - timedelta(days=1), last=day, as_of=as_of, limit=limit,
+            scan_from=datetime.combine(day - timedelta(days=2), time.min, tzinfo=timezone.utc),
+            scan_to=datetime.combine(day + timedelta(days=2), time.min, tzinfo=timezone.utc),
+        )
         async with self._pool.connection() as conn:
             async with conn.cursor(row_factory=dict_row) as cur:
                 await cur.execute(
@@ -105,8 +110,9 @@ class HeadlineRetriever:
                     SELECT id, published_at, headline
                     FROM historical_headlines
                     WHERE symbol = %(symbol)s
-                      AND published_at >= %(start)s
-                      AND published_at < %(end)s
+                      AND published_at >= %(scan_from)s AND published_at < %(scan_to)s
+                      AND {HEADLINE_DATE} BETWEEN %(first)s AND %(last)s
+                      AND {HEADLINE_AVAILABLE_AT} < %(as_of)s
                     ORDER BY {order}
                     LIMIT %(limit)s
                     """,
