@@ -1,0 +1,147 @@
+{
+ "scorer": "Claude (Opus 5.5), at the owner's request; see the third phase 09 deviation in docs/engineering-log.md",
+ "scored": "2026-10-06, before the judge stage ran",
+ "rules": "definitions in scripts/eval_explanations.py, applied literally: 'partly' whenever an answer adds or omits a main driver; the day's return, shown as context, may be used",
+ "items": [
+  {
+   "date": "2022-09-13",
+   "answer": "explainer",
+   "shown_as": "A",
+   "supported": true,
+   "matches": "yes"
+  },
+  {
+   "date": "2022-09-13",
+   "answer": "quote",
+   "shown_as": "B",
+   "supported": true,
+   "matches": "yes"
+  },
+  {
+   "date": "2022-11-03",
+   "answer": "explainer",
+   "shown_as": "A",
+   "supported": true,
+   "matches": "yes"
+  },
+  {
+   "date": "2022-11-03",
+   "answer": "quote",
+   "shown_as": "B",
+   "supported": true,
+   "matches": "yes"
+  },
+  {
+   "date": "2022-06-13",
+   "answer": "quote",
+   "shown_as": "A",
+   "supported": true,
+   "matches": "partly"
+  },
+  {
+   "date": "2022-06-13",
+   "answer": "explainer",
+   "shown_as": "B",
+   "supported": true,
+   "matches": "yes"
+  },
+  {
+   "date": "2022-10-07",
+   "answer": "explainer",
+   "shown_as": "A",
+   "supported": true,
+   "matches": "partly"
+  },
+  {
+   "date": "2022-10-07",
+   "answer": "quote",
+   "shown_as": "B",
+   "supported": true,
+   "matches": "partly"
+  },
+  {
+   "date": "2022-10-14",
+   "answer": "quote",
+   "shown_as": "A",
+   "supported": true,
+   "matches": "no"
+  },
+  {
+   "date": "2022-10-14",
+   "answer": "explainer",
+   "shown_as": "B",
+   "supported": true,
+   "matches": "no"
+  },
+  {
+   "date": "2022-06-28",
+   "answer": "quote",
+   "shown_as": "A",
+   "supported": true,
+   "matches": "partly"
+  },
+  {
+   "date": "2022-06-28",
+   "answer": "explainer",
+   "shown_as": "B",
+   "supported": true,
+   "matches": "partly"
+  },
+  {
+   "date": "2023-02-21",
+   "answer": "quote",
+   "shown_as": "A",
+   "supported": true,
+   "matches": "no"
+  },
+  {
+   "date": "2023-02-21",
+   "answer": "explainer",
+   "shown_as": "B",
+   "supported": true,
+   "matches": "partly"
+  },
+  {
+   "date": "2023-09-26",
+   "answer": "explainer",
+   "shown_as": "A",
+   "supported": true,
+   "matches": "partly"
+  },
+  {
+   "date": "2023-09-26",
+   "answer": "quote",
+   "shown_as": "B",
+   "supported": true,
+   "matches": "no"
+  },
+  {
+   "date": "2022-09-21",
+   "answer": "explainer",
+   "shown_as": "A",
+   "supported": true,
+   "matches": "no"
+  },
+  {
+   "date": "2022-09-21",
+   "answer": "quote",
+   "shown_as": "B",
+   "supported": true,
+   "matches": "no"
+  },
+  {
+   "date": "2022-07-18",
+   "answer": "explainer",
+   "shown_as": "A",
+   "supported": true,
+   "matches": "partly"
+  },
+  {
+   "date": "2022-07-18",
+   "answer": "quote",
+   "shown_as": "B",
+   "supported": true,
+   "matches": "no"
+  }
+ ]
+}
