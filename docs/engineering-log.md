@@ -1323,3 +1323,42 @@ explainer are all Claude models; the result says the three agree, not
 that a person would. One human pass over the labels would change that.
 
 Budget: ~$4.60 of the $5 cap spent; ~$0.40 left.
+
+## Phase 10 — Reasoning trace, built and tested with fakes
+
+Plan pre-registered in `docs/phase10-plan.md` (`8aceeef`); built in
+`56acf6f`. Scope chosen by the owner: every LLM node; CLI audit.
+
+- **What is stored** (`trace_steps`, migration 009, written in the
+  decision's own transaction): every LLM call — exact prompt messages,
+  raw reply, model, tokens, duration, error, tagged with its node by a
+  single LangChain callback; the sentiment analyst's headline lookup and
+  the explainer's retrievals (each result with rank and full-text score);
+  the risk node's VaR arithmetic; the explainer's citation check.
+- **Secrets:** invocation parameters pass an allow-list; a key-like
+  string anywhere in a step blocks the write (tested).
+- **Audit:** `scripts/audit_decision.py <id>` prints the chain from the
+  trace alone; `scripts/trace_completeness.py <backtest>` runs the
+  pre-registered check.
+- **Dry-run fakes are now real LangChain chat models**, so dry runs are
+  traced exactly as real runs would be.
+
+**Dry run** (Nov 2022, 21 trading days, fake Portfolio Manager buying so
+the explainer fires, fts retrieval):
+
+| | Trace off (bt 175) | Trace on (bt 176) |
+|---|---|---|
+| Wall time | 18.2 s | 18.4 s |
+| Trace steps / storage | — | 217 steps, 323 kB (~15.7 kB and ~10 steps per decision) |
+| Explanations | 19 | 19 |
+| **Completeness: rebuilt exactly from the trace** | — | **19 / 19 (100%)** |
+
+- Time overhead is within one-run noise (network calls to Alpaca dominate).
+- Storage is higher than the plan's 1-2 MB estimate: ~4 MB for a
+  272-day backtest, mostly the sentiment prompt (up to ~56 headlines a
+  day) stored in full. Acceptable; noted against the estimate.
+- Tests: 7 new (124 total), including an end-to-end backtest whose
+  stored trace passes completeness and shows the sentiment lookup seeing
+  only headlines dated before the decision.
+
+Not yet done: the small real check (~5 explanations, ~$0.02).
