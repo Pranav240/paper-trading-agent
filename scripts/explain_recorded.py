@@ -58,6 +58,7 @@ from app.agent.explainer import (
 from app.agent.llm import default_llm, describe, usage_cost_usd
 from app.agent.risk_math import simple_returns, tail_losses
 from app.agent.state import AgentOpinion, RiskVerdict, TentativeDecision
+from app.agent.trace import TraceRecorder, record_trace
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
@@ -122,6 +123,11 @@ async def main() -> None:
     parser.add_argument("--per-backtest", type=int, default=10)
     parser.add_argument("--method", choices=["fts", "recent"], default="fts")
     parser.add_argument("--max-cost-usd", type=float, required=True)
+    parser.add_argument(
+        "--trace", action="store_true",
+        help="Phase 10: store the explainer's reasoning trace with each explanation. "
+             "These decisions predate tracing, so their traces hold only the explainer's steps.",
+    )
     args = parser.parse_args()
 
     pool = AsyncConnectionPool(DATABASE_URL, open=False)
@@ -164,16 +170,20 @@ async def main() -> None:
                     "final_action": row["final_action"],
                     "final_quantity": final_quantity(row),
                 }
-                out = await _invoke(node, state, usage)
+                recorder = TraceRecorder() if args.trace else None
+                out = await _invoke(node, state, usage, recorder)
                 explanation = out["risk_explanation"]
                 done += 1
                 if explanation is None:
                     continue
                 async with pool.connection() as conn:
-                    await record_explanation(
-                        conn, decision_id=row["decision_id"], symbol=row["symbol"],
-                        as_of=row["as_of"], explanation=explanation,
-                    )
+                    async with conn.transaction():  # explanation and its trace together
+                        await record_explanation(
+                            conn, decision_id=row["decision_id"], symbol=row["symbol"],
+                            as_of=row["as_of"], explanation=explanation,
+                        )
+                        if recorder is not None:
+                            await record_trace(conn, decision_id=row["decision_id"], recorder=recorder)
                 results.append((backtest_id, row, explanation))
     except _CapReached:
         pass
@@ -183,11 +193,20 @@ async def main() -> None:
     report(results, usage)
 
 
-async def _invoke(node, state, usage):
-    """Call the node as a runnable so the usage callback sees its LLM call."""
+async def _invoke(node, state, usage, recorder=None):
+    """Call the node as a runnable so the usage callback (and the trace
+    recorder, if any) see its LLM call."""
     from langchain_core.runnables import RunnableLambda
 
-    return await RunnableLambda(node).ainvoke(state, config={"callbacks": [usage]})
+    if recorder is None:
+        return await RunnableLambda(node).ainvoke(state, config={"callbacks": [usage]})
+    token = recorder.activate()
+    try:
+        return await RunnableLambda(node, name="explainer").ainvoke(
+            state, config={"callbacks": [usage, recorder], "metadata": {"langgraph_node": "explainer"}}
+        )
+    finally:
+        TraceRecorder.deactivate(token)
 
 
 def report(results, usage) -> None:
