@@ -1207,3 +1207,31 @@ candidates (was 520), 1,415 fixture headlines. No label existed for the
 first version.
 
 Fixes and public corrections for the leak itself: `6bebc48`, `fd99811`.
+
+### Phase 09 retrieval test (`scripts/eval_retrieval.py`)
+
+Labels committed first (`6ad89bd`): 153 of 498 candidates relevant, 4
+days with no explaining headline. Pre-registered primary: hit@1, fts vs
+recent, two-sided exact sign test.
+
+| | fts | recent |
+|---|---|---|
+| hit@1 (top headline relevant), 40 days | **20 (50%)** | 12 (30%) |
+| precision@8 | 39% | 30% |
+| recall (37 days with any relevant) | 86% | 68% |
+
+- **Paired hit@1: fts wins 14 days, recent 6, ties 20; p = 0.115.
+  Pre-registered verdict: no significant difference.** Full-text ranking
+  is better on every number, but the test it was given cannot call it:
+  half the days tie (both right or both wrong), leaving 20 untied, where
+  15 wins were needed.
+- Without the 5 days the labeller had seen beforehand: wins 10 vs 6,
+  p = 0.45; same direction, same verdict.
+- Labels are Claude's, not a person's (logged deviation); neither
+  retrieval method is a language model, so this test is the one least
+  affected by that.
+
+**Regression check:** `tests/test_retrieval_regression.py` loads the
+1,415-headline fixture under a separate symbol and requires both methods
+to reproduce the recorded rankings exactly, so CI fails on any retrieval
+change until the test set is rebuilt and this test re-run on purpose.

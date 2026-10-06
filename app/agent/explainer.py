@@ -78,9 +78,17 @@ class HeadlineRetriever:
     """Headlines around a driver day, from historical_headlines (hand-written
     SQL, like the rest). `method="recent"` is the no-ranking baseline."""
 
-    def __init__(self, pool: AsyncConnectionPool, method: RetrievalMethod = "fts") -> None:
+    def __init__(
+        self,
+        pool: AsyncConnectionPool,
+        method: RetrievalMethod = "fts",
+        company_terms: list[str] | None = None,
+    ) -> None:
         self._pool = pool
         self.method = method
+        # Overrides COMPANY_TERMS[symbol]; the phase 09 regression test loads
+        # AAPL's headlines under a separate symbol and needs AAPL's terms.
+        self._company_terms = company_terms
 
     async def around(
         self, symbol: str, day: date, as_of: datetime, limit: int = HEADLINES_PER_DAY
@@ -89,7 +97,8 @@ class HeadlineRetriever:
         # not times), and only ones available before the decision
         # (HEADLINE_AVAILABLE_AT). The published_at bounds narrow the scan.
         if self.method == "fts":
-            terms = COMPANY_TERMS.get(symbol, [symbol.lower()]) + FTS_TERMS
+            company = self._company_terms or COMPANY_TERMS.get(symbol, [symbol.lower()])
+            terms = company + FTS_TERMS
             order = (
                 "ts_rank_cd(to_tsvector('english', headline), "
                 "websearch_to_tsquery('english', %(q)s)) DESC, published_at DESC, id"
