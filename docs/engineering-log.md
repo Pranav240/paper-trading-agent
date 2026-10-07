@@ -1398,3 +1398,66 @@ Budget: ~$4.62 of $5 spent, ~$0.38 left.
 - **V3 (Indian markets) is future work, not scheduled.** V4 stays on hold
   behind its gate.
 - Budget: ~$4.62 of the $5 cap spent.
+
+## Phase 04 rerun with MLflow tracking (2026-10-06/07)
+
+Why: phase 04's two notebooks logged nothing (`report_to="none"`); the
+results lived only in this log. Both notebooks now log parameters, the
+loss curve and every evaluation metric **next to its trivial baseline** to
+MLflow, and the sentiment notebook was rerun on a Kaggle T4 (free; no
+Claude spend). The old numbers were not typed into MLflow: a run is only
+in the database if it actually ran.
+
+**Library drift, not design changes.** The notebooks install the latest
+packages (unpinned `-U`), and since the original run torch, transformers,
+trl, peft and MLflow had all moved. Each fix below was forced by an error
+and changes memory use or speed, not the experiment:
+
+| Change | Forced by |
+|---|---|
+| MLflow logs to SQLite (`eval/mlflow/*.db`), not an `./mlruns` folder | MLflow 3.x refuses the file store unless forced |
+| `max_seq_length` → `max_length` | trl renamed the argument |
+| `loss_type="nll"` (the standard loss) | trl's new default `chunked_nll` crashes on a 4-bit PEFT model |
+| No gradient checkpointing | `CheckpointError` on recomputation with current torch/transformers |
+| Batch 2 × 8 accumulation (was 4 × 4; effective 16 either way) | out of memory on a T4 without checkpointing |
+| fp16, not bf16; trainable weights cast to fp32 | a T4 has no bf16 tensor cores (~4 h estimate); trl 1.14 casts QLoRA weights to bf16 unconditionally, which the fp16 grad scaler cannot unscale |
+| One GPU pinned, fail fast if none | T4 x2 splits the model; an imported notebook starts with no GPU |
+
+Commits `7d39fd0`..`6445c0f`. The run was made cell by cell, with the last
+fix typed into Kaggle by hand; the logged parameters match the committed
+notebook.
+
+### Sentiment classifier on Financial PhraseBank (run `f620d67a`)
+
+Qwen2.5-1.5B-Instruct, 4-bit QLoRA (r 16, alpha 32), 3 epochs on 3,872
+PhraseBank sentences, lr 2e-4, seed 42. torch 2.11, transformers 5.18,
+trl 1.14.1, peft 0.21.2, MLflow 3.16.1. 52 min training, 70 min in all.
+
+| Metric | Value |
+|---|---|
+| Held-out accuracy, 150 validation sentences | **91.3%** |
+| Always-HOLD baseline, same 150 | 59.3% |
+| Replies with no parseable opinion | 0 |
+| Eval loss by epoch | 0.331, **0.323**, 0.329 |
+
+- **Beats its baseline on PhraseBank by 32 points.** This is the first
+  recorded in-domain number: the original run's PhraseBank accuracy was
+  never written down, so there is nothing to compare it with.
+- **It does not change the phase 04 verdict.** The verdict rests on a
+  different test: agreement with GPT-4o-mini on the project's own AAPL
+  headlines, where the original adapter scored 84.0% against a 96.8%
+  always-HOLD baseline. Learning PhraseBank and transferring to this
+  project's headlines are different claims; only the first is shown here.
+  That transfer test was not rerun (it needs the project database and the
+  local backend described at the end of the notebook).
+- The 150 are the *first* 150 of 484 validation sentences, not a random
+  sample, as in the original notebook.
+- Eval loss was lowest after epoch 2 and the saved adapter is from epoch
+  3: mild overfitting in the last epoch, kept as run.
+- Misses lean one way: 6 of the 8 shown are BUY sentences called HOLD.
+
+Not yet run: the return-regression notebook (same fixes applied, plus
+batch 1 × 32 for memory; effective batch 32 as before).
+
+To browse the run: `pip install mlflow`, then
+`mlflow ui --backend-store-uri sqlite:///eval/mlflow/mlflow_sentiment.db`.
