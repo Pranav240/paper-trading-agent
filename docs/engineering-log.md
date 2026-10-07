@@ -1456,8 +1456,50 @@ trl 1.14.1, peft 0.21.2, MLflow 3.16.1. 52 min training, 70 min in all.
   3: mild overfitting in the last epoch, kept as run.
 - Misses lean one way: 6 of the 8 shown are BUY sentences called HOLD.
 
-Not yet run: the return-regression notebook (same fixes applied, plus
-batch 1 × 32 for memory; effective batch 32 as before).
+### Return regression, full run (run `7f7f7b8b`)
+
+The run phase 04 v2 skipped: the notebook as written, **1.5B, all 27,591
+training examples, 2 epochs**. The recorded v2 result had been cut down to
+0.5B, 12k examples and 1 epoch because a full run looked like six GPU
+hours. Same fixes as above, plus `warmup_ratio=0.03` → `warmup_steps=0.03`
+(transformers 5 removed the argument; a float below 1 is still a ratio),
+batch 1 × 32 accumulation (effective 32, as written), and the dataset path
+Kaggle now mounts. transformers 5.19, torch 2.11, peft 0.21.2. 5.4 h
+training, 5.9 h in all, on one T4. Verdict tag in MLflow: **FAIL**.
+
+| Split | n | IC | 95% interval | Sign acc. | Always-majority | Pred. sd |
+|---|---|---|---|---|---|---|
+| later dates, seen symbols | 9,336 | −0.0003 | [−0.021, +0.020] | 0.495 | 0.501 | 0.040 |
+| unseen symbols, overlapping dates (leaky) | 4,774 | +0.0181 | [−0.010, +0.046] | 0.501 | 0.509 | 0.041 |
+| **unseen symbols and dates (decides)** | 1,221 | **+0.0278** | [−0.028, +0.084] | 0.508 | 0.524 | 0.040 |
+
+Pre-registered bar IC ≥ 0.03; TF-IDF baseline +0.0024 on the deciding
+split. R² on every split is within ±0.005 of zero, and MAE is within 0.002
+of a constant predictor's.
+
+- **FAIL, and the same null as the cut-down run.** The deciding split's
+  +0.028 is just under the bar, but its 95% interval spans −0.03 to +0.08:
+  that split cannot tell this number from zero, the flaw already recorded
+  for the pre-registration. The split that can, later dates (n = 9,336),
+  gives −0.0003 and excludes 0.03.
+- **Collapsed to the mean again.** Prediction sd 0.04 against labels with
+  variance 0.98 (cut-down run: 0.051). Sign accuracy is below always
+  guessing the majority sign on every split.
+- **Versus the cut-down run** (clean −0.0125, later dates −0.0074, leaky
+  +0.0104): every change is inside one interval. A 3× larger model on
+  2.3× the data for twice the epochs found nothing the small one missed,
+  so the limitation "v2 ran at 0.5B, on 12k examples, one epoch" no longer
+  applies; the conclusion stands without it.
+- **Logged training loss reads ~33, not ~1.** It is summed over the 32
+  accumulation micro-steps (transformers 5 skips the division for a model
+  whose forward accepts loss kwargs, which Qwen's classification head
+  does, though its MSE ignores them): 33.56 / 32 = 1.05, against 0.98 for
+  always predicting the mean. Gradients carry the same constant factor;
+  clipping at 1.0 then AdamW, which is insensitive to a constant gradient
+  scale, so the effect should be small, but it is not verified. Eval loss
+  (0.85) is unaffected.
+
+Browse: `mlflow ui --backend-store-uri sqlite:///eval/mlflow/mlflow_regression.db`.
 
 To browse the run: `pip install mlflow`, then
 `mlflow ui --backend-store-uri sqlite:///eval/mlflow/mlflow_sentiment.db`.
