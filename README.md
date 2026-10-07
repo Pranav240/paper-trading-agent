@@ -162,7 +162,7 @@ original sentiment prompts for faithful reruns.
 **Does:** a working service over Postgres with hand-written SQL; a four-node
 agent with model choice justified per node; QLoRA end to end across
 classification, distillation and regression on a 41,701-example dataset with
-leak-free splits; CI against a live database; infrastructure-as-code applied
+leak-free splits, reruns tracked in MLflow; CI against a live database; infrastructure-as-code applied
 to a real AWS account, run once, destroyed the same day (~$0.02).
 
 **Also does, and this is the part that matters:** out-of-sample runs executed
@@ -181,8 +181,8 @@ rather than left standing.
 AAPL only — 108 further symbols are prepared but untested. Nineteen months
 covering one decline and one recovery. Daily bars only. A single five-day
 prediction horizon. Small samples throughout: two ablation replicates, ≤62
-closed trades per run. Fine-tuning at 0.5B on 12k of 27.6k examples, one
-epoch. Absence of a signal this setup can detect is not proof none exists.
+closed trades per run. Fine-tuning tops out at 1.5B, one seed per run.
+Absence of a signal this setup can detect is not proof none exists.
 
 ## Further reading
 

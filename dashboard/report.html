@@ -424,6 +424,19 @@
     </div>
     <p class="fig">Below the bar, below the TF-IDF baseline, and below the accuracy of simply always guessing &ldquo;up&rdquo;.</p>
 
+    <div class="scroll">
+      <table>
+        <caption>Rerun at full size, October 2026: Qwen2.5-1.5B, all 27,591 examples, two epochs, tracked in MLflow</caption>
+        <thead><tr><th>Validation split</th><th>n</th><th>Spearman IC</th><th>R&sup2;</th><th>Sign acc.</th><th>Base rate</th></tr></thead>
+        <tbody>
+          <tr><td class="label">later dates, seen symbols</td><td>9,336</td><td>&minus;0.0003</td><td>&minus;0.004</td><td>0.495</td><td>0.501</td></tr>
+          <tr><td class="label">unseen symbols, overlapping dates</td><td>4,774</td><td>+0.0181</td><td>&minus;0.001</td><td>0.501</td><td>0.509</td></tr>
+          <tr class="hi"><td class="label"><strong>unseen symbols and dates</strong></td><td>1,221</td><td>+0.0278</td><td>+0.000</td><td class="neg">0.508</td><td>0.524</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fig">The run first cut down for cost, done in full (5.9 GPU hours). Same answer: +0.028 sits just under the bar on a split that cannot tell it from zero (95% interval &minus;0.028 to +0.084); the 9,336-row split gives &minus;0.0003 and excludes 0.03. Prediction sd 0.040 &mdash; collapsed to the mean again.</p>
+
     <p><strong>The prediction spread is the number that matters.</strong> Predictions had a standard deviation of <span class="mono">0.051</span> against labels at ~1.0 &mdash; the model collapsed to predicting the mean. That superficially resembles v1&rsquo;s always-HOLD collapse and is the opposite thing. In v1 the labels were constant and the model reproduced a degenerate target. Here the labels vary and the model still predicts the mean, because <em>predicting the mean is the correct loss-minimising answer when the input carries no information about the target.</em> A model making confident, varied predictions on this data would be the broken one.</p>
 
     <div class="note">
@@ -432,7 +445,7 @@
       <p>The conclusion survives, but through the larger split: 9,336 rows, interval [&minus;0.028, +0.013], which does exclude 0.03. Its weaker isolation permits only a leak that would help a model, and it still found nothing. The fix next time is holding out thirty symbols instead of fifteen.</p>
     </div>
 
-    <p>Five attempts, two entirely different framings, one answer. <strong>Phase 04 is answered, not abandoned</strong> &mdash; the data was the suspect in v1, and v2 removed it as a suspect. Stated limits: 0.5B parameters rather than 1.5B, 12,000 of 27,591 examples, one epoch, a single five-day horizon, one market regime. Absence of a signal this setup can detect is not proof that none exists.</p>
+    <p>Five attempts, two entirely different framings, one answer. <strong>Phase 04 is answered, not abandoned</strong> &mdash; the data was the suspect in v1, and v2 removed it as a suspect. Stated limits: 1.5B parameters at most, one seed per run (the cut-down 0.5B run has since been repeated at full size, with the same result), a single five-day horizon, one market regime. Absence of a signal this setup can detect is not proof that none exists.</p>
   </section>
 
   <section>

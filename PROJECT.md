@@ -217,6 +217,8 @@ Five attempts, two entirely different framings, one answer. The order they faile
 
 The second predicted HOLD on all 44 held-out rows — it learned the constant function. The first reached **3.6% precision on BUY** and invented SELL calls on neutral headlines.
 
+Rerun in October 2026 with [MLflow tracking](https://github.com/Pranav240/paper-trading-agent/tree/master/eval/mlflow), the PhraseBank adapter scores **91.3% on held-out PhraseBank against 59.3% for always-HOLD**: it learns the dataset. The 84.0% above is what failed — transfer to this project's own headlines — and that test was not rerun.
+
 One query explained both: across every backtest the teacher had produced **17 BUY, 3 SELL, 537 HOLD** on one symbol. Distilling a teacher that says HOLD 96.8% of the time yields a student that always says HOLD.
 
 > Two rounds of hyperparameter work bought nothing. One database query answered it. Model-quality problems on this project were, without exception, **data problems**.
@@ -273,6 +275,16 @@ Qwen2.5-0.5B, 4-bit, LoRA r=16, regression head, 12k examples, 1 epoch.
 | **unseen symbols and dates** | 1,221 | **−0.0125** | 0.477 | 0.524 |
 
 Below the bar, below the baseline, below always guessing "up".
+
+**Rerun at full size (October 2026, [tracked in MLflow](https://github.com/Pranav240/paper-trading-agent/tree/master/eval/mlflow)):** Qwen2.5-1.5B, all 27,591 examples, 2 epochs, 5.9 GPU hours — the run first cut down for cost.
+
+| Validation split | n | Spearman IC | Sign acc. | Base rate |
+|---|---|---|---|---|
+| later dates, seen symbols | 9,336 | −0.0003 | 0.495 | 0.501 |
+| unseen symbols, overlapping dates | 4,774 | +0.0181 | 0.501 | 0.509 |
+| **unseen symbols and dates** | 1,221 | **+0.0278** | 0.508 | 0.524 |
+
+Same answer. +0.028 is just under the bar on a split that cannot tell it from zero (95% interval −0.028 to +0.084); the 9,336-row split gives −0.0003 and excludes 0.03. Prediction sd 0.040: collapsed to the mean again.
 
 **The prediction spread is the number that matters: sd 0.051 against labels at ~1.0.** The model collapsed to predicting the mean — which *looks* like v1's always-HOLD and is the opposite thing. In v1 the labels were constant. Here they vary and the model still predicts the mean, **because predicting the mean is the correct loss-minimising answer when the input carries no information.** A model making confident varied predictions here would be the broken one.
 
@@ -376,6 +388,7 @@ Not imported from a checklist. Each is traceable to a specific mistake in this p
 | Turn every written requirement into a test | "Decide on the prior day's close" was in the backtesting plan from day one; the code never honoured it, and seven backtests ran on future prices |
 | Check what a timestamp actually encodes | The headline rule was right for times and silently wrong for dates; the first data look at the raw stamps (99.7% at exactly midnight) would have shown it |
 | Cap and record the cost of every paid run | A run killed partway lost its token count, so part of its cost can only be estimated |
+| Log every training run's settings and metrics | Phase 04's first runs logged nothing; which 12k examples the cut-down regression used can't be recovered. The reruns are in MLflow |
 
 ---
 
@@ -443,7 +456,7 @@ Then [`phase04_v2_return_regression.ipynb`](https://github.com/Pranav240/paper-t
 - **Daily bars only.** No intraday, no order book, no volume analysis beyond the indicators.
 - **A single 5-day horizon** in the return work. Shorter and longer weren't tried.
 - **Small samples throughout.** Two replicates per ablation; ≤32 closed trades in most runs. Directional conclusions, not statistically strong ones — stated as such wherever they appear.
-- **v2 ran at 0.5B, not 1.5B**, on 12k of 27.6k examples, one epoch. Chosen because a full run was six GPU hours to confirm an expected null.
+- **Fine-tuning tops out at 1.5B, one seed per run.** v2 first ran cut down (0.5B, 12k of 27.6k examples, one epoch); the full 1.5B run on all of it, two epochs, found the same null.
 - **Absence of a signal this setup can detect is not proof that none exists.**
 
 ---
