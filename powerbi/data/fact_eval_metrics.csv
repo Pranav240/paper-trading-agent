@@ -1,0 +1,30 @@
+project,area,metric,value,baseline,unit,split,source,note
+Paper Trading Agent,Risk / VaR,VaR forecast breach rate (target 5%),4.4,10.3,%,In-sample (bt 45),PROJECT.md,"Baseline = naive flat 2% VaR; Kupiec p=0.65 (model), p<0.001 (naive)"
+Paper Trading Agent,Risk / VaR,VaR forecast breach rate (target 5%),1.6,5.6,%,Out-of-sample (bt 71),PROJECT.md,Too cautious; Kupiec p=0.041 (model)
+Paper Trading Agent,Risk / VaR,Kupiec p-value (model),0.65,,p,In-sample (bt 45),PROJECT.md,
+Paper Trading Agent,Risk / VaR,Kupiec p-value (model),0.041,,p,Out-of-sample (bt 71),PROJECT.md,
+Paper Trading Agent,Risk / VaR,VaR node P&L vs V1 rules,-492,0,USD,In-sample (bt 45),PROJECT.md,
+Paper Trading Agent,Risk / VaR,VaR node P&L vs V1 rules,57,0,USD,Out-of-sample (bt 71),PROJECT.md,
+Paper Trading Agent,Risk / VaR,Max drawdown vs V1 rules,-211,,USD,In-sample (bt 45),PROJECT.md,
+Paper Trading Agent,Risk / VaR,Max drawdown vs V1 rules,-185,,USD,Out-of-sample (bt 71),PROJECT.md,
+Paper Trading Agent,Explainer / RAG,Explanation names labelled cause,65,22,%,40 worst AAPL days,PROJECT.md,"Baseline = quoting top headline; 17 won, 0 lost, p<0.0001; LLM-judged vs LLM-written labels"
+Paper Trading Agent,Explainer / RAG,Top headline relevant (full-text vs recency),50,30,%,40 worst AAPL days,PROJECT.md,"Not significant, p=0.12"
+Paper Trading Agent,Explainer / RAG,Explainer causes supported by own citations,92,90,%,40 worst AAPL days,PROJECT.md,Baseline = pre-registered bar (90%)
+Paper Trading Agent,Trace,Explanations rebuilt from stored traces,100,,%,,resume,Resume claim; not re-verified here
+Paper Trading Agent,QLoRA,Financial PhraseBank adapter accuracy (v1),84.0,96.8,%,Project headlines,PROJECT.md,Baseline = majority class; below baseline
+Paper Trading Agent,QLoRA,Distilled adapter accuracy (v1),90.9,90.9,%,Project headlines,PROJECT.md,Baseline = majority class; exactly baseline
+Paper Trading Agent,QLoRA,"PhraseBank adapter, held-out PhraseBank (Oct 2026 rerun)",91.3,59.3,%,PhraseBank held-out,PROJECT.md,Baseline = always-HOLD
+Paper Trading Agent,QLoRA regression,"Spearman IC [v1 Qwen2.5-0.5B, 12k, 1 epoch]",-0.0074,0.03,IC,"Later dates, seen symbols (n=9336)",PROJECT.md,Baseline = pre-registered bar IC>=0.03; TF-IDF baseline IC=+0.002
+Paper Trading Agent,QLoRA regression,"Sign accuracy [v1 Qwen2.5-0.5B, 12k, 1 epoch]",0.502,0.501,ratio,"Later dates, seen symbols (n=9336)",PROJECT.md,"Baseline = base rate of ""up"""
+Paper Trading Agent,QLoRA regression,"Spearman IC [v1 Qwen2.5-0.5B, 12k, 1 epoch]",0.0104,0.03,IC,"Unseen symbols, overlapping dates (n=4774)",PROJECT.md,Baseline = pre-registered bar IC>=0.03; TF-IDF baseline IC=+0.002
+Paper Trading Agent,QLoRA regression,"Sign accuracy [v1 Qwen2.5-0.5B, 12k, 1 epoch]",0.499,0.509,ratio,"Unseen symbols, overlapping dates (n=4774)",PROJECT.md,"Baseline = base rate of ""up"""
+Paper Trading Agent,QLoRA regression,"Spearman IC [v1 Qwen2.5-0.5B, 12k, 1 epoch]",-0.0125,0.03,IC,Unseen symbols and dates (n=1221),PROJECT.md,Baseline = pre-registered bar IC>=0.03; TF-IDF baseline IC=+0.002
+Paper Trading Agent,QLoRA regression,"Sign accuracy [v1 Qwen2.5-0.5B, 12k, 1 epoch]",0.477,0.524,ratio,Unseen symbols and dates (n=1221),PROJECT.md,"Baseline = base rate of ""up"""
+Paper Trading Agent,QLoRA regression,"Spearman IC [Rerun Qwen2.5-1.5B, 27,591 ex, 2 epochs (MLflow)]",-0.0003,0.03,IC,"Later dates, seen symbols (n=9336)",PROJECT.md,Baseline = pre-registered bar IC>=0.03; TF-IDF baseline IC=+0.002
+Paper Trading Agent,QLoRA regression,"Sign accuracy [Rerun Qwen2.5-1.5B, 27,591 ex, 2 epochs (MLflow)]",0.495,0.501,ratio,"Later dates, seen symbols (n=9336)",PROJECT.md,"Baseline = base rate of ""up"""
+Paper Trading Agent,QLoRA regression,"Spearman IC [Rerun Qwen2.5-1.5B, 27,591 ex, 2 epochs (MLflow)]",0.0181,0.03,IC,"Unseen symbols, overlapping dates (n=4774)",PROJECT.md,Baseline = pre-registered bar IC>=0.03; TF-IDF baseline IC=+0.002
+Paper Trading Agent,QLoRA regression,"Sign accuracy [Rerun Qwen2.5-1.5B, 27,591 ex, 2 epochs (MLflow)]",0.501,0.509,ratio,"Unseen symbols, overlapping dates (n=4774)",PROJECT.md,"Baseline = base rate of ""up"""
+Paper Trading Agent,QLoRA regression,"Spearman IC [Rerun Qwen2.5-1.5B, 27,591 ex, 2 epochs (MLflow)]",0.0278,0.03,IC,Unseen symbols and dates (n=1221),PROJECT.md,Baseline = pre-registered bar IC>=0.03; TF-IDF baseline IC=+0.002
+Paper Trading Agent,QLoRA regression,"Sign accuracy [Rerun Qwen2.5-1.5B, 27,591 ex, 2 epochs (MLflow)]",0.508,0.524,ratio,Unseen symbols and dates (n=1221),PROJECT.md,"Baseline = base rate of ""up"""
+Paper Trading Agent,Engineering,pytest test functions in repo,132,124,count,HEAD,repo scan,Baseline = 124 stated on resume; resume likely stale
+Paper Trading Agent,Engineering,Training dataset size,41701,,examples,,PROJECT.md,"104 symbols, 19 months"
