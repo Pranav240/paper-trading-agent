@@ -1,0 +1,3778 @@
+{
+ "rule": "AAPL's 40 largest daily losses 2021-07-01..2023-12-31 with >=1 headline dated D-1 or D; candidates = union of fts and recent top 8; see docs/phase09-plan.md",
+ "built": "2026-10-06T05:03:57+00:00",
+ "days": [
+  {
+   "date": "2022-09-13",
+   "return": -0.057935,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 7345,
+     "published_at": "2022-09-13T00:00:00+00:00",
+     "headline": "After Hours Most Active for Sep 13, 2022 : AAPL, INTC, SWN, KO, NVDA, IQ, CMCSA, CWK, AMZN, VALE, UBER, NEM",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 7342,
+     "published_at": "2022-09-13T00:00:00+00:00",
+     "headline": "U.S. to discuss new chips bill with Taiwan next month",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 7366,
+     "published_at": "2022-09-13T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street tumbles as inflation data stokes bets of large rate hikes",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 7350,
+     "published_at": "2022-09-13T00:00:00+00:00",
+     "headline": "Apple (AAPL) Shares Gain on Strong iPhone 14 Pro Max Demand",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 7348,
+     "published_at": "2022-09-13T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street slides as CPI data locks in another hefty Fed rate hike",
+     "fts_rank": 1,
+     "recent_rank": 7
+    },
+    {
+     "id": 7344,
+     "published_at": "2022-09-13T00:00:00+00:00",
+     "headline": "Stock Market Today: Dow Sinks 1,276 Points After Alarming CPI Report",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 7349,
+     "published_at": "2022-09-13T00:00:00+00:00",
+     "headline": "Why Nvidia, Amazon, and Apple Stocks All Slumped Tuesday Morning",
+     "fts_rank": 7,
+     "recent_rank": 8
+    },
+    {
+     "id": 7346,
+     "published_at": "2022-09-13T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St tumbles to biggest loss in two years following CPI data",
+     "fts_rank": 6,
+     "recent_rank": 5
+    },
+    {
+     "id": 7358,
+     "published_at": "2022-09-13T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street set to drop after hot August inflation report",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 7354,
+     "published_at": "2022-09-13T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street plunges as inflation data stokes bets of large rate hikes",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 7343,
+     "published_at": "2022-09-13T00:00:00+00:00",
+     "headline": "Apple plans to use latest chip tech by Taiwan's TSMC in iPhones, Macs - Nikkei",
+     "fts_rank": 5,
+     "recent_rank": 2
+    },
+    {
+     "id": 7347,
+     "published_at": "2022-09-13T00:00:00+00:00",
+     "headline": "3 Best Index Funds to Buy Now",
+     "fts_rank": null,
+     "recent_rank": 6
+    }
+   ]
+  },
+  {
+   "date": "2022-09-29",
+   "return": -0.047877,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 7122,
+     "published_at": "2022-09-28T00:00:00+00:00",
+     "headline": "Nasdaq 100 Movers: AAPL, BIIB",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 7086,
+     "published_at": "2022-09-29T00:00:00+00:00",
+     "headline": "EXCLUSIVE-Senior Indonesian officials targeted by spyware last year \u2013 sources",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 7083,
+     "published_at": "2022-09-29T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street skids as investors fret about U.S. economic downturn",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 7085,
+     "published_at": "2022-09-29T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street ends down sharply; investors fret over economy",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 7115,
+     "published_at": "2022-09-28T00:00:00+00:00",
+     "headline": "Apple falls on fears of slowing iPhone 14 demand",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 7128,
+     "published_at": "2022-09-28T00:00:00+00:00",
+     "headline": "US STOCKS-Futures fall as Apple drops production increase, falling yields limit losses",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 7080,
+     "published_at": "2022-09-29T00:00:00+00:00",
+     "headline": "After Hours Most Active for Sep 29, 2022 : MCHI, MU, QQQ, AMZN, AAPL, BEKE, FDMT, FE, NKE, GE, T, DIS",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 7081,
+     "published_at": "2022-09-29T00:00:00+00:00",
+     "headline": "Lions Gate (LGF.A) Set to Rebrand Starzplay as Lionsgate+",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 7091,
+     "published_at": "2022-09-29T00:00:00+00:00",
+     "headline": "Apple senior exec leaves iPhone maker after remark in viral video",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 7134,
+     "published_at": "2022-09-28T00:00:00+00:00",
+     "headline": "Apple worsens selloff in beleaguered growth stocks",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 7082,
+     "published_at": "2022-09-29T00:00:00+00:00",
+     "headline": "Thursday's ETF with Unusual Volume: VONG",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 7084,
+     "published_at": "2022-09-29T00:00:00+00:00",
+     "headline": "Micron forecasts first-quarter revenue below estimates as demand worsens",
+     "fts_rank": 3,
+     "recent_rank": 5
+    },
+    {
+     "id": 7118,
+     "published_at": "2022-09-28T00:00:00+00:00",
+     "headline": "Why Apple Stock Is Falling Today",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 7087,
+     "published_at": "2022-09-29T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-'Pick-your-poison': Wall Street sell-off resumes",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 7132,
+     "published_at": "2022-09-28T00:00:00+00:00",
+     "headline": "Apple Shelves Plans To Boost IPhone 14 Production Targets On Lower Demand: Report",
+     "fts_rank": 7,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2023-08-04",
+   "return": -0.047519,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 2518,
+     "published_at": "2023-08-03T00:00:00+00:00",
+     "headline": "AAPL Earnings Today: Here\u2019s What to Expect from the iPhone Maker in Fiscal Q3",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 2434,
+     "published_at": "2023-08-04T00:00:00+00:00",
+     "headline": "Did Apple and Amazon Report \u201cMagnificent\u201d Earnings?",
+     "fts_rank": 7,
+     "recent_rank": 1
+    },
+    {
+     "id": 2437,
+     "published_at": "2023-08-04T00:00:00+00:00",
+     "headline": "Long-Term Tech Stock Deals to Buy Now",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 2505,
+     "published_at": "2023-08-03T00:00:00+00:00",
+     "headline": "Compared to Estimates, Apple (AAPL) Q3 Earnings: A Look at Key Metrics",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 2441,
+     "published_at": "2023-08-04T00:00:00+00:00",
+     "headline": "Stocks Dragged Lower by Losses in Apple",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 2438,
+     "published_at": "2023-08-04T00:00:00+00:00",
+     "headline": "After Hours Most Active for Aug 4, 2023 : AAPL, NKLA, PDCE, T, QQQ, AMZN, HPE, ENB, TLT, ELAN, VZ, BAC",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 2455,
+     "published_at": "2023-08-04T00:00:00+00:00",
+     "headline": "Apple's (AAPL) Q3 Earnings Beat Estimates, Revenues Decline Y/Y",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 2435,
+     "published_at": "2023-08-04T00:00:00+00:00",
+     "headline": "Technology Sector Update for 08/04/2023: USM, TDS, AMZN, AAPL, AAOI",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 2487,
+     "published_at": "2023-08-04T00:00:00+00:00",
+     "headline": "Amazon surges on 'game-changing' quarter, iPhone slump drags Apple",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 2445,
+     "published_at": "2023-08-04T00:00:00+00:00",
+     "headline": "Apple Stock (NASDAQ:AAPL): This Quiet Winner of the AI Race Still Has Upside",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 2436,
+     "published_at": "2023-08-04T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street closes lower after US jobs report, Apple weighs",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 2444,
+     "published_at": "2023-08-04T00:00:00+00:00",
+     "headline": "Canaccord Genuity Maintains Apple (AAPL) Buy Recommendation",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 2440,
+     "published_at": "2023-08-04T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street ends lower after US jobs report; Apple weighs",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 2439,
+     "published_at": "2023-08-04T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St rises on Amazon boost, US jobs growth remains moderate",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 2509,
+     "published_at": "2023-08-03T00:00:00+00:00",
+     "headline": "Apple (AAPL) Q3 2023 Earnings: What to Expect",
+     "fts_rank": 5,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2022-12-15",
+   "return": -0.046353,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 5976,
+     "published_at": "2022-12-15T00:00:00+00:00",
+     "headline": "Ericsson sees margin at lower end of target; pushes for cost cuts",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 5969,
+     "published_at": "2022-12-15T00:00:00+00:00",
+     "headline": "Stock Market News for Dec 15, 2022",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 5974,
+     "published_at": "2022-12-15T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street falls sharply on angst over hawkish Fed",
+     "fts_rank": 2,
+     "recent_rank": 6
+    },
+    {
+     "id": 5979,
+     "published_at": "2022-12-15T00:00:00+00:00",
+     "headline": "After Hours Most Active for Dec 15, 2022 : COTY, AAPL, SQQQ, TAL, GOOGL, GOOG, AMZN, FOLD, TSM, XOM, DIS, MO",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 5992,
+     "published_at": "2022-12-14T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street rises as Fed's rate decision looms",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 5972,
+     "published_at": "2022-12-15T00:00:00+00:00",
+     "headline": "Why Apple, Amazon, and Microsoft Are All Falling Today",
+     "fts_rank": 1,
+     "recent_rank": 4
+    },
+    {
+     "id": 5975,
+     "published_at": "2022-12-15T00:00:00+00:00",
+     "headline": "Warner Bros. Discovery's (WBD) Studio Celebrates 100 Years",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 5973,
+     "published_at": "2022-12-15T00:00:00+00:00",
+     "headline": "Thursday's ETF with Unusual Volume: EFIV",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 5980,
+     "published_at": "2022-12-15T00:00:00+00:00",
+     "headline": "3 Things About Apple That Smart Investors Know",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 5996,
+     "published_at": "2022-12-14T00:00:00+00:00",
+     "headline": "Forget the iPhone. Apple Stock Doesn't Need It.",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 5970,
+     "published_at": "2022-12-15T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street slides more than 1% on angst over hawkish Fed",
+     "fts_rank": 5,
+     "recent_rank": 2
+    },
+    {
+     "id": 5978,
+     "published_at": "2022-12-15T00:00:00+00:00",
+     "headline": "US STOCKS-Futures slide on worries over hawkish Fed",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 5971,
+     "published_at": "2022-12-15T00:00:00+00:00",
+     "headline": "Invest like a Pro: These 10 Stocks Could Outperform in 2023",
+     "fts_rank": null,
+     "recent_rank": 3
+    }
+   ]
+  },
+  {
+   "date": "2022-11-03",
+   "return": -0.042207,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 6542,
+     "published_at": "2022-11-03T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street eyes lower open on Fed's rate hike view",
+     "fts_rank": 2,
+     "recent_rank": 1
+    },
+    {
+     "id": 6548,
+     "published_at": "2022-11-03T00:00:00+00:00",
+     "headline": "Traders scramble for protection after Fed spooks markets",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 6547,
+     "published_at": "2022-11-03T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St falls on concerns over Fed interest rate path",
+     "fts_rank": 1,
+     "recent_rank": 6
+    },
+    {
+     "id": 6546,
+     "published_at": "2022-11-03T00:00:00+00:00",
+     "headline": "US STOCKS-U.S. stocks close lower on Fed rate hike worry",
+     "fts_rank": 4,
+     "recent_rank": 5
+    },
+    {
+     "id": 6560,
+     "published_at": "2022-11-03T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street extends losses after Fed signals more rate hikes",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 6554,
+     "published_at": "2022-11-03T00:00:00+00:00",
+     "headline": "Zacks Earnings Trends Highlights: Amazon, Alphabet, Microsoft and Apple",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 6544,
+     "published_at": "2022-11-03T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St down for fourth straight day on Fed rate hike worry",
+     "fts_rank": 3,
+     "recent_rank": 3
+    },
+    {
+     "id": 6559,
+     "published_at": "2022-11-03T00:00:00+00:00",
+     "headline": "US STOCKS-Futures signal more losses on Fed's rate hike view",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 6549,
+     "published_at": "2022-11-03T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St slides as Fed signals more interest rate hikes",
+     "fts_rank": 5,
+     "recent_rank": 8
+    },
+    {
+     "id": 6545,
+     "published_at": "2022-11-03T00:00:00+00:00",
+     "headline": "7 Stocks for Beginners to Buy Now",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 6543,
+     "published_at": "2022-11-03T00:00:00+00:00",
+     "headline": "What Are Retail Investors Buying And Selling This Week Amidst Q3 Earnings Season?",
+     "fts_rank": null,
+     "recent_rank": 2
+    }
+   ]
+  },
+  {
+   "date": "2022-06-16",
+   "return": -0.039495,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 8669,
+     "published_at": "2022-06-15T00:00:00+00:00",
+     "headline": "China COVID controls makes Apple supplier Pegatron \"emphasise\" expansion elsewhere",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 8638,
+     "published_at": "2022-06-16T00:00:00+00:00",
+     "headline": "Does Apple\u2019s Future Lie in Advertising? J.P. Morgan Thinks So",
+     "fts_rank": 8,
+     "recent_rank": 4
+    },
+    {
+     "id": 8642,
+     "published_at": "2022-06-16T00:00:00+00:00",
+     "headline": "2 Reasons to Keep Purchasing Apple Stock During the Bear Market",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 8635,
+     "published_at": "2022-06-16T00:00:00+00:00",
+     "headline": "Did the Fed\u2019s Commitment to Fight Inflation Just Start a New Bull Market?",
+     "fts_rank": 1,
+     "recent_rank": 1
+    },
+    {
+     "id": 8639,
+     "published_at": "2022-06-16T00:00:00+00:00",
+     "headline": "After Hours Most Active for Jun 16, 2022 : IBN, IXUS, AAPL, CMCSA, QQQ, AMZN, MSFT, DNA, ELAN, UBER, GOLD, WFC",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 8658,
+     "published_at": "2022-06-15T00:00:00+00:00",
+     "headline": "US STOCKS-Growth stocks lift Wall Street ahead of Fed's rate decision",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 8648,
+     "published_at": "2022-06-16T00:00:00+00:00",
+     "headline": "US STOCKS-Futures slump as recession fears loom",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 8637,
+     "published_at": "2022-06-16T00:00:00+00:00",
+     "headline": "2 Simple Reasons to Buy Apple Stock",
+     "fts_rank": 7,
+     "recent_rank": 3
+    },
+    {
+     "id": 8636,
+     "published_at": "2022-06-16T00:00:00+00:00",
+     "headline": "Why Meta, Amazon, and Apple Are Falling Today",
+     "fts_rank": 2,
+     "recent_rank": 2
+    },
+    {
+     "id": 8641,
+     "published_at": "2022-06-16T00:00:00+00:00",
+     "headline": "3 Things About Twitter That Smart Investors Know",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 8640,
+     "published_at": "2022-06-16T00:00:00+00:00",
+     "headline": "Apple Stock Is Still a Good Long-Term Growth Investment",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 8659,
+     "published_at": "2022-06-15T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street set to open higher ahead of Fed's rate decision",
+     "fts_rank": 5,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2022-06-03",
+   "return": -0.038617,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 8856,
+     "published_at": "2022-06-03T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St ends down with strong jobs data keeping the pressure on for rate hikes",
+     "fts_rank": 5,
+     "recent_rank": 3
+    },
+    {
+     "id": 8859,
+     "published_at": "2022-06-03T00:00:00+00:00",
+     "headline": "Block (SQ) to Attract Sellers Via Apple's Tap to Pay on iPhone",
+     "fts_rank": 1,
+     "recent_rank": 5
+    },
+    {
+     "id": 8857,
+     "published_at": "2022-06-03T00:00:00+00:00",
+     "headline": "After Hours Most Active for Jun 3, 2022 : MNDT, TSM, PM, QQQ, INVA, CERN, INTC, AAPL, ERJ, COTY, INFY, PLTR",
+     "fts_rank": 6,
+     "recent_rank": 4
+    },
+    {
+     "id": 8854,
+     "published_at": "2022-06-03T00:00:00+00:00",
+     "headline": "Apple Was the Worst Stock in the Dow Friday",
+     "fts_rank": 3,
+     "recent_rank": 1
+    },
+    {
+     "id": 8860,
+     "published_at": "2022-06-03T00:00:00+00:00",
+     "headline": "Why Nvidia, Amazon, and Apple Stocks Slumped Friday",
+     "fts_rank": 2,
+     "recent_rank": 6
+    },
+    {
+     "id": 8855,
+     "published_at": "2022-06-03T00:00:00+00:00",
+     "headline": "4 Top Stock Trades for Monday: SPY, AAPL, LULU, MU",
+     "fts_rank": 4,
+     "recent_rank": 2
+    },
+    {
+     "id": 8861,
+     "published_at": "2022-06-03T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St slides as solid jobs data supports rate hike bets",
+     "fts_rank": 7,
+     "recent_rank": 7
+    },
+    {
+     "id": 8862,
+     "published_at": "2022-06-03T00:00:00+00:00",
+     "headline": "Technology Sector Update for 06/03/2022: ASAN,AAPL,OKTA",
+     "fts_rank": 8,
+     "recent_rank": 8
+    }
+   ]
+  },
+  {
+   "date": "2022-06-10",
+   "return": -0.038463,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 8734,
+     "published_at": "2022-06-10T00:00:00+00:00",
+     "headline": "Why Apple, Amazon, and Nvidia Plunged Today",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 8730,
+     "published_at": "2022-06-10T00:00:00+00:00",
+     "headline": "Stock Market News for Jun 10, 2022",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 8731,
+     "published_at": "2022-06-10T00:00:00+00:00",
+     "headline": "Notable Friday Option Activity: TSLA, AAPL, DAL",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 8729,
+     "published_at": "2022-06-10T00:00:00+00:00",
+     "headline": "Down 79% in 2022, Is fuboTV Stock a Buy?",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 8727,
+     "published_at": "2022-06-10T00:00:00+00:00",
+     "headline": "5 High-Quality Stocks Sizzling this Summer",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 8725,
+     "published_at": "2022-06-10T00:00:00+00:00",
+     "headline": "Wall Street suffers biggest weekly loss since January after hot CPI data",
+     "fts_rank": 8,
+     "recent_rank": 2
+    },
+    {
+     "id": 8757,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "Apple (AAPL) Relies on Subsidiary to Manage Apple Pay Later",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 8737,
+     "published_at": "2022-06-10T00:00:00+00:00",
+     "headline": "Wall Street falls sharply as inflation data fuels jitters",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 8728,
+     "published_at": "2022-06-10T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St ends down sharply as hot inflation data intensifies investor fears",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 8755,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "Wall Street falls as growth stocks struggle with inflation reading in focus",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 8732,
+     "published_at": "2022-06-10T00:00:00+00:00",
+     "headline": "Apple (AAPL) to Expand Apple TV+ Content With New Series 'Sugar'",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 8726,
+     "published_at": "2022-06-10T00:00:00+00:00",
+     "headline": "Tesla to seek investor approval for 3-for-1 stock split",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 8768,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "China's smartphone makers chip away at Samsung, Apple's Russian market share",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 8724,
+     "published_at": "2022-06-10T00:00:00+00:00",
+     "headline": "This Is How Apple's WWDC Announcements Could Affect Your Stocks",
+     "fts_rank": 7,
+     "recent_rank": 1
+    }
+   ]
+  },
+  {
+   "date": "2022-06-13",
+   "return": -0.038032,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 8692,
+     "published_at": "2022-06-13T00:00:00+00:00",
+     "headline": "U.S. bill to rein in Big Tech backed by dozens of small and big companies",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 8696,
+     "published_at": "2022-06-13T00:00:00+00:00",
+     "headline": "US STOCKS-S&P 500 confirms bear market as recession worry grows",
+     "fts_rank": 5,
+     "recent_rank": 6
+    },
+    {
+     "id": 8706,
+     "published_at": "2022-06-13T00:00:00+00:00",
+     "headline": "US STOCKS-Futures fall on bets of aggressive Fed rate hikes",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 8699,
+     "published_at": "2022-06-13T00:00:00+00:00",
+     "headline": "S&P 500 confirms bear market as recession worry grows",
+     "fts_rank": 7,
+     "recent_rank": 8
+    },
+    {
+     "id": 8695,
+     "published_at": "2022-06-13T00:00:00+00:00",
+     "headline": "US STOCKS-Recession fears put S&P 500 on track to confirm bear market",
+     "fts_rank": 4,
+     "recent_rank": 5
+    },
+    {
+     "id": 8693,
+     "published_at": "2022-06-13T00:00:00+00:00",
+     "headline": "Rune Labs gets FDA clearance to use Apple Watch to track Parkinson's symptoms",
+     "fts_rank": 3,
+     "recent_rank": 3
+    },
+    {
+     "id": 8701,
+     "published_at": "2022-06-13T00:00:00+00:00",
+     "headline": "Notable ETF Inflow Detected - ITOT, AAPL, MSFT, PFE",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 8698,
+     "published_at": "2022-06-13T00:00:00+00:00",
+     "headline": "Why Apple Could Still Go Lower",
+     "fts_rank": 6,
+     "recent_rank": 7
+    },
+    {
+     "id": 8709,
+     "published_at": "2022-06-13T00:00:00+00:00",
+     "headline": "Apple music, gaming to bring in over $8 bln in revenue by 2025, JPM says",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 8691,
+     "published_at": "2022-06-13T00:00:00+00:00",
+     "headline": "SPY, PFI: Big ETF Outflows",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 8694,
+     "published_at": "2022-06-13T00:00:00+00:00",
+     "headline": "Monday's ETF with Unusual Volume: RYT",
+     "fts_rank": null,
+     "recent_rank": 4
+    }
+   ]
+  },
+  {
+   "date": "2022-08-26",
+   "return": -0.037971,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 7584,
+     "published_at": "2022-08-26T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St slips in choppy trade after Powell's speech",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 7611,
+     "published_at": "2022-08-25T00:00:00+00:00",
+     "headline": "Is Apple Stock a Buy After Its Latest Earnings?",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 7585,
+     "published_at": "2022-08-26T00:00:00+00:00",
+     "headline": "5 Stocks That Warren Buffett Is Betting on Now",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 7589,
+     "published_at": "2022-08-26T00:00:00+00:00",
+     "headline": "Alphabet's (GOOGL) Google Brings Google Wallet to South Africa",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 7591,
+     "published_at": "2022-08-26T00:00:00+00:00",
+     "headline": "Stock Stories With a Motley Fool Senior Analyst",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 7594,
+     "published_at": "2022-08-26T00:00:00+00:00",
+     "headline": "The Smartphone Market Is Slowing. Not Even Apple Is Immune.",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 7603,
+     "published_at": "2022-08-26T00:00:00+00:00",
+     "headline": "Is Trending Stock Apple Inc. (AAPL) a Buy Now?",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 7586,
+     "published_at": "2022-08-26T00:00:00+00:00",
+     "headline": "The Top 10 Constituents of the Nasdaq-100 Index",
+     "fts_rank": 6,
+     "recent_rank": 3
+    },
+    {
+     "id": 7588,
+     "published_at": "2022-08-26T00:00:00+00:00",
+     "headline": "What Investors Need to Understand About FAANG Stocks",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 7590,
+     "published_at": "2022-08-26T00:00:00+00:00",
+     "headline": "Top Analyst Reports for Apple, Alibaba & Bristol-Myers Squibb",
+     "fts_rank": 7,
+     "recent_rank": 7
+    },
+    {
+     "id": 7592,
+     "published_at": "2022-08-26T00:00:00+00:00",
+     "headline": "U.S. Justice Department in early stages of drafting possible antitrust suit against Apple -Politico",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 7606,
+     "published_at": "2022-08-25T00:00:00+00:00",
+     "headline": "Dell revenue growth slows on strong dollar, China lockdowns",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 7587,
+     "published_at": "2022-08-26T00:00:00+00:00",
+     "headline": "U.S. DOJ in early stages of drafting possible antitrust suit against Apple - Politico",
+     "fts_rank": 1,
+     "recent_rank": 4
+    }
+   ]
+  },
+  {
+   "date": "2022-11-02",
+   "return": -0.037504,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 6565,
+     "published_at": "2022-11-02T00:00:00+00:00",
+     "headline": "3 Year-End Investing Strategies You Should Consider Right Now",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 6573,
+     "published_at": "2022-11-02T00:00:00+00:00",
+     "headline": "Chinese zone housing major Apple iPhone plant imposes fresh lockdown",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 6587,
+     "published_at": "2022-11-01T00:00:00+00:00",
+     "headline": "Apple supplier Foxconn quadruples bonuses to staff hit by China COVID lockdown",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 6561,
+     "published_at": "2022-11-02T00:00:00+00:00",
+     "headline": "Is Apple Stock a Buy Now?",
+     "fts_rank": 7,
+     "recent_rank": 1
+    },
+    {
+     "id": 6568,
+     "published_at": "2022-11-02T00:00:00+00:00",
+     "headline": "Nasdaq Bear Market: 1 Stock That Could Weather the Storm",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 6567,
+     "published_at": "2022-11-02T00:00:00+00:00",
+     "headline": "AAPL, NFLX, AMZN: Which FAANG Stock Does Wall Street Expect to Rise the Most?",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 6579,
+     "published_at": "2022-11-01T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St slips as jobs data dents hopes for Fed rate deceleration",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 6576,
+     "published_at": "2022-11-01T00:00:00+00:00",
+     "headline": "Apple, Bank of America, and Chevron Earnings Show the Warren Buffett Way Still Works",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 6566,
+     "published_at": "2022-11-02T00:00:00+00:00",
+     "headline": "Qualcomm forecasts earnings below estimates as smartphone market weakens",
+     "fts_rank": 1,
+     "recent_rank": 6
+    },
+    {
+     "id": 6563,
+     "published_at": "2022-11-02T00:00:00+00:00",
+     "headline": "Breaking Down the Earnings Picture as Estimates Fade",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 6582,
+     "published_at": "2022-11-01T00:00:00+00:00",
+     "headline": "Workers Flee Apple's China Factory Following Covid Lockdown",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 6562,
+     "published_at": "2022-11-02T00:00:00+00:00",
+     "headline": "China's Nio resumes production at its two Hefei factories",
+     "fts_rank": 8,
+     "recent_rank": 2
+    },
+    {
+     "id": 6564,
+     "published_at": "2022-11-02T00:00:00+00:00",
+     "headline": "After Hours Most Active for Nov 2, 2022 : OABI, VONG, EW, QQQ, ROKU, RTO, AAPL, TQQQ, LUMN, STLA, T, MET",
+     "fts_rank": null,
+     "recent_rank": 4
+    }
+   ]
+  },
+  {
+   "date": "2023-01-03",
+   "return": -0.036865,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 5734,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "Valuation Squeezes Continue into 2023",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 5740,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "Foxconn's IPhone Plant In China Reaches 90% Production Capacity: Reports",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 5739,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "Why Apple Stock Dropped on Jan. 3, 2023",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 5736,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "Foxconn to use Nvidia chips to build self-driving vehicle platforms",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 5733,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "Tuesday's ETF with Unusual Volume: IWL",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 5732,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-Asian equities rise, dollar sways as focus firmly on Fed minutes",
+     "fts_rank": 6,
+     "recent_rank": 3
+    },
+    {
+     "id": 5737,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "First Session of 2023 Ends With Losses",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 5743,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "After Hours Most Active for Jan 3, 2023 : AMZN, PYPL, Z, AAPL, ACWI, PDD, CF, ELAN, USB, BEKE, BBD, KSS",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 5742,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St falters at start of 2023 as Apple, Tesla shares fall",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 5751,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "AAPL June 2025 Options Begin Trading",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 5730,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St starts the year with a dip; Apple, Tesla shares drag",
+     "fts_rank": 5,
+     "recent_rank": 1
+    },
+    {
+     "id": 5731,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "Nvidia, Foxconn to build autonomous vehicle platforms",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 5747,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street drops as Apple, energy stocks weigh",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 5735,
+     "published_at": "2023-01-03T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-Dollar jumps, U.S. stocks buck global rally",
+     "fts_rank": null,
+     "recent_rank": 6
+    }
+   ]
+  },
+  {
+   "date": "2022-10-07",
+   "return": -0.03664,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 6963,
+     "published_at": "2022-10-07T00:00:00+00:00",
+     "headline": "Which NDX ETF is Right for You?",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 6960,
+     "published_at": "2022-10-07T00:00:00+00:00",
+     "headline": "2 Unstoppable Warren Buffett Stocks That Can Turn Sitting Cash Into Growing Wealth",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 6961,
+     "published_at": "2022-10-07T00:00:00+00:00",
+     "headline": "Wall Street tumbles as jobs growth cements rate hike bets",
+     "fts_rank": 2,
+     "recent_rank": 6
+    },
+    {
+     "id": 6983,
+     "published_at": "2022-10-06T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street drops on inflation, rate hike worries",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 6976,
+     "published_at": "2022-10-06T00:00:00+00:00",
+     "headline": "EXCLUSIVE-Apple wins 2/3 cut in French antitrust fine to 372 mln euros - sources",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 6979,
+     "published_at": "2022-10-06T00:00:00+00:00",
+     "headline": "A French court divides by three an antitrust fine against Apple - source",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 6956,
+     "published_at": "2022-10-07T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street slips as jobs growth boosts rate hike bets",
+     "fts_rank": 6,
+     "recent_rank": 1
+    },
+    {
+     "id": 6978,
+     "published_at": "2022-10-06T00:00:00+00:00",
+     "headline": "EXCLUSIVE-French court cuts antitrust fine against Apple to 372 mln euros from 1.1 bln- source",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 6957,
+     "published_at": "2022-10-07T00:00:00+00:00",
+     "headline": "After Russia-Ukraine plan, Musk offers proposal to resolve China-Taiwan tensions",
+     "fts_rank": 7,
+     "recent_rank": 2
+    },
+    {
+     "id": 6958,
+     "published_at": "2022-10-07T00:00:00+00:00",
+     "headline": "Here's Why Meta Platforms Stock Hit a New 52-Week Low Today",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 6962,
+     "published_at": "2022-10-07T00:00:00+00:00",
+     "headline": "Future of Smart Homes: Here's What You Need to Know",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 6959,
+     "published_at": "2022-10-07T00:00:00+00:00",
+     "headline": "After Hours Most Active for Oct 7, 2022 : WIT, BAC, QQQ, AAPL, AUY, INFY, T, MSFT, PLTK, MIR, BTRS, AMZN",
+     "fts_rank": 8,
+     "recent_rank": 4
+    }
+   ]
+  },
+  {
+   "date": "2022-06-09",
+   "return": -0.036583,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 8751,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "Apple Stock: The Bull and Bear Cases Today",
+     "fts_rank": 7,
+     "recent_rank": 3
+    },
+    {
+     "id": 8755,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "Wall Street falls as growth stocks struggle with inflation reading in focus",
+     "fts_rank": 3,
+     "recent_rank": 7
+    },
+    {
+     "id": 8757,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "Apple (AAPL) Relies on Subsidiary to Manage Apple Pay Later",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 8750,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-Asian stocks track global shares lower, U.S. CPI in focus",
+     "fts_rank": 6,
+     "recent_rank": 2
+    },
+    {
+     "id": 8756,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "Apple pay-later foray blurs tech-finance boundary",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 8749,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "Buy Apple Stock Now To Profit From Second-Half Rally",
+     "fts_rank": 5,
+     "recent_rank": 1
+    },
+    {
+     "id": 8753,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "Best ETF Ideas for the Second Half of 2022",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 8754,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "After Hours Most Active for Jun 9, 2022 : KGC, MO, JD, MRO, ETWO, BABA, PFE, QQQ, ADPT, AAPL, DOCU, FOLD",
+     "fts_rank": 8,
+     "recent_rank": 6
+    },
+    {
+     "id": 8791,
+     "published_at": "2022-06-08T00:00:00+00:00",
+     "headline": "The Deeper Implications of Apple's (AAPL) Shift Towards Service Revenue",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 8768,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "China's smartphone makers chip away at Samsung, Apple's Russian market share",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 8752,
+     "published_at": "2022-06-09T00:00:00+00:00",
+     "headline": "BlackRock Owns These 3 High-Quality Stocks; Should You?",
+     "fts_rank": null,
+     "recent_rank": 4
+    }
+   ]
+  },
+  {
+   "date": "2023-09-06",
+   "return": -0.036051,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 1948,
+     "published_at": "2023-09-06T00:00:00+00:00",
+     "headline": "US STOCKS-Futures fall as inflation concerns resurface, investors await economic data",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 1931,
+     "published_at": "2023-09-06T00:00:00+00:00",
+     "headline": "Big Tech Companies Brace for EU Antitrust Clampdown",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 1928,
+     "published_at": "2023-09-06T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-Stocks fall, dollar and yields up after US services data",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 1936,
+     "published_at": "2023-09-06T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St slides as services data stokes inflation worries, Apple drags",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 1926,
+     "published_at": "2023-09-06T00:00:00+00:00",
+     "headline": "China Bans IPhone Use For Government Officials",
+     "fts_rank": 3,
+     "recent_rank": 3
+    },
+    {
+     "id": 1953,
+     "published_at": "2023-09-06T00:00:00+00:00",
+     "headline": "China bans govt officials from using iPhone for work -WSJ",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 1929,
+     "published_at": "2023-09-06T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St slides as economic data stokes inflation and interest rate worries",
+     "fts_rank": 5,
+     "recent_rank": 6
+    },
+    {
+     "id": 1927,
+     "published_at": "2023-09-06T00:00:00+00:00",
+     "headline": "Stocks Fall as Economic Strength May Keep Interest Rates Higher for Longer",
+     "fts_rank": 4,
+     "recent_rank": 4
+    },
+    {
+     "id": 1924,
+     "published_at": "2023-09-06T00:00:00+00:00",
+     "headline": "NVDA Stock: Nvidia Is Becoming the New Bitcoin",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 1950,
+     "published_at": "2023-09-06T00:00:00+00:00",
+     "headline": "US STOCKS-Futures fall as investors await more economic data to assess Fed rate path",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 1925,
+     "published_at": "2023-09-06T00:00:00+00:00",
+     "headline": "Wall St slides as economic data stokes inflation worries, Apple drags",
+     "fts_rank": 2,
+     "recent_rank": 2
+    },
+    {
+     "id": 1930,
+     "published_at": "2023-09-06T00:00:00+00:00",
+     "headline": "Strength in U.S. Economic News Boosts Bond Yields and Weighs on Stocks",
+     "fts_rank": null,
+     "recent_rank": 7
+    }
+   ]
+  },
+  {
+   "date": "2022-11-09",
+   "return": -0.033192,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 6469,
+     "published_at": "2022-11-09T00:00:00+00:00",
+     "headline": "Lawsuit claims Apple, Amazon colluded to raise iPhone, iPad prices",
+     "fts_rank": 1,
+     "recent_rank": 5
+    },
+    {
+     "id": 6486,
+     "published_at": "2022-11-08T00:00:00+00:00",
+     "headline": "Shares in Apple supplier Goertek tumble after client suspends order",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 6466,
+     "published_at": "2022-11-09T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-Asian shares fall ahead of U.S. CPI, crypto worries mount",
+     "fts_rank": 2,
+     "recent_rank": 2
+    },
+    {
+     "id": 6468,
+     "published_at": "2022-11-09T00:00:00+00:00",
+     "headline": "After Hours Most Active for Nov 9, 2022 : F, EW, FALN, BCE, AAPL, QQQ, BBD, U, INTC, MSFT, AMZN, PFE",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 6478,
+     "published_at": "2022-11-09T00:00:00+00:00",
+     "headline": "China, Hong Kong stocks fall as subdued data; midterm polls weigh",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 6467,
+     "published_at": "2022-11-09T00:00:00+00:00",
+     "headline": "Apple supplier Foxconn to update on outlook after China COVID curbs",
+     "fts_rank": 3,
+     "recent_rank": 3
+    },
+    {
+     "id": 6483,
+     "published_at": "2022-11-09T00:00:00+00:00",
+     "headline": "China, Hong Kong stocks fall on subdued data, U.S. midterm election uncertainty",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 6473,
+     "published_at": "2022-11-09T00:00:00+00:00",
+     "headline": "Disney (DIS) Q4 Earnings Miss Estimates, Revenues Rise Y/Y",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 6471,
+     "published_at": "2022-11-09T00:00:00+00:00",
+     "headline": "Apple To Begin Production Of AR Headset In March Next Year",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 6465,
+     "published_at": "2022-11-09T00:00:00+00:00",
+     "headline": "Should Investors Buy the Dip on Apple Stock?",
+     "fts_rank": 8,
+     "recent_rank": 1
+    },
+    {
+     "id": 6472,
+     "published_at": "2022-11-09T00:00:00+00:00",
+     "headline": "Bet on These Equity ETFs to Follow Warren Buffett",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 6470,
+     "published_at": "2022-11-09T00:00:00+00:00",
+     "headline": "Tesla stock hits 2-year low after Musk sells $4 bln worth of shares",
+     "fts_rank": null,
+     "recent_rank": 6
+    }
+   ]
+  },
+  {
+   "date": "2022-10-14",
+   "return": -0.032102,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 6880,
+     "published_at": "2022-10-14T00:00:00+00:00",
+     "headline": "Investing in This ETF Right Now Could Make You a Millionaire Retiree",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 6885,
+     "published_at": "2022-10-13T00:00:00+00:00",
+     "headline": "Apple Card To Allow Users Grow Daily Cash Rewards",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 6886,
+     "published_at": "2022-10-13T00:00:00+00:00",
+     "headline": "Financial Sector Update for 10/13/2022: NVEI, NVEI.TO, GS, AAPL, PGR",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 6899,
+     "published_at": "2022-10-13T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St falls as hot inflation data drives fears of big rate hike",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 6877,
+     "published_at": "2022-10-14T00:00:00+00:00",
+     "headline": "ROKU Expands The Roku Channel Internationally, Grows Library",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 6878,
+     "published_at": "2022-10-14T00:00:00+00:00",
+     "headline": "Apple workers vote to unionize second U.S. store",
+     "fts_rank": 6,
+     "recent_rank": 6
+    },
+    {
+     "id": 6893,
+     "published_at": "2022-10-13T00:00:00+00:00",
+     "headline": "Brazil court fines Apple, orders to sell iPhone with charger",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 6875,
+     "published_at": "2022-10-14T00:00:00+00:00",
+     "headline": "After Hours Most Active for Oct 14, 2022 : SMRT, RTO, PING, QQQ, HBAN, AAPL, AMZN, LBRT, C, VZ, INTC, TQQQ",
+     "fts_rank": 4,
+     "recent_rank": 3
+    },
+    {
+     "id": 6873,
+     "published_at": "2022-10-14T00:00:00+00:00",
+     "headline": "Banks Are Now as Leveraged as They Were Before the Great Recession, but Don't Panic",
+     "fts_rank": 3,
+     "recent_rank": 1
+    },
+    {
+     "id": 6876,
+     "published_at": "2022-10-14T00:00:00+00:00",
+     "headline": "Netflix (NFLX) Gears Up for Q3 Earnings: What's in the Cards?",
+     "fts_rank": 5,
+     "recent_rank": 4
+    },
+    {
+     "id": 6879,
+     "published_at": "2022-10-14T00:00:00+00:00",
+     "headline": "Is This Top Warren Buffett Dividend Stock a Buy Now?",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 6874,
+     "published_at": "2022-10-14T00:00:00+00:00",
+     "headline": "Friday's ETF with Unusual Volume: FCTR",
+     "fts_rank": null,
+     "recent_rank": 2
+    }
+   ]
+  },
+  {
+   "date": "2022-09-30",
+   "return": -0.031629,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 7069,
+     "published_at": "2022-09-30T00:00:00+00:00",
+     "headline": "TQQQ, GMOM: Big ETF Inflows",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 7084,
+     "published_at": "2022-09-29T00:00:00+00:00",
+     "headline": "Micron forecasts first-quarter revenue below estimates as demand worsens",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 7066,
+     "published_at": "2022-09-30T00:00:00+00:00",
+     "headline": "Dow Jones Bear Market: 2 Warren Buffett Stocks You Can Buy Today",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 7073,
+     "published_at": "2022-09-30T00:00:00+00:00",
+     "headline": "Apple Inc. (AAPL) Is a Trending Stock: Facts to Know Before Betting on It",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 7068,
+     "published_at": "2022-09-30T00:00:00+00:00",
+     "headline": "Apple NFTs: Everything You Need to Know",
+     "fts_rank": 5,
+     "recent_rank": 4
+    },
+    {
+     "id": 7091,
+     "published_at": "2022-09-29T00:00:00+00:00",
+     "headline": "Apple senior exec leaves iPhone maker after remark in viral video",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 7065,
+     "published_at": "2022-09-30T00:00:00+00:00",
+     "headline": "EXCLUSIVE-Senior Indonesian officials targeted by spyware last year \u2013 sources",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 7070,
+     "published_at": "2022-09-30T00:00:00+00:00",
+     "headline": "Noteworthy ETF Inflows: AOR, IVV, AAPL, MSFT",
+     "fts_rank": 6,
+     "recent_rank": 6
+    },
+    {
+     "id": 7067,
+     "published_at": "2022-09-30T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St posts third straight quarterly loss as inflation weighs, recession looms",
+     "fts_rank": 1,
+     "recent_rank": 3
+    },
+    {
+     "id": 7077,
+     "published_at": "2022-09-30T00:00:00+00:00",
+     "headline": "Japanese stocks fall in worst month since March 2020",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 7071,
+     "published_at": "2022-09-30T00:00:00+00:00",
+     "headline": "5 Ways to Stress-Test a Stock in a Bear Market",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 7072,
+     "published_at": "2022-09-30T00:00:00+00:00",
+     "headline": "After Hours Most Active for Sep 30, 2022 : PCG, EQT, FYBR, HAIN, CHNG, DRE, IXUS, AAPL, QQQ, MCW, AEO, T",
+     "fts_rank": 7,
+     "recent_rank": 8
+    }
+   ]
+  },
+  {
+   "date": "2022-12-28",
+   "return": -0.030604,
+   "is_driver_day": true,
+   "candidates": [
+    {
+     "id": 5826,
+     "published_at": "2022-12-28T00:00:00+00:00",
+     "headline": "3 Companies With Rock-Solid Free Cash Flow",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 5822,
+     "published_at": "2022-12-28T00:00:00+00:00",
+     "headline": "US STOCKS-U.S. stocks fall on recession fears, weak oil prices",
+     "fts_rank": 2,
+     "recent_rank": 3
+    },
+    {
+     "id": 5841,
+     "published_at": "2022-12-28T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St rises on boost from growth stocks, China reopening",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 5821,
+     "published_at": "2022-12-28T00:00:00+00:00",
+     "headline": "Why Apple Stock Was Sliding Today",
+     "fts_rank": 5,
+     "recent_rank": 2
+    },
+    {
+     "id": 5846,
+     "published_at": "2022-12-27T00:00:00+00:00",
+     "headline": "Apple (AAPL) Dips More Than Broader Markets: What You Should Know",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 5825,
+     "published_at": "2022-12-28T00:00:00+00:00",
+     "headline": "Tesla shares record rare jump this month on the way to worst year",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 5823,
+     "published_at": "2022-12-28T00:00:00+00:00",
+     "headline": "US STOCKS-U.S. stocks end lower on mixed economic data, recession fears",
+     "fts_rank": 6,
+     "recent_rank": 4
+    },
+    {
+     "id": 5845,
+     "published_at": "2022-12-27T00:00:00+00:00",
+     "headline": "IPhone Smartphone, Apple Watch Sending Out False Distress Signals",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 5829,
+     "published_at": "2022-12-28T00:00:00+00:00",
+     "headline": "After Hours Most Active for Dec 28, 2022 : AMC, VST, NU, VZ, KIM, EGHT, AAPL, T, BUG, TQQQ, AMZN, TSLA",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 5824,
+     "published_at": "2022-12-28T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St reverses gains as energy, growth shares drag",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 5827,
+     "published_at": "2022-12-28T00:00:00+00:00",
+     "headline": "US STOCKS-U.S. stocks drop on recession fears, Nasdaq closes at new bear market low",
+     "fts_rank": 1,
+     "recent_rank": 8
+    },
+    {
+     "id": 5820,
+     "published_at": "2022-12-28T00:00:00+00:00",
+     "headline": "Got $1,000? 2 Smart Stocks to Buy Hand Over Fist",
+     "fts_rank": null,
+     "recent_rank": 1
+    }
+   ]
+  },
+  {
+   "date": "2022-10-27",
+   "return": -0.030567,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 6659,
+     "published_at": "2022-10-27T00:00:00+00:00",
+     "headline": "Apple (AAPL) Q4 Earnings and Revenues Beat Estimates",
+     "fts_rank": 2,
+     "recent_rank": 5
+    },
+    {
+     "id": 6688,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "US STOCKS-Nasdaq falls as weak Big Tech earnings fan growth concerns; Visa buoys Dow",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 6654,
+     "published_at": "2022-10-27T00:00:00+00:00",
+     "headline": "Apple (AAPL) Q4 2022 Earnings Call Transcript",
+     "fts_rank": 5,
+     "recent_rank": 1
+    },
+    {
+     "id": 6695,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "Will iPhone Revenue Boost Apple (AAPL) Stock?",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 6658,
+     "published_at": "2022-10-27T00:00:00+00:00",
+     "headline": "AAPL, PINS Beat; AMZN, INTC Mixed but Down",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 6660,
+     "published_at": "2022-10-27T00:00:00+00:00",
+     "headline": "The Apple Report: Tech-Gadget Giant \u201cPhones It In\u201d",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 6673,
+     "published_at": "2022-10-27T00:00:00+00:00",
+     "headline": "Apple (AAPL) Q4 2022 Earnings: What to Expect",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 6657,
+     "published_at": "2022-10-27T00:00:00+00:00",
+     "headline": "Good Stocks To Invest In Today? 2 S&P 500 Stocks To Watch",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 6662,
+     "published_at": "2022-10-27T00:00:00+00:00",
+     "headline": "Apple falls short on iPhone sales, stock falls despite earnings beat",
+     "fts_rank": 1,
+     "recent_rank": 8
+    },
+    {
+     "id": 6655,
+     "published_at": "2022-10-27T00:00:00+00:00",
+     "headline": "ANALYSIS-For Twitter boss Elon Musk, now comes the hard part",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 6710,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "Apple\u2019s (NASDAQ:AAPL) Q4 Preview: Revenues to Hit Estimates, Says Analyst",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 6661,
+     "published_at": "2022-10-27T00:00:00+00:00",
+     "headline": "Apple Inc. Q4 Income Advances, Beats estimates",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 6666,
+     "published_at": "2022-10-27T00:00:00+00:00",
+     "headline": "Apple (AAPL) Earnings: Previewing a Potential Options Trade",
+     "fts_rank": 6,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2022-06-28",
+   "return": -0.029426,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 8480,
+     "published_at": "2022-06-28T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street stumbles as consumer pessimism stokes growth fears",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 8481,
+     "published_at": "2022-06-28T00:00:00+00:00",
+     "headline": "Why Qualcomm Surged Today Even as the Nasdaq Plunged",
+     "fts_rank": 2,
+     "recent_rank": 6
+    },
+    {
+     "id": 8477,
+     "published_at": "2022-06-28T00:00:00+00:00",
+     "headline": "Why Apple Was a Sour Stock on Tuesday",
+     "fts_rank": 7,
+     "recent_rank": 2
+    },
+    {
+     "id": 8479,
+     "published_at": "2022-06-28T00:00:00+00:00",
+     "headline": "Most Interesting New ETFs of 1H22",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 8476,
+     "published_at": "2022-06-28T00:00:00+00:00",
+     "headline": "Alphabet (GOOGL) Boosts YouTube Music With New Features",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 8483,
+     "published_at": "2022-06-28T00:00:00+00:00",
+     "headline": "US Supreme Court Rejects Apple Attempts To Restart Qualcomm Patent Dispute",
+     "fts_rank": 8,
+     "recent_rank": 8
+    },
+    {
+     "id": 8478,
+     "published_at": "2022-06-28T00:00:00+00:00",
+     "headline": "Dow Tumbles Nearly 500 Points as Nike Guidance Spooks Investors",
+     "fts_rank": 1,
+     "recent_rank": 3
+    },
+    {
+     "id": 8487,
+     "published_at": "2022-06-28T00:00:00+00:00",
+     "headline": "Apple (AAPL) Likely to Launch New Macs With Four M2 Chip Variants",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 8482,
+     "published_at": "2022-06-28T00:00:00+00:00",
+     "headline": "3 Stocks That Warren Buffett Can't Get Enough Of",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 8486,
+     "published_at": "2022-06-28T00:00:00+00:00",
+     "headline": "Apple (AAPL) Boosts Content Portfolio With Animal Pictures Deal",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 8502,
+     "published_at": "2022-06-27T00:00:00+00:00",
+     "headline": "Apple (AAPL) Flat As Market Sinks: What You Should Know",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 8484,
+     "published_at": "2022-06-28T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street tumbles as consumer data fuels recession worries",
+     "fts_rank": 3,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2023-09-07",
+   "return": -0.029007,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 1895,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "Apple tumbles, drags Wall Street lower as fears grow over China iPhone curbs",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 1877,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "Needham Reiterates Apple (AAPL) Buy Recommendation",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 1874,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "China moves to widen state employee iPhone curbs - sources",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 1871,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "TSMC shares fall after reports of China iPhone curbs",
+     "fts_rank": 6,
+     "recent_rank": 2
+    },
+    {
+     "id": 1872,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "Stocks Slump Before the Open as Inflation and Interest Rate Worries Return",
+     "fts_rank": 7,
+     "recent_rank": 3
+    },
+    {
+     "id": 1876,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "XLK ETF: This Long-Term Winner Still Looks Attractive",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 1873,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "Pre-Market Most Active for Sep 7, 2023 : SQQQ, TQQQ, AAPL, CBAY, AMC, TSLA, NVDA, AI, NIO, PLTR, CHPT, LYG",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 1881,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "Shares of Apple suppliers fall on reports of China iPhone curbs",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 1891,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "US STOCKS-S&P, Nasdaq fall as Apple drags, jobless claims data fuels rate jitters",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 1898,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "Apple tumbles, drags tech stocks lower as fears grow over China iPhone curbs",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 1903,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "US STOCKS-S&P 500, Nasdaq futures slip on inflation concerns; Fed speakers in focus",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 1870,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "Stock Market News for Sep 7, 2023",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 1875,
+     "published_at": "2023-09-07T00:00:00+00:00",
+     "headline": "US STOCKS-S&P 500, Nasdaq futures fall on inflation concerns; Fed speakers in focus",
+     "fts_rank": 1,
+     "recent_rank": 6
+    }
+   ]
+  },
+  {
+   "date": "2022-11-28",
+   "return": -0.026728,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 6233,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-Asia shares take comfort in China property rally",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 6232,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "China decoupling takes one step forward, one back",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 6237,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "US STOCKS-Apple, energy shares drag Wall St lower amid China COVID protests",
+     "fts_rank": 6,
+     "recent_rank": 8
+    },
+    {
+     "id": 6236,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "Behind Foxconn\u2019s China woes: mistrust, miscommunication, COVID curbs",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 6254,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "Apple's Extreme Dependence on China Can No Longer Be Ignored",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 6248,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "Apple Falls on China Fears, but This Nasdaq Stock Is Soaring Monday",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 6252,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "Apple In For Shortfall Of IPhone Pro Units Due To China Protest?",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 6255,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St futures slip on China COVID woes; Apple falls",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 6231,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "Musk says Apple mostly stopped advertising on Twitter",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 6230,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street ends down sharply, hit by Apple and China worries",
+     "fts_rank": 5,
+     "recent_rank": 1
+    },
+    {
+     "id": 6235,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "Disney CEO Iger makes profitable streaming a priority",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 6234,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "Investors hope Beijing will lift COVID curbs faster as protests rattle markets",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 6239,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street drops, weighed down by Apple and China worries",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 6246,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St set to open lower on China's anti-lockdown protests; Apple slips",
+     "fts_rank": 7,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2023-08-24",
+   "return": -0.026714,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 2113,
+     "published_at": "2023-08-24T00:00:00+00:00",
+     "headline": "Stock Market News for Aug 24, 2023",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 2120,
+     "published_at": "2023-08-24T00:00:00+00:00",
+     "headline": "The Ultimate Warren Buffett Stock to Buy Right Now",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 2118,
+     "published_at": "2023-08-24T00:00:00+00:00",
+     "headline": "These Are the ONLY 3 Blue-Chip Stocks to Consider in August 2023",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 2135,
+     "published_at": "2023-08-23T00:00:00+00:00",
+     "headline": "1 Supercharged Growth Stock That's a Shoo-in to Join Apple and Microsoft in the $2 Trillion Club by 2028",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 2119,
+     "published_at": "2023-08-24T00:00:00+00:00",
+     "headline": "3 Vanguard ETFs That Could Help You Retire a Millionaire",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 2115,
+     "published_at": "2023-08-24T00:00:00+00:00",
+     "headline": "Stocks Tumble on a Sell-Off in Mega-Cap Tech Stocks",
+     "fts_rank": 4,
+     "recent_rank": 3
+    },
+    {
+     "id": 2130,
+     "published_at": "2023-08-24T00:00:00+00:00",
+     "headline": "Zacks Investment Ideas feature highlights: Apple, Nasdaq 100 Index ETF, Super Micro Computer and S&P 500 Index ETF",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 2117,
+     "published_at": "2023-08-24T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St falls as Nvidia boost fades, caution sets in ahead of Powell speech",
+     "fts_rank": 5,
+     "recent_rank": 5
+    },
+    {
+     "id": 2114,
+     "published_at": "2023-08-24T00:00:00+00:00",
+     "headline": "Unusual Put Option Trade in Apple (AAPL) Worth $1,776.30K",
+     "fts_rank": 1,
+     "recent_rank": 2
+    },
+    {
+     "id": 2134,
+     "published_at": "2023-08-23T00:00:00+00:00",
+     "headline": "Amid Slowing Growth, Apple's Ace in the Hole Is More Important Than Ever",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 2116,
+     "published_at": "2023-08-24T00:00:00+00:00",
+     "headline": "The Next Frontier of Tech Investment: 7 Augmented Reality (AR) Stocks for Your Watch List",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 2153,
+     "published_at": "2023-08-23T00:00:00+00:00",
+     "headline": "1 Thing Investors Should Know About Apple's Revenue in 2023",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 2124,
+     "published_at": "2023-08-24T00:00:00+00:00",
+     "headline": "Guru Fundamental Report for AAPL - Warren Buffett",
+     "fts_rank": 6,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2023-02-21",
+   "return": -0.026421,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 5018,
+     "published_at": "2023-02-20T00:00:00+00:00",
+     "headline": "Foxconn chairman to visit COVID-hit iPhone plant in China -source",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 5008,
+     "published_at": "2023-02-21T00:00:00+00:00",
+     "headline": "3 ETFs to Buy for a Tech Stock Rebound",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 5012,
+     "published_at": "2023-02-21T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St set for lower open as Walmart, Home Depot forecasts disappoint",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 5011,
+     "published_at": "2023-02-21T00:00:00+00:00",
+     "headline": "Which \u2018MATANA\u2019 Stocks Have the Most Upside?",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 5005,
+     "published_at": "2023-02-21T00:00:00+00:00",
+     "headline": "After Hours Most Active for Feb 21, 2023 : VALE, ITUB, SHV, SHOP, AAPL, PFF, ONEM, AMZN, QQQ, MRO, BAC, NI",
+     "fts_rank": 5,
+     "recent_rank": 3
+    },
+    {
+     "id": 5014,
+     "published_at": "2023-02-21T00:00:00+00:00",
+     "headline": "US STOCKS-Futures fall as Home Depot outlook disappoints",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 5010,
+     "published_at": "2023-02-21T00:00:00+00:00",
+     "headline": "Anti-ESG crusader Ramaswamy launches U.S. presidential bid",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 5003,
+     "published_at": "2023-02-21T00:00:00+00:00",
+     "headline": "Foxconn chairman to visit COVID-hit iPhone plant in China -source",
+     "fts_rank": 1,
+     "recent_rank": 1
+    },
+    {
+     "id": 5004,
+     "published_at": "2023-02-21T00:00:00+00:00",
+     "headline": "Why Apple Stock Tasted Sour on Tuesday",
+     "fts_rank": 4,
+     "recent_rank": 2
+    },
+    {
+     "id": 5006,
+     "published_at": "2023-02-21T00:00:00+00:00",
+     "headline": "Biden admin won't veto ITC's Apple Watch import ban ruling",
+     "fts_rank": 6,
+     "recent_rank": 4
+    },
+    {
+     "id": 5009,
+     "published_at": "2023-02-21T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St tumbles as Walmart, Home Depot forecasts disappoint",
+     "fts_rank": 2,
+     "recent_rank": 6
+    }
+   ]
+  },
+  {
+   "date": "2023-10-26",
+   "return": -0.025307,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 871,
+     "published_at": "2023-10-26T00:00:00+00:00",
+     "headline": "1 Simple Reason Warren Buffett Prefers to Buy Apple Rather Than Tesla Stock",
+     "fts_rank": 6,
+     "recent_rank": 2
+    },
+    {
+     "id": 873,
+     "published_at": "2023-10-26T00:00:00+00:00",
+     "headline": "Intel's Turnaround Was Just Dealt a Devastating Blow",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 870,
+     "published_at": "2023-10-26T00:00:00+00:00",
+     "headline": "Is WisdomTree U.S. Quality Dividend Growth ETF (DGRW) a Strong ETF Right Now?",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 896,
+     "published_at": "2023-10-25T00:00:00+00:00",
+     "headline": "Apple (NASDAQ:AAPL): This \u201cMagnificent Seven\u201d Stock is Too Unloved",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 926,
+     "published_at": "2023-10-25T00:00:00+00:00",
+     "headline": "US STOCKS-Nasdaq, S&P 500 futures fall as Alphabet leads retreat in mega-cap stocks",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 918,
+     "published_at": "2023-10-25T00:00:00+00:00",
+     "headline": "Apple hikes price of Apple TV+, Apple News+",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 876,
+     "published_at": "2023-10-26T00:00:00+00:00",
+     "headline": "Apple Reports After the Close on 11/2 -- Options Contracts Expire the Next Day",
+     "fts_rank": 8,
+     "recent_rank": 7
+    },
+    {
+     "id": 874,
+     "published_at": "2023-10-26T00:00:00+00:00",
+     "headline": "Meet the S&P 500\u2019s 3 most hated companies",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 908,
+     "published_at": "2023-10-25T00:00:00+00:00",
+     "headline": "US STOCKS-Nasdaq, S&P 500 fall as Alphabet slumps",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 904,
+     "published_at": "2023-10-25T00:00:00+00:00",
+     "headline": "Huawei's China smartphone sales surge in Q3 as Apple declines - research firms",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 872,
+     "published_at": "2023-10-26T00:00:00+00:00",
+     "headline": "The New CPU King? Outperforming Intel, Advanced Micro Devices, and Apple CPUs?",
+     "fts_rank": 7,
+     "recent_rank": 3
+    },
+    {
+     "id": 875,
+     "published_at": "2023-10-26T00:00:00+00:00",
+     "headline": "The Magnificent 7 Stocks for October: 4 to Buy and 3 to Skip",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 877,
+     "published_at": "2023-10-26T00:00:00+00:00",
+     "headline": "Consumer Discretionary vs. Staples: What ETFs Can Tell Us",
+     "fts_rank": null,
+     "recent_rank": 8
+    }
+   ]
+  },
+  {
+   "date": "2022-12-06",
+   "return": -0.025032,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 6090,
+     "published_at": "2022-12-06T00:00:00+00:00",
+     "headline": "TSMC expects $10 billion in annual revenue from Arizona fabs",
+     "fts_rank": 6,
+     "recent_rank": 4
+    },
+    {
+     "id": 6089,
+     "published_at": "2022-12-06T00:00:00+00:00",
+     "headline": "US STOCKS-S&P posts 4th straight decline as recession talk weighs on Wall Street",
+     "fts_rank": 5,
+     "recent_rank": 3
+    },
+    {
+     "id": 6088,
+     "published_at": "2022-12-06T00:00:00+00:00",
+     "headline": "Why Meta Platforms Stock Dove Today",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 6091,
+     "published_at": "2022-12-06T00:00:00+00:00",
+     "headline": "After Hours Most Active for Dec 6, 2022 : FERG, AMZN, SMMT, AAPL, STOR, GOOGL, CSCO, ROSS, QQQ, PSPC, EOCW, BFAC",
+     "fts_rank": 7,
+     "recent_rank": 5
+    },
+    {
+     "id": 6092,
+     "published_at": "2022-12-06T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street slumps on further recession talk, S&P posts 4th decline",
+     "fts_rank": 1,
+     "recent_rank": 6
+    },
+    {
+     "id": 6087,
+     "published_at": "2022-12-06T00:00:00+00:00",
+     "headline": "Apple is sued by women who say AirTag lets stalkers track victims",
+     "fts_rank": 4,
+     "recent_rank": 1
+    },
+    {
+     "id": 6093,
+     "published_at": "2022-12-06T00:00:00+00:00",
+     "headline": "Why Apple, Salesforce, and Qualcomm Stocks Are Volatile Today",
+     "fts_rank": 8,
+     "recent_rank": 7
+    },
+    {
+     "id": 6118,
+     "published_at": "2022-12-05T00:00:00+00:00",
+     "headline": "Foxconn's IPhone Plant In China May Resume Full Production In Late Dec- Early Jan.",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 6094,
+     "published_at": "2022-12-06T00:00:00+00:00",
+     "headline": "Netflix co-CEO yet to see a path to profitability in 'renting big sports'",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 6096,
+     "published_at": "2022-12-06T00:00:00+00:00",
+     "headline": "Here is What to Know Beyond Why Apple Inc. (AAPL) is a Trending Stock",
+     "fts_rank": 2,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2022-12-22",
+   "return": -0.023486,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 5897,
+     "published_at": "2022-12-22T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street slides as economic data fans rate hike worries",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 5893,
+     "published_at": "2022-12-22T00:00:00+00:00",
+     "headline": "Best Blue Chip Stocks To Buy Right Now? 3 In Focus",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 5887,
+     "published_at": "2022-12-22T00:00:00+00:00",
+     "headline": "Noteworthy Thursday Option Activity: CHTR, AAPL, ENPH",
+     "fts_rank": 4,
+     "recent_rank": 1
+    },
+    {
+     "id": 5889,
+     "published_at": "2022-12-22T00:00:00+00:00",
+     "headline": "AAPL February 2023 Options Begin Trading",
+     "fts_rank": 5,
+     "recent_rank": 3
+    },
+    {
+     "id": 5888,
+     "published_at": "2022-12-22T00:00:00+00:00",
+     "headline": "TQQQ, MSFU: Big ETF Inflows",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 5910,
+     "published_at": "2022-12-21T00:00:00+00:00",
+     "headline": "Corporate China struggles with supply snags, demand slump as COVID cases spread",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 5895,
+     "published_at": "2022-12-22T00:00:00+00:00",
+     "headline": "India panel recommends digital competition act to rein in Big Tech",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 5911,
+     "published_at": "2022-12-21T00:00:00+00:00",
+     "headline": "Apple (AAPL) Set to Shift Some MacBook Production to Vietnam",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 5894,
+     "published_at": "2022-12-22T00:00:00+00:00",
+     "headline": "IWV, AAPL, MSFT, XOM: Large Inflows Detected at ETF",
+     "fts_rank": 7,
+     "recent_rank": 7
+    },
+    {
+     "id": 5890,
+     "published_at": "2022-12-22T00:00:00+00:00",
+     "headline": "Apple Watches violate AliveCor patents but import ban on hold -U.S. ITC",
+     "fts_rank": 6,
+     "recent_rank": 4
+    },
+    {
+     "id": 5891,
+     "published_at": "2022-12-22T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street dives amid Fed rate hike worries, chipmaker woes",
+     "fts_rank": 2,
+     "recent_rank": 5
+    }
+   ]
+  },
+  {
+   "date": "2023-09-26",
+   "return": -0.023309,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 1411,
+     "published_at": "2023-09-26T00:00:00+00:00",
+     "headline": "U.S. sues Amazon.com for breaking antitrust law and harming consumers",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 1430,
+     "published_at": "2023-09-26T00:00:00+00:00",
+     "headline": "US STOCKS-Futures drop as rate worries keep Treasury yields near recent peaks",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 1450,
+     "published_at": "2023-09-25T00:00:00+00:00",
+     "headline": "Investors Heavily Search Apple Inc. (AAPL): Here is What You Need to Know",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 1443,
+     "published_at": "2023-09-25T00:00:00+00:00",
+     "headline": "Morgan Stanley Reiterates Apple (AAPL) Overweight Recommendation",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 1413,
+     "published_at": "2023-09-26T00:00:00+00:00",
+     "headline": "Notable Tuesday Option Activity: AAPL, AMZN, MRNA",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 1433,
+     "published_at": "2023-09-26T00:00:00+00:00",
+     "headline": "US STOCKS-Futures drop as rate concerns keep Treasury yields elevated",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 1412,
+     "published_at": "2023-09-26T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St slides as rate concerns keep Treasury yields near 16-year peak",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 1446,
+     "published_at": "2023-09-25T00:00:00+00:00",
+     "headline": "US STOCKS-S&P 500, Nasdaq gain as megacaps rebound; rate concerns prevail",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 1408,
+     "published_at": "2023-09-26T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St slides over 1% as Treasury yields hover at 16-year peaks",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 1415,
+     "published_at": "2023-09-26T00:00:00+00:00",
+     "headline": "Stocks Tumble as Confidence in the U.S. Economic Outlook Wanes",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 1423,
+     "published_at": "2023-09-26T00:00:00+00:00",
+     "headline": "B of A Securities Reiterates Apple (AAPL) Neutral Recommendation",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 1410,
+     "published_at": "2023-09-26T00:00:00+00:00",
+     "headline": "Stocks Retreat on U.S. Economic Concerns",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 1409,
+     "published_at": "2023-09-26T00:00:00+00:00",
+     "headline": "Palo Alto Networks and 2 More Growth Stocks to Buy on the Dip",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 1426,
+     "published_at": "2023-09-26T00:00:00+00:00",
+     "headline": "French authorities received a software update for Apple's iPhone 12 - ministry source",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 1414,
+     "published_at": "2023-09-26T00:00:00+00:00",
+     "headline": "How to Invest in Big Tech\u2019s AI Chatbot Craze",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 1449,
+     "published_at": "2023-09-25T00:00:00+00:00",
+     "headline": "Why Apple's (AAPL) iPhone 15 Will Boost 2024 Revenue",
+     "fts_rank": 1,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2022-08-22",
+   "return": -0.022963,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 7653,
+     "published_at": "2022-08-22T00:00:00+00:00",
+     "headline": "GE workers in Alabama launch union organizing campaign",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 7651,
+     "published_at": "2022-08-22T00:00:00+00:00",
+     "headline": "Taiwan July export orders unexpectedly slip, outlook mixed",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 7658,
+     "published_at": "2022-08-22T00:00:00+00:00",
+     "headline": "US STOCKS-Nasdaq slumps more than 2% on fears of aggressive Fed",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 7656,
+     "published_at": "2022-08-22T00:00:00+00:00",
+     "headline": "Apple expands self-repair support to MacBooks",
+     "fts_rank": 7,
+     "recent_rank": 8
+    },
+    {
+     "id": 7654,
+     "published_at": "2022-08-22T00:00:00+00:00",
+     "headline": "Former Apple car engineer pleads guilty to trade secret theft",
+     "fts_rank": 6,
+     "recent_rank": 6
+    },
+    {
+     "id": 7659,
+     "published_at": "2022-08-22T00:00:00+00:00",
+     "headline": "Pre-Market Most Active for Aug 22, 2022 : AMC, SQQQ, MSPR, TQQQ, BBBY, GCT, PRTY, AAPL, CCL, SNAP, SGFY, F",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 7649,
+     "published_at": "2022-08-22T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street ends sharply lower on fears of aggressive Fed",
+     "fts_rank": 4,
+     "recent_rank": 1
+    },
+    {
+     "id": 7650,
+     "published_at": "2022-08-22T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St slumps more than 1% on fears of aggressive Fed",
+     "fts_rank": 2,
+     "recent_rank": 2
+    },
+    {
+     "id": 7652,
+     "published_at": "2022-08-22T00:00:00+00:00",
+     "headline": "After Hours Most Active for Aug 22, 2022 : APE, CSX, BAC, MSFT, AAPL, VTWO, WEN, C, GM, IBKR, INFY, LUMN",
+     "fts_rank": 5,
+     "recent_rank": 4
+    },
+    {
+     "id": 7655,
+     "published_at": "2022-08-22T00:00:00+00:00",
+     "headline": "Stock Market News for Aug 22, 2022",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 7663,
+     "published_at": "2022-08-22T00:00:00+00:00",
+     "headline": "US STOCKS-Futures drop as rate hike worries persist",
+     "fts_rank": 3,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2022-11-21",
+   "return": -0.021677,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 6331,
+     "published_at": "2022-11-21T00:00:00+00:00",
+     "headline": "Why Apple Stock Traded Lower on Monday",
+     "fts_rank": 2,
+     "recent_rank": 6
+    },
+    {
+     "id": 6328,
+     "published_at": "2022-11-21T00:00:00+00:00",
+     "headline": "Carl Icahn holds short position in GameStop - Bloomberg News",
+     "fts_rank": 6,
+     "recent_rank": 3
+    },
+    {
+     "id": 6330,
+     "published_at": "2022-11-21T00:00:00+00:00",
+     "headline": "SPY, SDD: Big ETF Inflows",
+     "fts_rank": 8,
+     "recent_rank": 5
+    },
+    {
+     "id": 6333,
+     "published_at": "2022-11-21T00:00:00+00:00",
+     "headline": "The Safest and Riskiest FAANG Stocks to Buy Right Now",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 6335,
+     "published_at": "2022-11-21T00:00:00+00:00",
+     "headline": "7 Must-Own Safe Havens as Market Selloff Accelerates",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 6327,
+     "published_at": "2022-11-21T00:00:00+00:00",
+     "headline": "After Hours Most Active for Nov 21, 2022 : BEKE, BAC, INFY, EXPD, CSX, AAPL, PAGP, TCOM, AMZN, XPEV, EW, YUMC",
+     "fts_rank": 1,
+     "recent_rank": 2
+    },
+    {
+     "id": 6326,
+     "published_at": "2022-11-21T00:00:00+00:00",
+     "headline": "Should Vanguard Mega Cap ETF (MGC) Be on Your Investing Radar?",
+     "fts_rank": 5,
+     "recent_rank": 1
+    },
+    {
+     "id": 6329,
+     "published_at": "2022-11-21T00:00:00+00:00",
+     "headline": "Disney Minus: The 1 Number Behind Iger's Return, and Why His Encore is No Sure Blockbuster",
+     "fts_rank": 7,
+     "recent_rank": 4
+    },
+    {
+     "id": 6332,
+     "published_at": "2022-11-21T00:00:00+00:00",
+     "headline": "3 Stocks to Avoid This Week",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 6338,
+     "published_at": "2022-11-20T00:00:00+00:00",
+     "headline": "7 Top-Rated Large-Cap Stocks to Buy and Hold",
+     "fts_rank": 4,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2022-11-29",
+   "return": -0.021082,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 6252,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "Apple In For Shortfall Of IPhone Pro Units Due To China Protest?",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 6211,
+     "published_at": "2022-11-29T00:00:00+00:00",
+     "headline": "After Hours Most Active for Nov 29, 2022 : EW, CRWD, GOOGL, GOOG, AMZN, V, CSX, AAPL, NI, VICI, INFY, MOS",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 6255,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St futures slip on China COVID woes; Apple falls",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 6208,
+     "published_at": "2022-11-29T00:00:00+00:00",
+     "headline": "Twitter blue verified set to launch on Apple's iOS app - Information",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 6206,
+     "published_at": "2022-11-29T00:00:00+00:00",
+     "headline": "7 Stocks to Buy That Will Make You a Multi-Millionaire",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 6220,
+     "published_at": "2022-11-29T00:00:00+00:00",
+     "headline": "Why Long-Term Investors Should Be Buying Apple (AAPL) on the Dip",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 6207,
+     "published_at": "2022-11-29T00:00:00+00:00",
+     "headline": "ANALYSIS-Apple supply chain data shows receding exposure to China as risks mount",
+     "fts_rank": 2,
+     "recent_rank": 3
+    },
+    {
+     "id": 6209,
+     "published_at": "2022-11-29T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-Stocks dip while U.S. crude gains on China hopes",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 6248,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "Apple Falls on China Fears, but This Nasdaq Stock Is Soaring Monday",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 6239,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street drops, weighed down by Apple and China worries",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 6212,
+     "published_at": "2022-11-29T00:00:00+00:00",
+     "headline": "US STOCKS-S&P 500 ends down as Apple dips and traders eye Powell speech",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 6230,
+     "published_at": "2022-11-28T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street ends down sharply, hit by Apple and China worries",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 6205,
+     "published_at": "2022-11-29T00:00:00+00:00",
+     "headline": "Why Apple Stock Fell Today",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 6210,
+     "published_at": "2022-11-29T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street dips as growth shares offset energy gains",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 6215,
+     "published_at": "2022-11-29T00:00:00+00:00",
+     "headline": "Apple's iPhone Pro shipments may fall 20 mln units short of estimates - analyst",
+     "fts_rank": 3,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2022-09-21",
+   "return": -0.020456,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 7247,
+     "published_at": "2022-09-20T00:00:00+00:00",
+     "headline": "Why Investors Found Apple Stock Tempting Today",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 7249,
+     "published_at": "2022-09-20T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street falls as focus turns on Fed",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 7240,
+     "published_at": "2022-09-21T00:00:00+00:00",
+     "headline": "Where Will Apple Be in 5 Years?",
+     "fts_rank": 7,
+     "recent_rank": 6
+    },
+    {
+     "id": 7265,
+     "published_at": "2022-09-20T00:00:00+00:00",
+     "headline": "Why Apple's iPhone 14 Could Be a Blockbuster",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 7246,
+     "published_at": "2022-09-21T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street rises ahead of Fed rate-hike decision",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 7238,
+     "published_at": "2022-09-21T00:00:00+00:00",
+     "headline": "After Hours Most Active for Sep 21, 2022 : TQQQ, BHC, LUMN, AAPL, SQQQ, HST, DTP, CRBG, CMCSA, T, QQQ, PCG",
+     "fts_rank": 5,
+     "recent_rank": 4
+    },
+    {
+     "id": 7239,
+     "published_at": "2022-09-21T00:00:00+00:00",
+     "headline": "Notable Wednesday Option Activity: AAPL, DRI, GIS",
+     "fts_rank": 6,
+     "recent_rank": 5
+    },
+    {
+     "id": 7236,
+     "published_at": "2022-09-21T00:00:00+00:00",
+     "headline": "2 Top Buffett Stocks To Buy and Hold for the Long Haul",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 7241,
+     "published_at": "2022-09-21T00:00:00+00:00",
+     "headline": "Warren Buffett Is Sitting On $168 Billion In Unrealized Gains From These 4 Stocks",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 7235,
+     "published_at": "2022-09-21T00:00:00+00:00",
+     "headline": "Should Vanguard Mega Cap ETF (MGC) Be on Your Investing Radar?",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 7237,
+     "published_at": "2022-09-21T00:00:00+00:00",
+     "headline": "3 Tech Stocks to Buy on the Dip, or You\u2019ll be Kicking Yourself Later",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 7252,
+     "published_at": "2022-09-20T00:00:00+00:00",
+     "headline": "Apple (AAPL) Gains As Market Dips: What You Should Know",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 7242,
+     "published_at": "2022-09-21T00:00:00+00:00",
+     "headline": "Excellence Capitalism & Anti-ESG ETFs",
+     "fts_rank": null,
+     "recent_rank": 8
+    }
+   ]
+  },
+  {
+   "date": "2023-09-20",
+   "return": -0.020157,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 1532,
+     "published_at": "2023-09-20T00:00:00+00:00",
+     "headline": "Apple Stock: Extending Lead Times Sign of Strong Demand for iPhone 15, Says Goldman Sachs",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 1520,
+     "published_at": "2023-09-20T00:00:00+00:00",
+     "headline": "3 Semiconductor Stocks That Should Be on Every Investor\u2019s Radar This Fall",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 1517,
+     "published_at": "2023-09-20T00:00:00+00:00",
+     "headline": "Will Apple Lose its Crown of Having the Largest Market Cap?",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 1522,
+     "published_at": "2023-09-20T00:00:00+00:00",
+     "headline": "7 S&P 500 Stocks That Should Be on Every Investor\u2019s Radar This Fall",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 1547,
+     "published_at": "2023-09-19T00:00:00+00:00",
+     "headline": "Barclays Reiterates Apple (AAPL) Equal-Weight Recommendation",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 1525,
+     "published_at": "2023-09-20T00:00:00+00:00",
+     "headline": "Apple France workers call strike ahead of iPhone 15 launch",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 1521,
+     "published_at": "2023-09-20T00:00:00+00:00",
+     "headline": "Down 17%, Should Investors Buy the September Dip in This FAANG Stock?",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 1519,
+     "published_at": "2023-09-20T00:00:00+00:00",
+     "headline": "Top Analyst Reports for Apple, Bank of America, Cisco & Others",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 1518,
+     "published_at": "2023-09-20T00:00:00+00:00",
+     "headline": "3 AI Chip Stocks That Should Be on Every Investor\u2019s Radar This Fall",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 1523,
+     "published_at": "2023-09-20T00:00:00+00:00",
+     "headline": "Wall Street closes lower after Fed holds rates steady, warns of higher for longer",
+     "fts_rank": 3,
+     "recent_rank": 8
+    },
+    {
+     "id": 1516,
+     "published_at": "2023-09-20T00:00:00+00:00",
+     "headline": "US STOCKS-S&P, Dow rise as yields slip ahead of Fed rate verdict",
+     "fts_rank": 2,
+     "recent_rank": 1
+    },
+    {
+     "id": 1550,
+     "published_at": "2023-09-19T00:00:00+00:00",
+     "headline": "Apple's (AAPL) Prospects Shine on iPhone 15 Pro Max Demand",
+     "fts_rank": 1,
+     "recent_rank": null
+    },
+    {
+     "id": 1552,
+     "published_at": "2023-09-19T00:00:00+00:00",
+     "headline": "S&P Futures Plunge Ahead of FOMC Meeting, Oil\u2019s Climb Raises Inflation Concerns",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 1543,
+     "published_at": "2023-09-19T00:00:00+00:00",
+     "headline": "Evercore ISI Group Maintains Apple (AAPL) Outperform Recommendation",
+     "fts_rank": 6,
+     "recent_rank": null
+    }
+   ]
+  },
+  {
+   "date": "2023-01-30",
+   "return": -0.020075,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 5341,
+     "published_at": "2023-01-30T00:00:00+00:00",
+     "headline": "US STOCKS-Tech, megacaps drag Wall St down at start of big market week",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 5338,
+     "published_at": "2023-01-30T00:00:00+00:00",
+     "headline": "Apple Earnings Preview: Why AAPL Stock Could Dive After the Feb. 2 Report",
+     "fts_rank": 2,
+     "recent_rank": 5
+    },
+    {
+     "id": 5335,
+     "published_at": "2023-01-30T00:00:00+00:00",
+     "headline": "Meta Platforms (META) to Report Q4 Earnings: What to Expect",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 5336,
+     "published_at": "2023-01-30T00:00:00+00:00",
+     "headline": "Wall Street Waits for Fed FOMC and Key Economic Data",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 5350,
+     "published_at": "2023-01-30T00:00:00+00:00",
+     "headline": "InterDigital Raises Its Earnings Guidance",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 5340,
+     "published_at": "2023-01-30T00:00:00+00:00",
+     "headline": "Unusual Options Activity: COIN, LCID, AAPL and 6 Others",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 5334,
+     "published_at": "2023-01-30T00:00:00+00:00",
+     "headline": "US STOCKS-Nasdaq falls as megacaps drop ahead of earnings, Fed meet in focus",
+     "fts_rank": 1,
+     "recent_rank": 2
+    },
+    {
+     "id": 5344,
+     "published_at": "2023-01-30T00:00:00+00:00",
+     "headline": "Time to Take Another Bite of Apple Before Q1 Earnings?",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 5363,
+     "published_at": "2023-01-29T00:00:00+00:00",
+     "headline": "China's 2022 smartphone sales plunge to lowest level in a decade",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 5359,
+     "published_at": "2023-01-30T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street set to open lower ahead of Fed rate decision",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 5349,
+     "published_at": "2023-01-30T00:00:00+00:00",
+     "headline": "Amazon, Alphabet, Apple, Intel and Microsoft are part of Zacks Earnings Preview",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 5364,
+     "published_at": "2023-01-29T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-Asia shares turn cagey as rate hikes, earnings loom",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 5339,
+     "published_at": "2023-01-30T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-Stocks fall, U.S. yields climb with central banks on tap",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 5333,
+     "published_at": "2023-01-30T00:00:00+00:00",
+     "headline": "No Hyperbole: This Really is a Critical Week for Stocks",
+     "fts_rank": null,
+     "recent_rank": 1
+    }
+   ]
+  },
+  {
+   "date": "2022-11-25",
+   "return": -0.019717,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 6264,
+     "published_at": "2022-11-25T00:00:00+00:00",
+     "headline": "Why Manchester United Stock Was Rocketing Higher Again Today",
+     "fts_rank": null,
+     "recent_rank": 1
+    },
+    {
+     "id": 6268,
+     "published_at": "2022-11-25T00:00:00+00:00",
+     "headline": "After Hours Most Active for Nov 25, 2022 : WE, AMZN, ISTB, KO, AAPL, CZR, CSX, TQQQ, VICI, BMY, ATUS, DELL",
+     "fts_rank": 7,
+     "recent_rank": 5
+    },
+    {
+     "id": 6267,
+     "published_at": "2022-11-25T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-Nasdaq falls while the dollar, bond yields gain",
+     "fts_rank": 1,
+     "recent_rank": 4
+    },
+    {
+     "id": 6272,
+     "published_at": "2022-11-25T00:00:00+00:00",
+     "headline": "US STOCKS-Nasdaq ends down as investors eye Black Friday sales, China infections",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 6286,
+     "published_at": "2022-11-24T00:00:00+00:00",
+     "headline": "More than 20,000 new hires have left Apple supplier Foxconn's Zhengzhou plant in China -Foxconn source",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 6265,
+     "published_at": "2022-11-25T00:00:00+00:00",
+     "headline": "4 ETFs That Are the Best Deals on Black Friday Bonanza",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 6276,
+     "published_at": "2022-11-25T00:00:00+00:00",
+     "headline": "Technology Sector Update for 11/25/2022: COUP, AAPL, VEON, XLK, SOXX",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 6270,
+     "published_at": "2022-11-25T00:00:00+00:00",
+     "headline": "3 Tech Stocks You Can Count on in This Uncertain Market",
+     "fts_rank": null,
+     "recent_rank": 7
+    },
+    {
+     "id": 6271,
+     "published_at": "2022-11-25T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-Nasdaq falls and dollar rises on investor caution",
+     "fts_rank": 3,
+     "recent_rank": 8
+    },
+    {
+     "id": 6266,
+     "published_at": "2022-11-25T00:00:00+00:00",
+     "headline": "US STOCKS-S&P 500 inches higher as Black Friday sales kick off",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 6280,
+     "published_at": "2022-11-25T00:00:00+00:00",
+     "headline": "EXCLUSIVE-Foxconn woes could hit at least 30% of iPhone Nov shipments from China plant -source",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 6269,
+     "published_at": "2022-11-25T00:00:00+00:00",
+     "headline": "Why Apple Shares Dropped Friday",
+     "fts_rank": 2,
+     "recent_rank": 6
+    }
+   ]
+  },
+  {
+   "date": "2022-07-18",
+   "return": -0.01966,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 8215,
+     "published_at": "2022-07-18T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street closes down on slide in Apple shares, bank stocks",
+     "fts_rank": 6,
+     "recent_rank": 3
+    },
+    {
+     "id": 8217,
+     "published_at": "2022-07-18T00:00:00+00:00",
+     "headline": "Stocks Turn Negative as Investors Eye More Recession Indicators",
+     "fts_rank": 7,
+     "recent_rank": 5
+    },
+    {
+     "id": 8218,
+     "published_at": "2022-07-18T00:00:00+00:00",
+     "headline": "Warren Buffett Is Increasing His Bets Big-Time in These 3 Sectors",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 8219,
+     "published_at": "2022-07-18T00:00:00+00:00",
+     "headline": "Australia shares set to fall; NZ flat",
+     "fts_rank": 8,
+     "recent_rank": 7
+    },
+    {
+     "id": 8232,
+     "published_at": "2022-07-18T00:00:00+00:00",
+     "headline": "Can Apple (AAPL) Keep the Earnings Surprise Streak Alive?",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 8220,
+     "published_at": "2022-07-18T00:00:00+00:00",
+     "headline": "Australian shares subdued in choppy trade; NZ down",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 8216,
+     "published_at": "2022-07-18T00:00:00+00:00",
+     "headline": "Lawsuit accuses Apple of antitrust violations over Apple Pay",
+     "fts_rank": 1,
+     "recent_rank": 4
+    },
+    {
+     "id": 8234,
+     "published_at": "2022-07-18T00:00:00+00:00",
+     "headline": "Will Revenue Contraction Affect AT&T's (T) Q2 Earnings?",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 8214,
+     "published_at": "2022-07-18T00:00:00+00:00",
+     "headline": "GLOBAL MARKETS-Stocks edge up, dollar dips as Fed hike expectations lessened",
+     "fts_rank": 5,
+     "recent_rank": 2
+    },
+    {
+     "id": 8213,
+     "published_at": "2022-07-18T00:00:00+00:00",
+     "headline": "Apple (AAPL) Spending Cuts Drain Rally; IBM Beats Again",
+     "fts_rank": 3,
+     "recent_rank": 1
+    }
+   ]
+  },
+  {
+   "date": "2022-09-15",
+   "return": -0.018962,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 7302,
+     "published_at": "2022-09-15T00:00:00+00:00",
+     "headline": "Alphabet (GOOGL) Enhances Google Photos With Recent Features",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 7304,
+     "published_at": "2022-09-15T00:00:00+00:00",
+     "headline": "After Hours Most Active for Sep 15, 2022 : CSX, CRBG, INFY, AAPL, TRQ, SNAP, BAC, HBAN, UBER, AMZN, GOOG, QQQ",
+     "fts_rank": 7,
+     "recent_rank": 6
+    },
+    {
+     "id": 7337,
+     "published_at": "2022-09-14T00:00:00+00:00",
+     "headline": "Apple plans to use latest chip tech by Taiwan's TSMC in iPhones, Macs - Nikkei",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 7299,
+     "published_at": "2022-09-15T00:00:00+00:00",
+     "headline": "3 Mega-Cap Stocks With Unbelievably Strong Free Cash Flow",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 7324,
+     "published_at": "2022-09-14T00:00:00+00:00",
+     "headline": "US STOCKS-Wall Street rebounds after selloff on rate hike worries",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 7306,
+     "published_at": "2022-09-15T00:00:00+00:00",
+     "headline": "AVID Launches New Upgrades to Pro Tools Artist for ALA Students",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 7305,
+     "published_at": "2022-09-15T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St slides amid Fed tightening worries, economic warnings",
+     "fts_rank": 8,
+     "recent_rank": 7
+    },
+    {
+     "id": 7301,
+     "published_at": "2022-09-15T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St tumbles amid Fed tightening jitters, economic rumblings",
+     "fts_rank": 1,
+     "recent_rank": 4
+    },
+    {
+     "id": 7298,
+     "published_at": "2022-09-15T00:00:00+00:00",
+     "headline": "US STOCKS-Wall St dips as investors look beyond hawkish Fed's next move",
+     "fts_rank": 5,
+     "recent_rank": 1
+    },
+    {
+     "id": 7319,
+     "published_at": "2022-09-14T00:00:00+00:00",
+     "headline": "Apple (AAPL) Outpaces Stock Market Gains: What You Should Know",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 7300,
+     "published_at": "2022-09-15T00:00:00+00:00",
+     "headline": "Why Investors Lost Their Taste for Apple Today",
+     "fts_rank": 6,
+     "recent_rank": 3
+    }
+   ]
+  },
+  {
+   "date": "2022-10-26",
+   "return": -0.018384,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 6689,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "SONY Gears Up to Report Q2 Earnings: Here's What to Expect",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 6694,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "After Hours Most Active for Oct 26, 2022 : META, SNAP, TQQQ, AAPL, QQQ, WFC, F, SQQQ, RTO, BP, FDX, AMZN",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 6710,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "Apple\u2019s (NASDAQ:AAPL) Q4 Preview: Revenues to Hit Estimates, Says Analyst",
+     "fts_rank": 2,
+     "recent_rank": null
+    },
+    {
+     "id": 6690,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "US STOCKS-S&P, Nasdaq pulled lower as tech earnings misses fuel slowdown fears",
+     "fts_rank": null,
+     "recent_rank": 3
+    },
+    {
+     "id": 6709,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "US STOCKS-Nasdaq futures drop over 1% as weak tech earnings fan slowdown fears",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 6699,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "PREVIEW-Apple's holiday quarter may face pressure from inflation, weak China demand",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 6691,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "US STOCKS-S&P 500 ends lower, snapping rally on mounting slowdown fears",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 6718,
+     "published_at": "2022-10-25T00:00:00+00:00",
+     "headline": "Apple's iPhone Revenue Set to Be Key in Q4 Earnings",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 6701,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "Will Slowing Services Growth Hurt Apple's (AAPL) Q4 Earnings?",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 6688,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "US STOCKS-Nasdaq falls as weak Big Tech earnings fan growth concerns; Visa buoys Dow",
+     "fts_rank": 4,
+     "recent_rank": 1
+    },
+    {
+     "id": 6695,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "Will iPhone Revenue Boost Apple (AAPL) Stock?",
+     "fts_rank": 1,
+     "recent_rank": 7
+    },
+    {
+     "id": 6705,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "US STOCKS-Nasdaq futures fall 1% as tech earnings spark slowdown fears",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 6693,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "Meta Platforms beats estimates for quarterly revenue",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 6696,
+     "published_at": "2022-10-26T00:00:00+00:00",
+     "headline": "IVV, AAPL, MSFT, GOOG: Large Inflows Detected at ETF",
+     "fts_rank": null,
+     "recent_rank": 8
+    }
+   ]
+  },
+  {
+   "date": "2023-02-24",
+   "return": -0.018075,
+   "is_driver_day": false,
+   "candidates": [
+    {
+     "id": 4965,
+     "published_at": "2023-02-24T00:00:00+00:00",
+     "headline": "This Supercharged Nasdaq Stock Is Up 35% in 2023, But Is It a Buy?",
+     "fts_rank": 2,
+     "recent_rank": 1
+    },
+    {
+     "id": 4966,
+     "published_at": "2023-02-24T00:00:00+00:00",
+     "headline": "3 Stocks Investors Can Buy to Join the AI Revolution",
+     "fts_rank": null,
+     "recent_rank": 2
+    },
+    {
+     "id": 4968,
+     "published_at": "2023-02-24T00:00:00+00:00",
+     "headline": "Soccer-LAFC favored to repeat as MLS season kicks off",
+     "fts_rank": null,
+     "recent_rank": 4
+    },
+    {
+     "id": 4978,
+     "published_at": "2023-02-23T00:00:00+00:00",
+     "headline": "ETF Strategies to Protect Against Inflation",
+     "fts_rank": 5,
+     "recent_rank": null
+    },
+    {
+     "id": 4967,
+     "published_at": "2023-02-24T00:00:00+00:00",
+     "headline": "Apple Breaks Below 200-Day Moving Average - Notable for AAPL",
+     "fts_rank": 1,
+     "recent_rank": 3
+    },
+    {
+     "id": 4969,
+     "published_at": "2023-02-24T00:00:00+00:00",
+     "headline": "79% of Warren Buffett's $338 Billion Portfolio Is Invested in Just 6 Stocks",
+     "fts_rank": null,
+     "recent_rank": 5
+    },
+    {
+     "id": 4970,
+     "published_at": "2023-02-24T00:00:00+00:00",
+     "headline": "3 Hot Stocks for Monday: Predictions for ZM, WDAY, BRK.B",
+     "fts_rank": null,
+     "recent_rank": 6
+    },
+    {
+     "id": 4972,
+     "published_at": "2023-02-24T00:00:00+00:00",
+     "headline": "Should Investors Buy the Dip on This Stock With Major Growth Potential?",
+     "fts_rank": null,
+     "recent_rank": 8
+    },
+    {
+     "id": 4974,
+     "published_at": "2023-02-23T00:00:00+00:00",
+     "headline": "Apple's Secret Plans to Dominate (Another) $16 Billion Market",
+     "fts_rank": 3,
+     "recent_rank": null
+    },
+    {
+     "id": 4979,
+     "published_at": "2023-02-23T00:00:00+00:00",
+     "headline": "After Hours Most Active for Feb 23, 2023 : PBF, SQ, SBSW, QQQ, CVNA, CSX, LBRT, WDC, AAPL, CTSH, PM, MSFT",
+     "fts_rank": 6,
+     "recent_rank": null
+    },
+    {
+     "id": 4977,
+     "published_at": "2023-02-23T00:00:00+00:00",
+     "headline": "U.S. likely to cap level of S.Korean chips made in China- U.S. official",
+     "fts_rank": 4,
+     "recent_rank": null
+    },
+    {
+     "id": 4981,
+     "published_at": "2023-02-23T00:00:00+00:00",
+     "headline": "US STOCKS-S&P, Dow dip as resilient economic data stokes fears of rate hikes",
+     "fts_rank": 7,
+     "recent_rank": null
+    },
+    {
+     "id": 4983,
+     "published_at": "2023-02-23T00:00:00+00:00",
+     "headline": "Berkshire Earnings: Should Investors Buy Warren Buffett's Stock?",
+     "fts_rank": 8,
+     "recent_rank": null
+    },
+    {
+     "id": 4971,
+     "published_at": "2023-02-24T00:00:00+00:00",
+     "headline": "What is a Blue Chip Company? Examples of Blue Chips",
+     "fts_rank": null,
+     "recent_rank": 7
+    }
+   ]
+  }
+ ],
+ "no_news_driver_days": [
+  "2021-12-16",
+  "2022-05-05",
+  "2022-05-11",
+  "2022-05-18"
+ ]
+}

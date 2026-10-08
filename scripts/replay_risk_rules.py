@@ -68,7 +68,10 @@ SELECT
     r.as_of,
     pm.opinion                       AS proposed_action,
     (pm.raw_output->>'quantity')::int AS proposed_qty,
-    (d.technicals_snapshot->>'current_price')::numeric AS price
+    -- The fill price: the day's open for runs that recorded one
+    -- (migration 007), else V1's current_price, which old runs filled at.
+    COALESCE(d.execution_price,
+             (d.technicals_snapshot->>'current_price')::numeric) AS price
 FROM decisions d
 JOIN runs r ON d.run_id = r.id
 JOIN agent_opinions pm
@@ -216,6 +219,7 @@ def replay(
     stop_loss_pct: Decimal | None = None,
     trailing_stop_pct: Decimal | None = None,
     min_days_between_buys: int | None = None,
+    var_budget: bool = False,
 ) -> Result:
     """Re-gate each recorded Portfolio Manager proposal.
 
@@ -233,6 +237,8 @@ def replay(
     - min_days_between_buys: refuse to open a new lot within this many days
       of the last one. Targets stacking rather than drawdown — see
       blocked_by_spacing().
+    - var_budget: apply the V2 risk node's VaR share limit, read from each
+      tape row's `var_max_qty` (see scripts/compare_var_node.py).
     """
     res = Result(name=name)
     lots: list[Lot] = []
@@ -288,7 +294,15 @@ def replay(
             ):
                 res.blocked += 1
                 continue
-            allowed = min(qty, MAX_POSITION_QTY - held)
+            cap = MAX_POSITION_QTY
+            # V2 VaR budget: the risk node's recorded share limit for the day
+            # (var_forecasts.var_max_qty; None = no VaR, V1 rules only).
+            if var_budget and row.get("var_max_qty") is not None:
+                cap = min(cap, row["var_max_qty"])
+                if held >= cap:
+                    res.blocked += 1
+                    continue
+            allowed = min(qty, cap - held)
             fill = _slip(price, "BUY", slippage_bps)
             lots.append(Lot(quantity=allowed, entry_price=fill))
             last_buy_day = row["as_of"].date()

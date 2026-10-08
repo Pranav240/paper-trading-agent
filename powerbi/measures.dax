@@ -1,0 +1,45 @@
+-- ===== Calendar (Modeling > New table) =====
+DimDate = CALENDAR ( MIN ( fact_commits[commit_date] ), MAX ( fact_commits[commit_date] ) )
+-- then add columns: Month = FORMAT([Date],"yyyy-MM") ; mark as date table.
+
+-- ===== Repo activity =====
+Commits          = COUNTROWS ( fact_commits )
+Active Days      = DISTINCTCOUNT ( fact_commits[commit_date] )
+Commits / Active Day = DIVIDE ( [Commits], [Active Days] )
+Lines Added      = SUM ( fact_commits[insertions] )
+Lines Deleted    = SUM ( fact_commits[deletions] )
+Churn Ratio      = DIVIDE ( [Lines Deleted], [Lines Added] )
+Commits Last 30d =
+    CALCULATE ( [Commits], DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -30, DAY ) )
+Repo Lines (current) = SUM ( fact_repo_language[lines] )
+
+-- ===== Backtests (fact_backtest_runs) =====
+Strategy Result $   = SUM ( fact_backtest_runs[result_usd] )
+Buy&Hold Result $   = SUM ( fact_backtest_runs[buy_hold_usd] )
+Diff vs B&H $       = [Strategy Result $] - [Buy&Hold Result $]
+Runs                = COUNTROWS ( fact_backtest_runs )
+Runs Beating B&H    = COUNTROWS ( FILTER ( fact_backtest_runs, fact_backtest_runs[diff_usd] > 0 ) )
+Leak-Free Runs      = CALCULATE ( [Runs], fact_backtest_runs[look_ahead_status] = "Both leaks fixed" )
+Leak-Free Diff $    = CALCULATE ( [Diff vs B&H $], fact_backtest_runs[look_ahead_status] = "Both leaks fixed" )
+-- Chart guard: always show look_ahead_status on any chart of [Diff vs B&H $]. Only 1 of 10 runs is leak-free.
+
+-- ===== Decisions / trades =====
+Decisions        = COUNTROWS ( fact_daily_decisions )
+HOLD %           = DIVIDE ( CALCULATE ( [Decisions], fact_daily_decisions[action] = "HOLD" ), [Decisions] )
+BUY %            = DIVIDE ( CALCULATE ( [Decisions], fact_daily_decisions[action] = "BUY" ), [Decisions] )
+SELL %           = DIVIDE ( CALCULATE ( [Decisions], fact_daily_decisions[action] = "SELL" ), [Decisions] )
+Avg Confidence   = AVERAGE ( fact_daily_decisions[confidence] )
+Closed Trades    = CALCULATE ( COUNTROWS ( fact_trades ), fact_trades[status] = "CLOSED" )
+Realized P&L $   = CALCULATE ( SUM ( fact_trades[realized_pnl] ), fact_trades[status] = "CLOSED" )
+Win Rate         = DIVIDE ( CALCULATE ( COUNTROWS ( fact_trades ), fact_trades[status] = "CLOSED", fact_trades[realized_pnl] > 0 ), [Closed Trades] )
+Avg Hold Days    = CALCULATE ( AVERAGE ( fact_trades[hold_days] ), fact_trades[status] = "CLOSED" )
+-- NOTE: Realized P&L $ (closed lots only) will NOT equal Strategy Result $ (mark-to-market incl. open positions).
+
+-- ===== Evaluation metrics (fact_eval_metrics) =====
+Metric Value     = SELECTEDVALUE ( fact_eval_metrics[value] )
+Metric Baseline  = SELECTEDVALUE ( fact_eval_metrics[baseline] )
+Delta vs Baseline = IF ( ISBLANK ( [Metric Baseline] ), BLANK (), [Metric Value] - [Metric Baseline] )
+-- Interpretation differs by metric: higher is better for accuracy/IC/RAG rates;
+-- for VaR breach rate the target is 5%, so closeness to 5% matters, not the sign of the delta.
+VaR Breach Target = 5
+

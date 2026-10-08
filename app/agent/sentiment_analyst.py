@@ -49,10 +49,17 @@ from __future__ import annotations
 
 from typing import Awaitable, Callable
 
-from langchain_openai import ChatOpenAI
+from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, Field
 
-from app.agent.data_sources import HeadlineSource
+from app.agent.data_sources import Headline, HeadlineSource
+from app.agent.llm import default_llm, structured
+from app.agent.v1_categorical import (
+    CATEGORICAL_SENTIMENT_PROMPT,
+    SentimentCall,
+    SentimentMode,
+    no_headlines_opinion,
+)
 from app.agent.state import AgentOpinion, GraphState
 
 SYSTEM_PROMPT = """You are a sentiment analyst for a stock paper-trading \
@@ -113,8 +120,11 @@ def format_score(score: float) -> str:
 
 def make_sentiment_analyst_node(
     headline_source: HeadlineSource,
-    llm: ChatOpenAI | None = None,
+    llm: BaseChatModel | None = None,
+    mode: SentimentMode = "score",
 ) -> Callable[[GraphState], Awaitable[dict]]:
+    # mode="categorical" is V1's BUY/SELL/HOLD vote, kept only so V1
+    # backtests can be rerun faithfully (app/agent/v1_categorical.py).
     # `llm` is injectable so tests can pass a fake/mock instead of hitting
     # the OpenAI API — same reason price_source/headline_source are
     # injected rather than constructed inside the node. The DEFAULT
@@ -132,6 +142,9 @@ def make_sentiment_analyst_node(
             symbol, as_of, lookback_days=3
         )
 
+        if mode == "categorical":
+            return {"sentiment_opinion": await _categorical(symbol, headlines, llm)}
+
         if not headlines:
             # 0.0 here means "no information", not "recommend holding".
             # confidence=None is what marks it as the absence of a read
@@ -145,8 +158,9 @@ def make_sentiment_analyst_node(
             )
             return {"sentiment_opinion": opinion}
 
-        model = llm or ChatOpenAI(model="gpt-4o-mini", temperature=0)
-        structured_model = model.with_structured_output(SentimentScore)
+        # Provider and model come from app/agent/llm.py (LLM_PROVIDER env).
+        model = llm or default_llm("sentiment_analyst")
+        structured_model = structured(model, SentimentScore)
 
         headline_block = "\n".join(f"- {h.headline}" for h in headlines)
         user_prompt = (
@@ -179,3 +193,34 @@ def make_sentiment_analyst_node(
         return {"sentiment_opinion": opinion}
 
     return node
+
+
+async def _categorical(
+    symbol: str, headlines: list[Headline], llm: BaseChatModel | None
+) -> AgentOpinion:
+    """V1's node body, unchanged apart from where the model comes from."""
+    if not headlines:
+        return no_headlines_opinion(symbol)
+
+    model = llm or default_llm("sentiment_analyst")
+    structured_model = structured(model, SentimentCall)
+
+    headline_block = "\n".join(f"- {h.headline}" for h in headlines)
+    user_prompt = f"Symbol: {symbol}\nHeadlines ({len(headlines)}):\n{headline_block}"
+
+    call: SentimentCall = await structured_model.ainvoke(
+        [
+            {"role": "system", "content": CATEGORICAL_SENTIMENT_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ]
+    )
+    return AgentOpinion(
+        agent_name="sentiment_analyst",
+        opinion=call.opinion,
+        confidence=call.confidence,
+        reasoning=call.reasoning,
+        raw_output={
+            "n_headlines": len(headlines),
+            "headlines": [h.headline for h in headlines],
+        },
+    )

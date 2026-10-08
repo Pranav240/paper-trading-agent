@@ -1,6 +1,6 @@
 # Paper Trading Agent — complete project record
 
-**A multi-agent trading decision system, built in six phases and evaluated honestly. It has no edge, and this document explains how that was established.**
+**A multi-agent trading decision system, built in six phases (V1), then given a VaR risk engine (V2, phase 07), and evaluated honestly. No edge has been established, and this document explains how that was measured — including the correction V2 forced on it.**
 
 [![CI](https://github.com/Pranav240/paper-trading-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Pranav240/paper-trading-agent/actions/workflows/ci.yml)
 
@@ -12,9 +12,11 @@
 
 Seven backtests against real market data and real news, with slippage modelled and FIFO lot accounting.
 
-**Every run longer than a single quarter underperformed buy-and-hold, by $39 to $225 on a 20-share basis.** The out-of-sample run — executed once, with nothing changed after seeing the in-sample result — lost $63 in a market that was essentially flat.
+**As first run, every backtest longer than a single quarter underperformed buy-and-hold, by $39 to $225 on a 20-share basis.** The out-of-sample run — executed once, with nothing changed after seeing the in-sample result — lost $63 in a market that was essentially flat.
 
-The project's founding rule was that an honestly evaluated failure is the correct thing to report. So it is reported, and the machinery built to establish it is the actual deliverable.
+**Corrections (5 and 6 October 2026).** V2 found **two look-ahead leaks**. First, every run could see each decision day's own closing price (938 of 938 stored decisions). Then, while those runs were being redone, a second: 99.7% of the news data's timestamps are dates at midnight UTC, so a decision at 8 a.m. read headlines dated that same day — on 98–100% of decisions in every run, including the first reruns, whose +$64 / +$83 against buy-and-hold were published on 5 October as corrected. **Redone with both fixed (backtest 136), the out-of-sample run finished $72 ahead of buy-and-hold in a flat market** (+$73.88 vs +$2.20), where it had been published as a $63 loss: one run on one stock, about twice the replicate spread, not evidence of an edge. The in-sample runs are not yet redone. No edge has been established. See [the reruns](#corrected-reruns-v2) and defects 8 and 9.
+
+The project's founding rule was that an honestly evaluated result is the correct thing to report, including when a correction moves it. So it is reported, and the machinery built to establish it is the actual deliverable.
 
 ---
 
@@ -26,8 +28,8 @@ The project's founding rule was that an honestly evaluated failure is the correc
 |---|---|
 | **Project site** — start here | [pranav240.github.io/paper-trading-agent](https://pranav240.github.io/paper-trading-agent/) |
 | **Technical report** | [pranav240.github.io/…/report.html](https://pranav240.github.io/paper-trading-agent/dashboard/report.html) |
-| **Interactive results dashboard** — 7 backtests, charts, trade tables | [pranav240.github.io/…/backtest_dashboard.html](https://pranav240.github.io/paper-trading-agent/dashboard/backtest_dashboard.html) |
-| **Roadmap** — 12 phases, status, why V2 is on hold | [pranav240.github.io/…/roadmap.html](https://pranav240.github.io/paper-trading-agent/dashboard/roadmap.html) |
+| **Interactive results dashboard** — 7 original backtests and 2 corrected reruns, charts, trade tables | [pranav240.github.io/…/backtest_dashboard.html](https://pranav240.github.io/paper-trading-agent/dashboard/backtest_dashboard.html) |
+| **Roadmap** — 16 phases, status; V2 in progress, V4 on hold | [pranav240.github.io/…/roadmap.html](https://pranav240.github.io/paper-trading-agent/dashboard/roadmap.html) |
 
 ### Code and data
 
@@ -46,6 +48,7 @@ The project's founding rule was that an honestly evaluated failure is the correc
 | [`README.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/README.md) | Start here — result, architecture, how to run |
 | [`docs/engineering-log.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/docs/engineering-log.md) | Design decisions log, phase-by-phase writeup |
 | [`docs/backtesting-plan.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/docs/backtesting-plan.md) | Backtest requirements, written before the code |
+| [`docs/mcp-plan.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/docs/mcp-plan.md) | The MCP server's plan, written before the code |
 | [`infra/README.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/infra/README.md) | Deployment, cost breakdown, deliberate omissions |
 
 ---
@@ -78,9 +81,11 @@ START ─→ Sentiment Analyst ─┘
 | Node | Backing | Why |
 |---|---|---|
 | [Technical Analyst](https://github.com/Pranav240/paper-trading-agent/blob/master/app/agent/technical_analyst.py) | Rule-based | RSI-14 / SMA-20 is arithmetic. Paying an LLM to reason about arithmetic buys nothing. |
-| [Sentiment Analyst](https://github.com/Pranav240/paper-trading-agent/blob/master/app/agent/sentiment_analyst.py) | GPT-4o-mini | Reading headlines is genuine language understanding. Skips the API call entirely when there are no headlines. |
-| [Portfolio Manager](https://github.com/Pranav240/paper-trading-agent/blob/master/app/agent/portfolio_manager.py) | GPT-4o | The only node where judgment under conflicting evidence happens, so it gets the frontier model. |
-| [Risk Manager](https://github.com/Pranav240/paper-trading-agent/blob/master/app/agent/risk_manager.py) | Rule-based | Hard position cap, no selling what you don't hold. **Holds final authority** — it sets what actually trades. |
+| [Sentiment Analyst](https://github.com/Pranav240/paper-trading-agent/blob/master/app/agent/sentiment_analyst.py) | GPT-4o-mini in V1, Claude Haiku 4.5 since V2 | Reading headlines is genuine language understanding. Skips the API call entirely when there are no headlines. |
+| [Portfolio Manager](https://github.com/Pranav240/paper-trading-agent/blob/master/app/agent/portfolio_manager.py) | GPT-4o in V1, Claude Sonnet 5.5 since V2 | The only node where judgment under conflicting evidence happens, so it gets the larger model. |
+| [Risk Manager](https://github.com/Pranav240/paper-trading-agent/blob/master/app/agent/risk_manager.py) | Rule-based, + [VaR](https://github.com/Pranav240/paper-trading-agent/blob/master/app/agent/risk_math.py) since V2 | Hard position cap, no selling what you don't hold — kept as a floor; V2 adds a pre-registered 2% VaR budget. **Holds final authority** — it sets what actually trades. |
+
+The provider is configuration, not code ([`app/agent/llm.py`](https://github.com/Pranav240/paper-trading-agent/blob/master/app/agent/llm.py), `LLM_PROVIDER` in `.env`), and every backtest records its models, settings and git commit.
 
 **The propose-versus-gate split was the most valuable structural decision in the project.** Because the Risk Manager is code and every input it consumed is stored, alternative risk rules could later be tested for free — see [Replay](#replaying-decisions-for-free).
 
@@ -88,11 +93,11 @@ START ─→ Sentiment Analyst ─┘
 
 Every node factory takes its dependencies as arguments — price source, headline source, repository, optional LLM — and the sources are Protocols, not concrete classes.
 
-This is what makes backtesting possible: swap the live headline source for one reading a local historical table, and the nodes can't tell. It's also why 33 of 39 tests run with no network, no API keys and no database.
+This is what makes backtesting possible: swap the live headline source for one reading a local historical table, and the nodes can't tell. It's also why most of the suite runs with no network, no API keys and no database.
 
 ### Schema
 
-Ten tables. The shape follows from one Phase 03 decision: once several agents each hold an opinion, a decisions log can't be one row per cycle.
+Thirteen tables. The shape follows from one Phase 03 decision: once several agents each hold an opinion, a decisions log can't be one row per cycle.
 
 | Table | Purpose |
 |---|---|
@@ -104,6 +109,9 @@ Ten tables. The shape follows from one Phase 03 decision: once several agents ea
 | `price_snapshots` | Prices observed during live runs |
 | `backtests` / `backtest_outcomes` | Simulated runs, **structurally isolated** from live tables |
 | `historical_headlines` | Imported FNSPID corpus |
+| `var_forecasts` | V2: one VaR forecast per decision, scored later against the realized return (breach is a generated column) |
+| `trace_steps` | V2: the full reasoning trace of each decision — prompts, replies, retrievals, checks — written with it |
+| `risk_explanations` | V2: the explainer's account of a VaR-changed decision, with retrieved and cited headline ids and the no-news template baseline |
 | `schema_migrations` | Managed by [the project's own runner](https://github.com/Pranav240/paper-trading-agent/blob/master/db/migrate.py) |
 
 **No ORM, deliberately.** The gap being closed was "real database work" — an ORM would have hidden exactly what the exercise existed to practise.
@@ -126,15 +134,65 @@ All AAPL. Mark-to-market, each against buy-and-hold **over its own window**.
 
 The single positive row is a 4-trade quarter that beat the baseline mainly because **AAPL fell** over that window — buy-and-hold lost money and a largely idle system didn't. That's not evidence of skill.
 
+**Every row above had the look-ahead leak described below.** They are left as published.
+
+### Clean rerun: both leaks fixed (backtest 136)
+
+Out-of-sample window, V1's categorical prompts, Claude; verified on the run itself that no headline it read first appeared on or after the decision day.
+
+| Run | Closed | Result (V1 rules) | Buy & hold | Difference | VaR node instead |
+|---|---|---|---|---|---|
+| #6 ⇒ bt 136 | 9 | **+73.88** (1.91%) | +2.20 | **+71.68** | +132.64, $188 less drawdown |
+
+The headline leak barely moved this window (+$66 with it, bt 71): the categorical sentiment voted HOLD almost always. The in-sample score-node run may differ more; it is not rerun (over budget).
+
+### Corrected reruns (V2) — price leak only
+
+**Superseded:** these reruns still read same-day headlines (defect 9). Kept as a record of the first fix, not as results.
+
+Fixed: prices only from sessions closed before the decision; trading days from the market calendar (V1 also ran on 11 holidays in #4's window); fills at the decision day's open. Run on Claude Sonnet 5.5 + Haiku 4.5 instead of GPT-4o + GPT-4o-mini. Each rerun was recorded with V2's VaR risk engine; V1's rules were then replayed exactly over the same decisions (the Portfolio Manager never sees positions, so its proposals don't depend on the risk node).
+
+| Rerun | Configuration | Closed | Result (V1 rules) | Buy & hold | Difference |
+|---|---|---|---|---|---|
+| #6 → bt 71 | categorical sentiment, **out-of-sample** | 11 | +66.35 | +2.20 | **+64.15** |
+| #14 → bt 45 | continuous score, #4's window | 29 | +920.81 | +837.80 | **+83.01** |
+
+- **Four things changed at once**, so neither difference can be attributed to the leak alone; no bridge run (same configuration on both providers) was possible without OpenAI credit.
+- **Both exceed the noise between V1's replicate runs** ($24–34: #7 vs #8, #4 vs #9), by two to three times, so they are not just model randomness. But each is one run on one price path, on one stock, so they don't establish an edge. Read: V1's "underperforms" does not survive; "outperforms" is not shown.
+- **#3, #4 and #7 are not yet rerun** (budget). #8 and #9 repeated #7 and #4 and won't be. #4 and #6 use V1's original categorical prompts, restored verbatim and pinned by hash.
+
+### V2's risk engine on the same decisions
+
+| | In-sample (bt 45) | Out-of-sample (bt 71) |
+|---|---|---|
+| VaR node P&L vs V1 rules | **−$492** | **+$57** |
+| Max drawdown vs V1 rules | −$211 | −$185 |
+| VaR forecast breaches (target 5%) | 4.4%, Kupiec p = 0.65 | 1.6% (too cautious), p = 0.041 |
+| Naive flat 2% VaR breaches | 10.3%, p < 0.001 | 5.6% |
+
+The forecasts beat the trivial baseline in-sample and are too conservative out-of-sample. As a binding, pre-registered 2% budget they hurt in one window and helped in the other — no evidence either way that the budget improves the strategy. Kupiec's power was checked first: over ~280 days it catches a model breaching 10% of days 92% of the time, but one breaching 7.5% only 46% of the time.
+
+### Phase 09: grading the explainer
+
+On 40 of AAPL's worst days (every candidate headline labelled; plan, labels and each stage committed before its result — [`docs/phase09-plan.md`](docs/phase09-plan.md)):
+
+| | Result |
+|---|---|
+| Retrieval: top headline relevant, full-text vs recency | 50% vs 30% — **not significant** by the pre-registered test (p = 0.12) |
+| Explanation names the labelled cause, explainer vs quoting the top headline | **65% vs 22%**, 17 days won, 0 lost (p < 0.0001) |
+| Explainer causes supported by its own citations | 92% (bar: 90%) |
+
+**Caveat:** the labels were written by Claude (Opus 5.5) at the owner's request, not by a person, and the judge (Sonnet 5.5) and explainer (Haiku 4.5) are Claude models too. The result shows they agree; whether a person would is untested. All three deviations from the plan are logged in the engineering log before the step they changed.
+
 ### Methodology
 
 | Assumption | Treatment |
 |---|---|
-| Slippage | 5bps against decision price, both directions. A stated placeholder, not a researched constant. |
+| Slippage | 5bps against the fill price, both directions — the decision-day close in V1 (the leak), the decision-day open in corrected reruns. A stated placeholder, not a researched constant. |
 | Commission | Zero, modelled explicitly rather than silently omitted |
 | Lots | FIFO, oldest first, partial-lot splitting |
 | Position cap | Hard 20 shares, enforced by the Risk Manager |
-| Look-ahead | `published_at < as_of`, strictly — a headline published *at* the decision moment wasn't necessarily readable then |
+| Look-ahead | Headlines: **not enforced through V2's first reruns** (see defect 9) — `published_at < as_of` assumed real timestamps, but FNSPID's are dates; since 2026-10-06 a date-only headline is available only once its date has ended in New York. Prices: **not enforced in V1** (see defect 8); since V2, only bars whose 16:00 New York session closed before `as_of`. |
 | Open positions | Marked at the window's last price before any comparison |
 
 ### A baseline error, found by checking a number that looked wrong
@@ -159,6 +217,8 @@ Five attempts, two entirely different framings, one answer. The order they faile
 | Distilled from GPT-4o-mini | 90.9% | **90.9%** | *exactly* baseline |
 
 The second predicted HOLD on all 44 held-out rows — it learned the constant function. The first reached **3.6% precision on BUY** and invented SELL calls on neutral headlines.
+
+Rerun in October 2026 with [MLflow tracking](https://github.com/Pranav240/paper-trading-agent/tree/master/eval/mlflow), the PhraseBank adapter scores **91.3% on held-out PhraseBank against 59.3% for always-HOLD**: it learns the dataset. The 84.0% above is what failed — transfer to this project's own headlines — and that test was not rerun.
 
 One query explained both: across every backtest the teacher had produced **17 BUY, 3 SELL, 537 HOLD** on one symbol. Distilling a teacher that says HOLD 96.8% of the time yields a student that always says HOLD.
 
@@ -217,6 +277,16 @@ Qwen2.5-0.5B, 4-bit, LoRA r=16, regression head, 12k examples, 1 epoch.
 
 Below the bar, below the baseline, below always guessing "up".
 
+**Rerun at full size (October 2026, [tracked in MLflow](https://github.com/Pranav240/paper-trading-agent/tree/master/eval/mlflow)):** Qwen2.5-1.5B, all 27,591 examples, 2 epochs, 5.9 GPU hours — the run first cut down for cost.
+
+| Validation split | n | Spearman IC | Sign acc. | Base rate |
+|---|---|---|---|---|
+| later dates, seen symbols | 9,336 | −0.0003 | 0.495 | 0.501 |
+| unseen symbols, overlapping dates | 4,774 | +0.0181 | 0.501 | 0.509 |
+| **unseen symbols and dates** | 1,221 | **+0.0278** | 0.508 | 0.524 |
+
+Same answer. +0.028 is just under the bar on a split that cannot tell it from zero (95% interval −0.028 to +0.084); the 9,336-row split gives −0.0003 and excludes 0.03. Prediction sd 0.040: collapsed to the mean again.
+
 **The prediction spread is the number that matters: sd 0.051 against labels at ~1.0.** The model collapsed to predicting the mean — which *looks* like v1's always-HOLD and is the opposite thing. In v1 the labels were constant. Here they vary and the model still predicts the mean, **because predicting the mean is the correct loss-minimising answer when the input carries no information.** A model making confident varied predictions here would be the broken one.
 
 ### A flaw in the pre-registration itself
@@ -256,6 +326,24 @@ Note also that three "different" rules land on exactly −49.24. They block the 
 
 ---
 
+## Asking the record questions (MCP)
+
+[`app/mcp_server.py`](https://github.com/Pranav240/paper-trading-agent/blob/master/app/mcp_server.py) is a read-only [MCP](https://modelcontextprotocol.io) server, so Claude Desktop or any MCP client can answer questions from the stored record itself. It runs locally over stdio and opens no port.
+
+| Tool | Answers |
+|---|---|
+| `list_backtests` | Which runs exist: window, models, git commit |
+| `list_decisions` | What the system did, and whether the VaR budget scaled or blocked it |
+| `get_decision` | One decision: every agent's opinion, the VaR forecast, the final action |
+| `explain_decision` | Why a trade was cut: the stored explanation and the headlines it cited |
+| `get_trace` | The full reasoning trace, step by step |
+
+**Read-only in the database, not by convention:** every connection opens with `default_transaction_read_only=on`, and a test proves a `DELETE` through it fails. No tool starts a run — a run spends money, and an LLM client should not be able to start one.
+
+**Checked in a real Claude Desktop chat.** Every fact in the answer matched the database, and the answer exposed two faults in the tool's own description — it implied every VaR-cut decision had an explanation (only a sample was explained) and could not tell a cut from a block. Both fixed. `get_trace` output is identical, line for line, to `scripts/audit_decision.py`. Config snippet in the [README](https://github.com/Pranav240/paper-trading-agent#ask-it-questions-mcp).
+
+---
+
 ## Deployment
 
 [Terraform](https://github.com/Pranav240/paper-trading-agent/tree/master/infra) provisioning a purpose-built VPC, a `t3.micro` running the container, ECR, encrypted SSM parameters, scoped IAM roles, and an EventBridge schedule firing through SSM.
@@ -281,7 +369,7 @@ Keeping it running would cost ~$13/month to trade a strategy already measured as
 
 ---
 
-## Seven defects, and what each one hid
+## Nine defects, and what each one hid
 
 Every one passed type checks, linting and any amount of re-reading.
 
@@ -294,8 +382,10 @@ Every one passed type checks, linting and any amount of re-reading.
 | 5 | `most_recent = true` on the AMI | A new OS image made Terraform propose destroying a running server. A plan you can't trust is a plan you stop reading. |
 | 6 | OIDC subject carries numeric IDs | Documented form is `repo:owner/name`; the real one appends immutable account IDs. AWS returns only "not authorized" — uninformative *by design*. CloudTrail has the actual claim. |
 | 7 | A threshold below its own resolving power | The pre-registered bar sat at ~1 standard error of the split chosen to test it |
+| 8 | Price bars fetched "up to now" at 12:00 UTC (found in V2) | The data source stamps a day's bar at midnight New York, so every backtest decision saw that day's own close. Seven backtests and every conclusion drawn from them. The plan required prior-day prices from the start; nothing checked it. |
+| 9 | Headline dates treated as times (found in V2) | 99.7% of FNSPID stamps are dates at 00:00 UTC; `published_at < as_of` read them as published at midnight, so a decision at 8 a.m. saw headlines dated that day — after-the-close reports included. Every backtest, including the reruns that fixed defect 8. |
 
-**Four of seven were findable only by running the system for real** — against a live database, cloud account, or identity provider. That's the argument for spending a few cents on an actual deployment rather than shipping validated infrastructure code.
+**Four of nine were findable only by running the system for real** — against a live database, cloud account, or identity provider. That's the argument for spending a few cents on an actual deployment rather than shipping validated infrastructure code. The eighth and ninth were visible in the code and data all along: each survived because a written requirement never became a test — and the ninth survived the fix for the eighth.
 
 ---
 
@@ -314,6 +404,10 @@ Not imported from a checklist. Each is traceable to a specific mistake in this p
 | Pre-register the threshold — **and check it's resolvable** | A bar was set at one standard error of its own test |
 | Fail loudly rather than skip quietly | Six tests reported green while never running |
 | Replay recorded decisions before paying for new runs | A standing hypothesis died for free, using data already on disk |
+| Turn every written requirement into a test | "Decide on the prior day's close" was in the backtesting plan from day one; the code never honoured it, and seven backtests ran on future prices |
+| Check what a timestamp actually encodes | The headline rule was right for times and silently wrong for dates; the first data look at the raw stamps (99.7% at exactly midnight) would have shown it |
+| Cap and record the cost of every paid run | A run killed partway lost its token count, so part of its cost can only be estimated |
+| Log every training run's settings and metrics | Phase 04's first runs logged nothing; which 12k examples the cut-down regression used can't be recovered. The reruns are in MLflow |
 
 ---
 
@@ -323,15 +417,23 @@ Not imported from a checklist. Each is traceable to a specific mistake in this p
 
 ```bash
 docker compose up --build     # API + fresh database
-pytest -q                     # 39 tests, none skipped
+pytest -q                     # 134 tests, none skipped
 ```
 
-**A backtest** *(needs Alpaca + OpenAI keys)*
+**A backtest** *(needs Alpaca + an Anthropic or OpenAI key; `LLM_PROVIDER` picks)*
 
 ```bash
 python scripts/run_backtest.py --name "run" --symbols AAPL \
-    --start 2022-06-03 --end 2023-06-30 --use-real-llms
-python scripts/compare_ablation.py 4 7 8 9 14
+    --start 2022-06-01 --end 2023-06-30 --use-real-llms --max-cost-usd 2
+python scripts/compare_var_node.py <backtest_id>   # VaR node vs V1 rules, same decisions
+```
+
+Paid runs must set a spending cap. `--resume <backtest_id>` continues an interrupted run; `--sentiment-mode categorical` reproduces V1's original prompts.
+
+**The VaR evaluation** *(free — price data only)*
+
+```bash
+python scripts/evaluate_var.py
 ```
 
 **The return-prediction dataset and baseline** *(free — no LLM calls)*
@@ -357,7 +459,8 @@ Then [`phase04_v2_return_regression.ipynb`](https://github.com/Pranav240/paper-t
 
 | Item | Spend |
 |---|---|
-| OpenAI, entire project (7 backtests + probes) | **< $6** |
+| OpenAI, V1 (7 backtests + probes) | **< $6** |
+| Anthropic, V2 (3 reruns, explanations, evaluation, trace checks) | **~$4.62** (part extrapolated: one run was killed and resumed, losing its token count) |
 | AWS (applied, verified, destroyed same day) | **~$0.02** |
 | Kaggle GPU (fine-tuning) | free |
 | Alpaca market data | free |
@@ -372,13 +475,15 @@ Then [`phase04_v2_return_regression.ipynb`](https://github.com/Pranav240/paper-t
 - **Daily bars only.** No intraday, no order book, no volume analysis beyond the indicators.
 - **A single 5-day horizon** in the return work. Shorter and longer weren't tried.
 - **Small samples throughout.** Two replicates per ablation; ≤32 closed trades in most runs. Directional conclusions, not statistically strong ones — stated as such wherever they appear.
-- **v2 ran at 0.5B, not 1.5B**, on 12k of 27.6k examples, one epoch. Chosen because a full run was six GPU hours to confirm an expected null.
+- **Fine-tuning tops out at 1.5B, one seed per run.** v2 first ran cut down (0.5B, 12k of 27.6k examples, one epoch); the full 1.5B run on all of it, two epochs, found the same null.
 - **Absence of a signal this setup can detect is not proof that none exists.**
 
 ---
 
 ## Open questions
 
+- Rerunning #3, #4 and #7 with the look-ahead fix (~$2.40 for #4 alone at measured rates) would complete the correction
+- Whether the VaR budget helps: it cost $492 in one window and gained $57 in the other; a fixed budget may simply be the wrong use of a good forecast
 - One ablation, under a dollar, would separate the score node's effect from the simultaneous prompt change
 - A second symbol would test whether "no edge" is about the strategy or about AAPL
 - The evidence says remove the Sentiment Analyst — but no run has tested removing it *entirely*, so acting on that would create another unmeasured configuration
@@ -393,4 +498,4 @@ Then [`phase04_v2_return_regression.ipynb`](https://github.com/Pranav240/paper-t
 
 **More usefully, it demonstrates an evaluation discipline:** out-of-sample runs executed once and never re-tuned; accuracy figures checked against trivial baselines; components ablated before being improved; noise floors measured rather than assumed; a confound named instead of smoothed over; and a flaw in the project's own pre-registration reported rather than replaced by the split that happened to agree.
 
-**It does not demonstrate a profitable trading strategy.** The system never touched real capital. Its own conclusion is that it should not.
+**It does not demonstrate a profitable trading strategy.** The system never touched real capital. Its own conclusion is that it should not — and when V2 found a flaw in the evidence for that conclusion, the evidence was corrected in public rather than defended.

@@ -40,7 +40,7 @@ DATABASE_URL = os.environ.get(
     "postgresql://pta:pta_dev_password@127.0.0.1:5432/paper_trading_agent",
 )
 OUT_PATH = Path("data/dashboard_data.json")
-DEFAULT_IDS = [3, 4, 6, 7, 8, 9, 14]
+DEFAULT_IDS = [3, 4, 6, 7, 8, 9, 14, 45, 71, 136]  # 45, 71: price leak fixed; 136: both leaks fixed
 
 BACKTESTS = """
 SELECT id, name, window_start, window_end, status
@@ -49,7 +49,8 @@ FROM backtests WHERE id = ANY(%s) ORDER BY id
 
 DAILY = """
 SELECT r.backtest_id, r.as_of::date AS as_of,
-       (d.technicals_snapshot->>'current_price')::numeric AS price,
+       COALESCE(d.execution_price,
+                (d.technicals_snapshot->>'current_price')::numeric) AS price,
        d.action, d.confidence
 FROM decisions d JOIN runs r ON d.run_id = r.id
 WHERE r.backtest_id = ANY(%s)

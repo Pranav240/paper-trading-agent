@@ -734,3 +734,831 @@ skip guard caught. One line in `tests/conftest.py` fixed it.
 So the CI job greps its own output and **fails if any test skipped**. A
 green tick over a silently shortened suite is worse than a red one — that
 is the entire lesson of the bug above, encoded so it can't recur.
+
+## Phase 07 — Risk engine (V2), step 1: price look-ahead in backtests
+
+**Found a leak. Every V1 backtest number is affected and needs a rerun.**
+
+`run_backtest` decides at 12:00 UTC. `AlpacaPriceSource.get_recent_bars`
+asked Alpaca for daily bars with `end=as_of`. Alpaca stamps a daily bar at
+midnight New York (04:00 UTC summer, 05:00 UTC winter), so the decision
+day's own bar, with its close, came back. `scripts/check_bar_timing.py`
+confirmed it live on 2026-09-28 for AAPL:
+
+| Decision day | Last bar returned (before fix) | Close | After fix |
+|---|---|---|---|
+| 2023-06-15 | 2023-06-15 04:00 UTC | 185.99 | 2023-06-14, 183.95 |
+| 2023-12-14 | 2023-12-14 05:00 UTC | 198.16 | 2023-12-13, 197.86 |
+
+This breaks the first rule of `docs/backtesting-plan.md`'s look-ahead
+checklist (prior-day close only). The technical analyst was scoring each
+day with that day's close already in hand.
+
+**Fix:** `bars_closed_before()` in `app/agent/data_sources.py` keeps a bar
+only if its session close (16:00 New York, DST-aware) is at or before
+`as_of`. Early-close days are treated as 16:00, which can drop a final bar
+but never leak one. Tests: `tests/test_alpaca_price_source.py`, using the
+real timestamps above. Live runs are affected too: a mid-session run no
+longer sees the in-progress bar for today.
+
+**Not yet done:** the seven V1 backtests (and the results on `index.html`
+and the dashboard) were produced with the leak. They have not been rerun.
+Whether the leak helped or hurt the strategy is not measured; the exact
+numbers, and the verdict drawn from them, are not valid until rerun.
+
+## Phase 07 step 2: `risk_math.py`, and how much Kupiec can actually tell us
+
+`app/agent/risk_math.py`: historical VaR/CVaR (95%, 1-day, 250 returns,
+k-th largest loss with k = ceil(n x 5%) = 13, no interpolation), normal
+VaR/CVaR for comparison, 60-day pairwise correlation on date-aligned
+returns, and the Kupiec POF test. Plain Python, no scipy. Checked against
+scipy locally (p-values within 5e-15; VaR/CVaR/correlation identical) and,
+in `tests/test_risk_math.py`, against Jorion's published 95% acceptance
+regions (T=255: 7-20, T=510: 17-35, T=1000: 38-64 breaches, all exact).
+
+**Power check, before using the test** (exact binomial, alpha = 5%):
+
+| Days | Accept (breaches) | Size | True rate 2.5% | 7.5% | 10% | 15% |
+|---|---|---|---|---|---|---|
+| 140 (~out-of-sample run) | 3-12 | 0.051 | 0.32 | 0.25 | 0.65 | 0.98 |
+| 250 | 7-19 | 0.059 | 0.57 | 0.42 | 0.88 | 1.00 |
+| 283 (run #4) | 8-21 | 0.055 | 0.59 | 0.46 | 0.92 | 1.00 |
+
+What this means for step 6:
+
+- Over run #4's 283 days, Kupiec reliably catches a model breaching 10%+
+  of days (twice the target). It **misses a 7.5% model more often than
+  not** (46% power). "Passed Kupiec" is weak evidence; a 50%-too-high
+  breach rate usually passes.
+- On the ~140-day out-of-sample window it is weaker still: 65% power even
+  against a 10% breach rate.
+- 99% would be worse: at 250 days the region is 1-6 breaches, size 9.5%,
+  and only 24% power against a true 2% rate. Hence 95%.
+- So a naive 2% VaR "beating" our VaR on Kupiec needs the breach counts
+  and p-values reported side by side, not just pass/fail.
+
+## Phase 07 step 3: VaR budget in the risk manager (pre-registered)
+
+Fixed **before** any backtest was run with it, and without looking at
+AAPL's VaR over the backtest windows:
+
+- **Budget:** a full 20-share position may carry at most **2.0%** of its
+  value as 95% 1-day historical VaR. Max shares = floor(20 x 2% / VaR),
+  capped at 20. VaR at or under 2%: the budget never binds.
+- **V1 rules first, unchanged**, as a hard floor. The budget only shrinks
+  or vetoes a BUY that V1 allowed; it never enlarges a trade.
+- **SELLs are never limited** by the budget.
+- **Already over budget** (volatility rose after buying): further BUYs
+  vetoed, `over_var_budget` flagged, **no forced sell**.
+- **Under 250 returns of history:** V1 only, `var_unavailable` flagged.
+- **Correlation** (60-day, with other held symbols): recorded, and
+  `high_correlation:<SYM>` flagged above 0.8. Never changes quantity.
+
+Everything lands in the risk manager's `raw_output`: VaR/CVaR (historical
+and normal), `var_max_qty`, `correlations`, `risk_flags`. The node takes an
+optional `price_source`; without one it is exactly the V1 node, which is
+how the 7 original tests still run untouched.
+
+## Phase 07 step 6: baselines
+
+### Leak confirmed in the stored V1 runs, not just the API
+
+Every stored V1 decision's `technicals_snapshot.current_price` was
+compared with real IEX closes: **938 of 938** decisions in runs #4, #6, #9
+and #14 used that day's own close; none used the prior day's. (Those runs
+also made a decision on every weekday, including 11 market holidays in
+run #4's window. Not a leak: there's no close that day. But those days
+count as "decision days" in V1's totals.)
+
+### 6a: historical VaR vs a naive 2% VaR (Kupiec, `scripts/evaluate_var.py`)
+
+Criterion committed before the first run (`dff330f`): historical VaR
+"beats" naive iff Kupiec does not reject it (p >= 0.05) and does reject
+naive. AAPL, 95% 1-day, closes through D-1 only:
+
+| Window | Days | Historical: breaches, p | Parametric | Naive 2% | Verdict |
+|---|---|---|---|---|---|
+| **Primary: run #4** (Jun 2022 to Jun 2023) | 272 | 12 (4.4%), p=0.65 | 12, p=0.65 | 28 (10.3%), p<0.001 | **beats naive** |
+| Out-of-sample (Jul to Dec 2023) | 126 | 2 (1.6%), p=0.041 | 2, p=0.041 | 7 (5.6%), p=0.78 | **historical fails** |
+| "Long" (Jul 2021 to Dec 2023) | 613 | 33 (5.4%), p=0.67 | 32, p=0.80 | 65 (10.6%), p<0.001 | beats naive |
+
+- **Primary verdict: pass.** In run #4's window the 2% naive VaR was
+  breached twice as often as it should be; the 250-day historical VaR was
+  on target.
+- **Out-of-sample it fails the other way: too conservative.** The 250-day
+  window still carried 2022's volatility into a calm late 2023 (mean VaR
+  2.7% vs a realized breach rate of 1.6%). For a budget this means
+  shrinking positions more than the risk justified. Naive 2% happened to
+  fit that calm stretch. At 126 days the test's size is 7% (not 5%), so
+  this rejection is itself weak evidence, but it is reported as a fail,
+  as pre-registered.
+- **The "long window" is shorter than planned.** It was meant to be
+  2017 to 2023; Alpaca's IEX feed only has AAPL bars from mid-2020, so
+  the first forecast with 250 returns behind it is 2021-07-26. Reported
+  as what it actually covered.
+- Parametric and historical VaR are nearly indistinguishable here.
+
+Stored forecasts were cross-checked against an independent recomputation
+(`evaluate_var.py --check-backtest`): max difference 3.6e-7, the
+NUMERIC(10,6) rounding.
+
+### 6b: VaR node vs rule-based node, first attempt blocked (result further down)
+
+Plan: one real-LLM rerun of run #4's config with the VaR node, then
+replay both rule sets over the same recorded proposals
+(`scripts/compare_var_node.py`, committed before the run finished,
+`ee9d656`; the replay gate reproduces run #6 to $0.0003). The Portfolio
+Manager never sees positions, so this isolates the risk node exactly.
+
+The rerun (backtest 18) **stopped after 25 of ~272 days: the OpenAI
+account ran out of credits** (HTTP 429 `credit_balance_exhausted`).
+Backtest 18 is marked FAILED; its partial rows are not a result. Nothing
+from it is reported. Step 6b, and therefore phase 07, is not done.
+
+### Before the reruns: backtest fixes (`70b7b7f`), and a full dry run
+
+Done while OpenAI credits were at zero, so the paid reruns happen once:
+
+- **Real trading calendar.** Days come from Alpaca's market calendar. V1
+  ran every weekday, 11 holidays included in run #4's window (283 vs 272).
+- **Fills at the open.** A trade decided before the open on D now fills
+  at D's open + 5 bps, as `docs/backtesting-plan.md` specified. V1 filled
+  at D's own close (the leak); with only the leak fixed it would have
+  filled at D-1's close, a price gone by the open. The open is stored per
+  decision (`decisions.execution_price`, migration 007) so replays fill
+  identically; old runs fall back to `current_price` and still reproduce
+  (runs 4 and 6: drift $0.0004 / $0.0003).
+- **Run setup recorded.** `backtests.config` holds models, risk settings,
+  fill rule, calendar, git commit. A paid run refuses a dirty tree.
+- **Crash = FAILED.** Backtests 5 (V1) and 18 had been left RUNNING; both
+  now FAILED, and a crash now marks the run FAILED with tokens used so far.
+- **Token usage measured.** Per model in `backtests.llm_usage`, via a
+  LangChain callback passed into every graph call; a test drives it
+  through LangGraph end to end.
+
+**What this means for the V1 reruns:** they are V1 with three corrections
+(leak, holidays, fill at the open), not the leak alone. Differences from
+the published numbers can't be attributed to the leak alone.
+
+**Dry run** (backtest 25, fake LLMs, VaR node, run #4's window): SUCCESS
+in 210 s; 272 decisions, 0 on weekends or holidays, 272 opens, 272 VaR
+forecasts matching an independent recomputation (max 4.8e-7); opens
+spot-checked against raw Alpaca bars. Not exercised: real LLM calls
+(token counts will be checked on the first paid run) and trade fills on
+real prices (the fake Portfolio Manager always HOLDs; fills are covered by
+`tests/test_backtest_v2.py`).
+
+### Switching the LLM provider to Claude (V2 onward)
+
+Both OpenAI and Anthropic balances were at zero; Claude credit is what
+gets bought. Rather than swap one hard-coded client for another, the
+provider became configuration: `app/agent/llm.py`, `LLM_PROVIDER` in
+`.env`, default still OpenAI. Every backtest records provider, models,
+temperature and thinking setting in `backtests.config`.
+
+- **Models (chosen 2026-10-05):** Portfolio Manager `claude-sonnet-5-5`,
+  Sentiment Analyst `claude-haiku-4-5`: the same large/small split V1 had
+  with gpt-4o / gpt-4o-mini.
+- **Settings:** Sonnet 5.5 runs with thinking off (`between_tools`; it
+  rejects `disabled`) to match V1's non-reasoning setup. Sonnet 5.5
+  rejects `temperature`, so the Portfolio Manager runs at the model
+  default: unlike V1's temperature 0, two runs need not match exactly.
+  Haiku 4.5 keeps temperature 0.
+- **Structured output** uses Claude's native JSON-schema mode; the default
+  forced-tool-call method returns a 400 on Sonnet 5.5.
+- **Estimated cost** from run #14's measured prompt sizes (chars / 3.5,
+  so +/-50%): ~$1.60 per 272-day run; step 6 plus every V1 rerun ~$8.
+  The first paid run's `llm_usage` replaces this estimate.
+
+**What this does to comparisons.** Results from here on are a
+Claude-driven strategy. The V1 reruns change four things at once (look-
+ahead leak, holidays, fill at the open, model), so a difference from the
+published V1 numbers can't be attributed to any one of them; no bridge
+run (same config on both providers) is possible without OpenAI credit.
+The VaR-node comparison is unaffected: both sides replay one run.
+
+**Rerun plan (decided 2026-10-05):** Sonnet 5.5 + Haiku 4.5; the two
+repeat runs are skipped (#8 repeated #7, #9 repeated #4), which loses
+the run-to-run noise check they provided. Estimated at ~$0.006 per full
+trading day (Portfolio Manager ~$0.004, sentiment ~$0.002):
+
+| Run | What | Days | Est. |
+|---|---|---|---|
+| step 6 | VaR node, #4's window, current code; V1-rules replay of it is the corrected #14 | 272 | ~$1.60 |
+| #4 | categorical sentiment | 272 | ~$1.60 |
+| #7 | sentiment ablated (PM calls only) | 272 | ~$1.10 |
+| #6 | out-of-sample, categorical | 126 | ~$0.75 |
+| #3 | pilot quarter, categorical | ~64 | ~$0.40 |
+| | **total** | | **~$5.40** |
+
+Open: #3, #4 and #6 used the categorical sentiment prompt, which the
+Phase 04 rewrite removed. Rerunning them faithfully needs it restored
+behind a setting.
+
+**Categorical mode restored (`fa094e8`).** V1's BUY/SELL/HOLD sentiment
+prompt and the Portfolio Manager prompt written for it are back, verbatim,
+behind `--sentiment-mode categorical` (`app/agent/v1_categorical.py`).
+Both were checked byte-for-byte against git (ba47f0a, 275b6e4^) and are
+pinned by hash in `tests/test_v1_categorical.py`. Dry run over #3's window
+(backtest 44, fake LLMs): 64 trading days, all 64 sentiment opinions
+stored as votes, mode recorded in config.
+
+**Reduced to fit a $5 budget, in this order:** step 6 (~$1.60), #6
+(~$0.75), then check real cost from `llm_usage`, then #4 (~$1.60) if it
+fits. #3 and #7 are not rerun for now; the homepage will say so rather
+than leave their old numbers looking corrected.
+
+### 6b result: VaR node vs V1 rules on the same decisions (backtest 45)
+
+Backtest 45: run #4's window, current (score) sentiment, Claude (Sonnet
+5.5 + Haiku 4.5), leak/holiday/open-fill fixes. It was killed by a tool
+time limit at day 220 and resumed (`3b101bc`); the resume is recorded in
+its config. Replay gate: recorded MtM +428.56, replayed +428.56.
+
+| Same 272 decisions | MtM P&L | % of cap | vs buy & hold | Max drawdown | Avg shares |
+|---|---|---|---|---|---|
+| VaR node (recorded) | +428.56 | 14.3% | -409.24 | 579.15 | 10.8 |
+| V1 rules (replayed) | +920.81 | 30.7% | **+83.01** | 790.17 | 17.0 |
+| Buy & hold, 20 sh | +837.80 | 27.9% | | | 20 |
+
+- **The VaR budget bound on all 272 days** (AAPL's VaR stayed above 2%
+  throughout), so the node held ~64% of V1's average position.
+- **As pre-registered, it cost P&L** (-$492) in a rising market. Its
+  drawdown was smaller (-$211), but by less than its exposure was cut:
+  return per dollar of drawdown 0.74 vs V1's 1.17. On this window the
+  budget made the strategy worse, risk-adjusted too.
+- **The forecasts themselves hold up:** 12 breaches in 272 days (4.4%,
+  Kupiec p=0.65) vs the naive 2% VaR's 28 (10.3%, p=0.0004), matching
+  step 6a exactly. The VaR is a good estimate; using it as a binding
+  2% budget was the costly part.
+- **V1's rules beat buy-and-hold here, by $83 (3%).** No V1 run did. Not
+  evidence of an edge: one path, one symbol. (Corrected: this first said
+  it was within V1's repeat-run spread, "$24-90"; the real replicate
+  spread is $24-34, so $83 exceeds it. See the correction at the end.)
+  It also can't be pinned on any one change (leak fix, holidays, open
+  fills, Claude).
+
+**Cost:** the resumed 52 days measured $0.46 (Sonnet 78k in / 17k out,
+Haiku 97k / 7k tokens), ~$0.0088 per day, ~50% above the estimate. The
+first 220 days' usage was lost with the killed process; extrapolated
+~$1.94, so step 6 cost ~$2.40 of the $5 budget. Spending caps are now
+mandatory on paid runs (`a2602e2`).
+
+### V1 #6 rerun (backtest 71): out-of-sample, categorical sentiment, Claude
+
+Jul-Dec 2023, `--sentiment-mode categorical` (V1's prompts verbatim),
+Claude, leak/holiday/open-fill fixes, VaR node recorded; V1's rules
+replayed over the same 126 decisions (gate: drift $0.0001). Cost measured:
+$0.96 (Sonnet 138k in / 40k out, Haiku 207k / 15k), $0.0076 per day.
+
+| Same 126 decisions | MtM P&L | vs buy & hold | Max drawdown | Avg shares |
+|---|---|---|---|---|
+| **V1 rules (corrected #6)** | **+66.35** | **+64.15** | 582.45 | 18.5 |
+| VaR node | +123.20 | +121.00 | 397.39 | 13.9 |
+| Buy & hold, 20 sh | +2.20 | | | 20 |
+| *Original #6 (gpt-4o, leaky)* | *-63.10* | *-65.30* | | |
+
+- **The published out-of-sample loss does not survive the corrections:**
+  -$63 becomes +$66, in a flat market. That can't be attributed to any
+  single change (leak, holidays, open fills, gpt-4o -> Claude). (Corrected:
+  this first called ~$65 "within the noise V1's repeat runs showed
+  ($24-90)"; see the correction at the end.) The honest reading: V1's loss
+  does not survive, and one path on one stock does not show a gain either.
+- **Here the VaR budget helped:** +$57 P&L and $185 less drawdown, with
+  the budget binding on 116 of 126 days. In-sample (backtest 45) it hurt
+  (-$492). Same rule, opposite signs on two windows: no evidence either
+  way that the budget improves the strategy.
+
+**Budget:** ~$3.36 of $5 spent (step 6 ~$2.40 incl. extrapolated $1.94,
+#6 $0.96). #4 (~$2.1-2.4 at measured rates) does not fit; #3, #4, #7
+remain not rerun.
+
+### Correction: the "within noise" claim was wrong
+
+The two entries above, and the homepage, report, dashboard, README and
+PROJECT.md as first updated, called the corrected results (+$64, +$83 vs
+buy-and-hold) "within the run-to-run noise of V1's repeat runs ($24-90)".
+The $90 came from comparing #4's and #9's *gaps to buy-and-hold*, which
+used different baselines (the two-day window difference above), so it is
+not run-to-run noise. The actual replicate spread is **$24-34**: #7 vs #8
+(same window) differ by $33.69, #4 vs #9 by $24.17.
+
+So the corrected gaps are two to three times model-randomness noise. That
+still doesn't make them an edge: each is one run on one price path, on
+one stock, after four simultaneous changes, and replicates don't sample
+the price path, which dominates any buy-and-hold comparison. Every page
+now says the narrower, true thing: V1's "underperforms" does not survive
+the correction, and an edge is not established.
+
+## Phase 08 — Explainer agent, built with fakes
+
+A node after the risk manager that says, in plain language, why the VaR
+budget cut or blocked a trade. Pre-registered design (module docstring of
+`app/agent/explainer.py`, written before any real call):
+
+- **Trigger:** `var_budget_scale` / `var_budget_veto` only: the budget
+  changed the trade. It explains; it never alters a decision.
+- **What it explains:** the 5 worst losses the VaR is built from. The risk
+  node now records them (`var_tail`, via `risk_math.tail_losses`), so the
+  explanation is about the number actually used, not this week's news.
+- **Retrieval:** Postgres full-text search over `historical_headlines`,
+  window [D-1, D+1) New York and strictly before `as_of`, ranked by
+  relevance to the company and fixed market terms; 8 per day. Baseline:
+  same window by recency only (`--explain recent`).
+- **Grounding check:** every cited headline must have been retrieved for
+  that same day; problems are stored and `citations_valid` set false. The
+  explanation is kept, never repaired, so the failure rate is measurable.
+- **Baseline explanation:** a no-news, no-model template with the same
+  facts, stored next to every explanation, for phase 09 to compare.
+- **Storage:** `risk_explanations` (migration 008). Model: Haiku 4.5.
+
+Tests: 17 new (110 total): trigger, grounding check, template, node with
+fake LLMs (including an invented citation kept and flagged), retrieval
+SQL against real Postgres (ranking, New York day bounds, nothing after
+`as_of`), the real graph end to end, and persistence through a backtest.
+
+**Retrieval-only dry run** (`scripts/explainer_retrieval_check.py`, no LLM):
+
+| | bt 45 (in-sample) | bt 71 (out-of-sample) |
+|---|---|---|
+| VaR-changed decisions | 105 | 49 |
+| Driver days with any headline | 253 / 525 (48%) | 245 / 245 (100%) |
+| Top headline names Apple: fts vs recent | 59 vs 21 | 128 vs 75 |
+| fts / recent overlap in picks | 31% | 30% |
+| Est. prompt / cost per call (Haiku) | ~870 tok / $0.0026 | ~1,315 tok / $0.0031 |
+
+- Half the in-sample driver days have **no news at all**: the worst losses
+  include May 2022, inside FNSPID's gap. The "say so, cite nothing" rule
+  will carry much of the in-sample load.
+- Full-text ranking surfaces an Apple-named headline first 2.8x (in) and
+  1.7x (out) as often as recency. "Names Apple" is a crude proxy for
+  relevance; phase 09's hand labels are the real test.
+- Not yet done: one small real run (~20 decisions, ~$0.06) to measure the
+  share of explanations whose citations hold up.
+
+### Phase 08 real run: 20 recorded decisions (`scripts/explain_recorded.py`)
+
+Sample pre-registered and committed before running (`aaca37e`): 10
+evenly spaced VaR-changed decisions each from backtests 45 and 71, fts
+retrieval, Claude Haiku 4.5, $0.15 cap. Only the explainer was paid for;
+decision states were rebuilt from what the backtests stored.
+
+| | Result |
+|---|---|
+| Explanations written | 20 / 20 |
+| All citations grounded (retrieved for that same day) | **20 / 20** |
+| Citations per explanation | 7.4 |
+| No-news driver days left uncited | 27 / 27 |
+| Tokens (Haiku 4.5) | 33,955 in / 6,014 out |
+| Cost, measured | **$0.064** |
+
+**What the check does not cover.** "Grounded" means every cited headline
+was one the model was shown for that day; it does not mean the headline
+supports the stated cause. A manual spot check of one explanation
+(2023-11-28, 5 driver days, 11 citations): 4 of 5 causes match their
+headlines closely (China iPhone curbs, iPhone slump, hawkish Fed, Apple
+falling at the start of 2023); one embellishes — 2022-12-28 says "weak
+economic data" where both cited headlines say recession fears and weak
+*oil prices*. Phase 09's grading has to catch this kind of drift; the
+citation check cannot.
+
+The template baseline in these 20 rows reads "1 shares" where the cut was
+to one share; fixed since in the code (rows left as written).
+
+Budget: ~$3.42 of the $5 spent; ~$1.58 left.
+
+## Phase 09 — deviation from the pre-registration (2026-10-06), before any label
+
+The plan (`docs/phase09-plan.md`, section 2) says the 40 test days are
+labelled by the project owner, by hand. **Changed at the owner's request:
+the labels are written by Claude (Opus 5.5), the coding assistant.**
+Recorded here, before any label exists, as the plan requires.
+
+What this costs, stated plainly:
+
+- **Independence.** The explainer (Haiku 4.5) and the judge (Sonnet 5.5)
+  are Claude models too. Labels from the same model family share its
+  blind spots, so agreement between explainer, judge and labels is weaker
+  evidence than agreement with a person would be.
+- **Contamination.** The labeller had already seen the explainer's
+  output and cited headlines for 5 test days during the phase 08 spot
+  check (2022-12-15, 2022-12-28, 2023-01-03, 2023-08-04, 2023-09-06).
+  Those days are flagged in `eval/labels.json` (`seen_explainer_output`)
+  so results can be reported with and without them.
+- **Mitigations.** Labelling from the blind view only (headline text and
+  time, shuffled, no retrieval method or rank — the same view the page
+  shows); by the plan's written rules; before any new explanation exists.
+  The retrieval test (fts vs recency) is affected least: neither method
+  is a language model.
+- **Judge check (section 5).** If the same labeller also scored the 20
+  judge items, the check would be Claude agreeing with Claude. Proposed:
+  the owner still scores those 20 (~10 minutes); otherwise the judge
+  check is reported as LLM-only and not counted as validation.
+
+## A second look-ahead leak: date-only headline timestamps (found 2026-10-06)
+
+Found while preparing phase 09's labels: every candidate headline was
+stamped at exactly midnight UTC. Across `historical_headlines`, **99.66%
+of rows are stamped 00:00 UTC** (AAPL: 100% in 2022, 99.6% in 2023). The
+FNSPID `Date` field carries a date, not a time of publication.
+
+**Consequence 1 — sentiment look-ahead in every backtest.** The headline
+filter is `published_at < as_of` with `as_of` = D 12:00 UTC (08:00 New
+York, before the open). A headline dated D is stamped D 00:00 UTC and
+passes, whenever on D it was actually published. Measured from stored
+opinions, the share of decisions whose sentiment input included
+headlines dated that same day:
+
+| Run | #4 | #6 | #9 | #14 | **45** | **71** |
+|---|---|---|---|---|---|---|
+| Same-day headlines seen | 100% | 98% | 100% | 100% | **100%** | **98%** |
+
+Concrete case, run #14 and corrected run 45, decision at 2022-06-03 08:00
+New York: the sentiment analyst read "Apple Was the Worst Stock in the Dow
+Friday", "US STOCKS-Wall St ends down with strong jobs data…" and "Why
+Nvidia, Amazon, and Apple Stocks Slumped Friday" — all published after
+that day's close. **This affects the two "corrected" reruns as well**:
+their +$64 / +$83 against buy-and-hold were produced with it.
+
+The backtesting plan's headline rule, `published_at < as_of` strictly,
+was correct for timestamps with times and silently wrong for dates.
+
+**Consequence 2 — the explainer's window is a day late.** The window
+[D-1 00:00, D+1 00:00) New York is [D-1 04:00, D+1 04:00) UTC in summer,
+so with midnight-UTC stamps it holds headlines *dated D and D+1*, not
+D-1 and D. Phase 08's coverage numbers, its 20 explanations and phase
+09's candidate set were all built on the shifted window. No phase 09
+label exists yet.
+
+Not affected: the VaR forecasts and Kupiec results (prices only), and
+the VaR-node vs V1-rules comparisons as risk-rule comparisons (both sides
+replay the same decisions) — though those decisions were themselves made
+with the leak.
+
+### Phase 09 — second deviation: test set rebuilt on headline dates (before any label)
+
+`docs/phase09-plan.md` defines each day's candidates by the explainer's
+window "[D-1, D+1) New York". On FNSPID's midnight-UTC date stamps that
+window held headlines *dated D and D+1* (see the headline-date finding
+above). Fixed in the explainer, so the test set was rebuilt with the
+corrected window, headlines dated D-1 or D, by the same selection rule
+otherwise: still 40 days (13 of them explainer driver days), 498
+candidates (was 520), 1,415 fixture headlines. No label existed for the
+first version.
+
+Fixes and public corrections for the leak itself: `6bebc48`, `fd99811`.
+
+### Phase 09 retrieval test (`scripts/eval_retrieval.py`)
+
+Labels committed first (`6ad89bd`): 153 of 498 candidates relevant, 4
+days with no explaining headline. Pre-registered primary: hit@1, fts vs
+recent, two-sided exact sign test.
+
+| | fts | recent |
+|---|---|---|
+| hit@1 (top headline relevant), 40 days | **20 (50%)** | 12 (30%) |
+| precision@8 | 39% | 30% |
+| recall (37 days with any relevant) | 86% | 68% |
+
+- **Paired hit@1: fts wins 14 days, recent 6, ties 20; p = 0.115.
+  Pre-registered verdict: no significant difference.** Full-text ranking
+  is better on every number, but the test it was given cannot call it:
+  half the days tie (both right or both wrong), leaving 20 untied, where
+  15 wins were needed.
+- Without the 5 days the labeller had seen beforehand: wins 10 vs 6,
+  p = 0.45; same direction, same verdict.
+- Labels are Claude's, not a person's (logged deviation); neither
+  retrieval method is a language model, so this test is the one least
+  affected by that.
+
+**Regression check:** `tests/test_retrieval_regression.py` loads the
+1,415-headline fixture under a separate symbol and requires both methods
+to reproduce the recorded rankings exactly, so CI fails on any retrieval
+change until the test set is rebuilt and this test re-run on purpose.
+
+### #6 rerun with both leaks fixed (backtest 136)
+
+Out-of-sample window (Jul-Dec 2023), V1's categorical prompts, Claude,
+prices and headlines both look-ahead-free (verified on the run itself:
+0 of 400 headlines it read had first appeared on or after the decision
+day; the old runs, measured the same strict way, 98-100% of decisions).
+Commit `b13093a`. Cost measured: $0.93 (Sonnet 138k in / 40k out, Haiku
+190k / 15k). Budget: ~$4.36 of $5 spent.
+
+| Same 126 decisions | MtM P&L | vs buy & hold | Max drawdown | Avg shares |
+|---|---|---|---|---|
+| **V1 rules (corrected #6)** | **+73.88** (1.91%) | **+71.68** | 581.50 | 18.6 |
+| VaR node | +132.64 | +130.44 | 393.70 | 14.0 |
+| Buy & hold, 20 sh | +2.20 (0.06%) | | | 20 |
+| *price leak fixed only (bt 71)* | *+66.35* | *+64.15* | | |
+| *original #6 (both leaks, gpt-4o)* | *-63.10* | *-65.30* | | |
+
+- **The headline leak barely moved this window**: +$66 with it, +$74
+  without. The categorical sentiment voted HOLD almost always, so the
+  leaked news had little channel into decisions here. The in-sample
+  score-node run (bt 45), whose sentiment is a continuous score, may not
+  be so lucky; it is not rerun (~$2.40, over budget).
+- **Reading:** one out-of-sample path, one stock, a flat market: +$72
+  over buy-and-hold, about twice the replicate spread ($24-34). Not
+  evidence of an edge; it does mean the original "-$63 out-of-sample
+  loss" was an artefact of the look-ahead and the other corrections, not
+  the strategy.
+- **VaR budget, again on identical decisions:** +$59 and $188 less
+  drawdown (bt 71: +$57, $185). Out-of-sample it helps; in-sample (on
+  leaky decisions) it cost $492.
+
+### Phase 09 — third deviation: judge check scored by Claude (before any judging)
+
+`docs/phase09-plan.md` section 5: the owner hand-scores 20 judge items,
+and the judge's scores count only if judge-human agreement is >= 80%.
+**At the owner's request the 20 items are scored by Claude (Opus 5.5)
+instead.** As noted when the labelling deviation was logged, this makes
+the check Claude agreeing with Claude: the explainer (Haiku 4.5), the
+judge (Sonnet 5.5), the labels and the check-scores are all one model
+family. Consequence, fixed now: **the agreement figure is reported, but
+it is not treated as validating the judge.** The explanation test's
+results are reported as "LLM-judged against LLM labels" and nothing
+stronger. Scores are written blind to the judge's output and committed
+before the judge runs.
+
+### Phase 09 explanation test (`scripts/eval_explanations.py`)
+
+Staged, each committed before the next ran: script and fixed item set
+(`f14e21f`), 44 explanations (`a9d7437`, Haiku 4.5, $0.080), the 20
+check scores (`9917ef5`), then the judge (Sonnet 5.5, $0.166).
+
+**Explanations:** all 40 news-day explanations fully grounded (every
+citation retrieved for that day); on all 4 no-news days the explainer
+cited nothing, as required.
+
+| Judged on 40 news days | Explainer | Quote baseline (top fts headline) |
+|---|---|---|
+| matches reference cause: yes | **26 (65%)** | 9 (22%) |
+| matches: partly | 10 | 10 |
+| supported by its own citations | **37 (92%)** | 32 (80%)* |
+
+- **Primary, pre-registered: met.** Paired on "matches = yes": explainer
+  wins 17 days, quote 0, ties 23; sign test p < 0.0001; and 92% of the
+  explainer's causes are supported (bar: 90%). Without the 5 days the
+  labeller had seen: 14 wins vs 0, p = 0.0001, 94% supported.
+- **The explainer's 3 unsupported causes are real overreach**: each
+  asserts a link the cited headlines don't state (China COVID controls
+  pressuring Apple; Foxconn capacity linked to the drop; Apple supply
+  disruptions). ~7.5% of explanations, the kind of drift the phase 08
+  spot check found once in five causes.
+- *The judge read "supported" more strictly for quotes than defined: it
+  marked a quoted headline unsupported when the headline doesn't explain
+  a fall (e.g. an Apple TV+ series). By the definition a verbatim quote
+  is supported; this only lowers the quote's 80%, not the primary test.
+- **Judge check:** agreement with the 20 Claude-scored items, 18/20 on
+  supported and 18/20 on matches (90%). As fixed in the third deviation,
+  this is Claude agreeing with Claude and **is not treated as validating
+  the judge.**
+
+**What this does and doesn't show.** An explanation from Haiku, grounded
+in retrieved headlines, names the labelled cause far more often than
+quoting the best-ranked headline does, by a margin no tie-heavy small
+sample could produce by chance. But the labels, the judge and the
+explainer are all Claude models; the result says the three agree, not
+that a person would. One human pass over the labels would change that.
+
+Budget: ~$4.60 of the $5 cap spent; ~$0.40 left.
+
+## Phase 10 — Reasoning trace, built and tested with fakes
+
+Plan pre-registered in `docs/phase10-plan.md` (`8aceeef`); built in
+`56acf6f`. Scope chosen by the owner: every LLM node; CLI audit.
+
+- **What is stored** (`trace_steps`, migration 009, written in the
+  decision's own transaction): every LLM call — exact prompt messages,
+  raw reply, model, tokens, duration, error, tagged with its node by a
+  single LangChain callback; the sentiment analyst's headline lookup and
+  the explainer's retrievals (each result with rank and full-text score);
+  the risk node's VaR arithmetic; the explainer's citation check.
+- **Secrets:** invocation parameters pass an allow-list; a key-like
+  string anywhere in a step blocks the write (tested).
+- **Audit:** `scripts/audit_decision.py <id>` prints the chain from the
+  trace alone; `scripts/trace_completeness.py <backtest>` runs the
+  pre-registered check.
+- **Dry-run fakes are now real LangChain chat models**, so dry runs are
+  traced exactly as real runs would be.
+
+**Dry run** (Nov 2022, 21 trading days, fake Portfolio Manager buying so
+the explainer fires, fts retrieval):
+
+| | Trace off (bt 175) | Trace on (bt 176) |
+|---|---|---|
+| Wall time | 18.2 s | 18.4 s |
+| Trace steps / storage | — | 217 steps, 323 kB (~15.7 kB and ~10 steps per decision) |
+| Explanations | 19 | 19 |
+| **Completeness: rebuilt exactly from the trace** | — | **19 / 19 (100%)** |
+
+- Time overhead is within one-run noise (network calls to Alpaca dominate).
+- Storage is higher than the plan's 1-2 MB estimate: ~4 MB for a
+  272-day backtest, mostly the sentiment prompt (up to ~56 headlines a
+  day) stored in full. Acceptable; noted against the estimate.
+- Tests: 7 new (124 total), including an end-to-end backtest whose
+  stored trace passes completeness and shows the sentiment lookup seeing
+  only headlines dated before the decision.
+
+Not yet done: the small real check (~5 explanations, ~$0.02).
+
+### Phase 10 real check: 5 traced explanations (backtest 136)
+
+`scripts/explain_recorded.py 136 --per-backtest 5 --trace` (`adb2582`):
+5 evenly spaced VaR-changed decisions from the clean out-of-sample run,
+explained by Claude Haiku 4.5 with tracing on; $0.018 measured.
+
+- **Completeness: 5 / 5 rebuilt exactly from the trace (100%)** — real
+  model output, same check as the dry run's 19 / 19.
+- Stored LLM steps carry the real model id (`claude-haiku-4-5-20251001`),
+  token counts identical to the run's measured usage (9,414 in / 1,692
+  out), node tag `explainer`, ~4.7 s per call. 25 retrieval steps with
+  ranks and scores, 5 check steps. Secret scan over every stored step:
+  0 hits.
+- These decisions predate tracing, so their traces hold only the
+  explainer's steps (logged in the script's help); every decision made
+  from now on is traced in full, in its own transaction.
+
+**Phase 10 done** by its pre-registered definition: code and tests,
+completeness 100% on the dry run and the real run, overhead reported.
+Budget: ~$4.62 of $5 spent, ~$0.38 left.
+
+## Status, 2026-10-06: V2 complete; project paused
+
+- **V2 shipped:** phases 07-10 (risk engine, explainer, eval harness,
+  reasoning trace).
+- **Phase 09's human check declined by the owner.** The labels stay
+  Claude-written, and the caveat stays on every page that reports phase
+  09: the result shows that the Claude explainer, judge and labels agree,
+  not that a person would. The blind labelling page and a fixed 12-day
+  sample remain ready if someone does it later.
+- **Not rerun, over budget:** the in-sample runs with both look-ahead
+  leaks fixed (~$2.40). The homepage says so.
+- **V3 (Indian markets) is future work, not scheduled.** V4 stays on hold
+  behind its gate.
+- Budget: ~$4.62 of the $5 cap spent.
+
+## Phase 04 rerun with MLflow tracking (2026-10-06/07)
+
+Why: phase 04's two notebooks logged nothing (`report_to="none"`); the
+results lived only in this log. Both notebooks now log parameters, the
+loss curve and every evaluation metric **next to its trivial baseline** to
+MLflow, and the sentiment notebook was rerun on a Kaggle T4 (free; no
+Claude spend). The old numbers were not typed into MLflow: a run is only
+in the database if it actually ran.
+
+**Library drift, not design changes.** The notebooks install the latest
+packages (unpinned `-U`), and since the original run torch, transformers,
+trl, peft and MLflow had all moved. Each fix below was forced by an error
+and changes memory use or speed, not the experiment:
+
+| Change | Forced by |
+|---|---|
+| MLflow logs to SQLite (`eval/mlflow/*.db`), not an `./mlruns` folder | MLflow 3.x refuses the file store unless forced |
+| `max_seq_length` → `max_length` | trl renamed the argument |
+| `loss_type="nll"` (the standard loss) | trl's new default `chunked_nll` crashes on a 4-bit PEFT model |
+| No gradient checkpointing | `CheckpointError` on recomputation with current torch/transformers |
+| Batch 2 × 8 accumulation (was 4 × 4; effective 16 either way) | out of memory on a T4 without checkpointing |
+| fp16, not bf16; trainable weights cast to fp32 | a T4 has no bf16 tensor cores (~4 h estimate); trl 1.14 casts QLoRA weights to bf16 unconditionally, which the fp16 grad scaler cannot unscale |
+| One GPU pinned, fail fast if none | T4 x2 splits the model; an imported notebook starts with no GPU |
+
+Commits `7d39fd0`..`6445c0f`. The run was made cell by cell, with the last
+fix typed into Kaggle by hand; the logged parameters match the committed
+notebook.
+
+### Sentiment classifier on Financial PhraseBank (run `f620d67a`)
+
+Qwen2.5-1.5B-Instruct, 4-bit QLoRA (r 16, alpha 32), 3 epochs on 3,872
+PhraseBank sentences, lr 2e-4, seed 42. torch 2.11, transformers 5.18,
+trl 1.14.1, peft 0.21.2, MLflow 3.16.1. 52 min training, 70 min in all.
+
+| Metric | Value |
+|---|---|
+| Held-out accuracy, 150 validation sentences | **91.3%** |
+| Always-HOLD baseline, same 150 | 59.3% |
+| Replies with no parseable opinion | 0 |
+| Eval loss by epoch | 0.331, **0.323**, 0.329 |
+
+- **Beats its baseline on PhraseBank by 32 points.** This is the first
+  recorded in-domain number: the original run's PhraseBank accuracy was
+  never written down, so there is nothing to compare it with.
+- **It does not change the phase 04 verdict.** The verdict rests on a
+  different test: agreement with GPT-4o-mini on the project's own AAPL
+  headlines, where the original adapter scored 84.0% against a 96.8%
+  always-HOLD baseline. Learning PhraseBank and transferring to this
+  project's headlines are different claims; only the first is shown here.
+  That transfer test was not rerun (it needs the project database and the
+  local backend described at the end of the notebook).
+- The 150 are the *first* 150 of 484 validation sentences, not a random
+  sample, as in the original notebook.
+- Eval loss was lowest after epoch 2 and the saved adapter is from epoch
+  3: mild overfitting in the last epoch, kept as run.
+- Misses lean one way: 6 of the 8 shown are BUY sentences called HOLD.
+
+### Return regression, full run (run `7f7f7b8b`)
+
+The run phase 04 v2 skipped: the notebook as written, **1.5B, all 27,591
+training examples, 2 epochs**. The recorded v2 result had been cut down to
+0.5B, 12k examples and 1 epoch because a full run looked like six GPU
+hours. Same fixes as above, plus `warmup_ratio=0.03` → `warmup_steps=0.03`
+(transformers 5 removed the argument; a float below 1 is still a ratio),
+batch 1 × 32 accumulation (effective 32, as written), and the dataset path
+Kaggle now mounts. transformers 5.19, torch 2.11, peft 0.21.2. 5.4 h
+training, 5.9 h in all, on one T4. Verdict tag in MLflow: **FAIL**.
+
+| Split | n | IC | 95% interval | Sign acc. | Always-majority | Pred. sd |
+|---|---|---|---|---|---|---|
+| later dates, seen symbols | 9,336 | −0.0003 | [−0.021, +0.020] | 0.495 | 0.501 | 0.040 |
+| unseen symbols, overlapping dates (leaky) | 4,774 | +0.0181 | [−0.010, +0.046] | 0.501 | 0.509 | 0.041 |
+| **unseen symbols and dates (decides)** | 1,221 | **+0.0278** | [−0.028, +0.084] | 0.508 | 0.524 | 0.040 |
+
+Pre-registered bar IC ≥ 0.03; TF-IDF baseline +0.0024 on the deciding
+split. R² on every split is within ±0.005 of zero, and MAE is within 0.002
+of a constant predictor's.
+
+- **FAIL, and the same null as the cut-down run.** The deciding split's
+  +0.028 is just under the bar, but its 95% interval spans −0.03 to +0.08:
+  that split cannot tell this number from zero, the flaw already recorded
+  for the pre-registration. The split that can, later dates (n = 9,336),
+  gives −0.0003 and excludes 0.03.
+- **Collapsed to the mean again.** Prediction sd 0.04 against labels with
+  variance 0.98 (cut-down run: 0.051). Sign accuracy is below always
+  guessing the majority sign on every split.
+- **Versus the cut-down run** (clean −0.0125, later dates −0.0074, leaky
+  +0.0104): every change is inside one interval. A 3× larger model on
+  2.3× the data for twice the epochs found nothing the small one missed,
+  so the limitation "v2 ran at 0.5B, on 12k examples, one epoch" no longer
+  applies; the conclusion stands without it.
+- **Logged training loss reads ~33, not ~1.** It is summed over the 32
+  accumulation micro-steps (transformers 5 skips the division for a model
+  whose forward accepts loss kwargs, which Qwen's classification head
+  does, though its MSE ignores them): 33.56 / 32 = 1.05, against 0.98 for
+  always predicting the mean. Gradients carry the same constant factor;
+  clipping at 1.0 then AdamW, which is insensitive to a constant gradient
+  scale, so the effect should be small, but it is not verified. Eval loss
+  (0.85) is unaffected.
+
+Browse: `mlflow ui --backend-store-uri sqlite:///eval/mlflow/mlflow_regression.db`.
+
+To browse the run: `pip install mlflow`, then
+`mlflow ui --backend-store-uri sqlite:///eval/mlflow/mlflow_sentiment.db`.
+
+## MCP server (add-on, 2026-10-08)
+
+Plan committed first (`61fb254`, `docs/mcp-plan.md`). `app/mcp_server.py`:
+a read-only MCP server over the stored record, official `mcp` SDK 2.3
+(where `FastMCP` is now `MCPServer`), stdio transport, five tools —
+`list_backtests`, `list_decisions`, `get_decision`, `explain_decision`,
+`get_trace`. Hand-written SQL; `get_trace` reuses `trace_audit` rather
+than a second implementation.
+
+- **Read-only in Postgres, not by convention:** connections open with
+  `default_transaction_read_only=on`; a test proves a `DELETE` through the
+  server's connection raises `ReadOnlySqlTransaction` and the row survives.
+  Every tool also carries `readOnlyHint` for the client.
+- No tool starts a run (runs spend API money). Lists capped at 200 rows;
+  trace text shortened unless `full=True`, and sent once (structured copy
+  turned off). Missing rows and a down database come back as plain
+  sentences, not stack traces.
+- **Tests: 10 new, 134 pass, none skipped.** A fake-model backtest with one
+  VaR-cut decision is read back through the SDK's in-process client; the
+  `get_trace` text is asserted equal to what `scripts/audit_decision.py`
+  prints for the same decision.
+- **Launched as a client would** (subprocess over stdio, Windows): lists
+  the five tools and returns the stored explanation of decision 2827
+  (backtest 136) unchanged.
+- `requirements.txt`: `mcp` and its 11 dependencies pinned (`pywin32`
+  marked Windows-only).
+
+### Real check (2026-10-08)
+
+Claude Desktop (Store build: its config lives under
+`%LOCALAPPDATA%\Packages\Claude_*\LocalCache\Roaming\Claude\`, and the
+app overwrites that file from memory on quit, so the entry has to be added
+with the app closed).
+
+1. **Asked in a Claude Desktop chat:** "In backtest 136, which decisions did
+   the VaR budget cut, and which have explanations?" Every fact in the
+   answer matched the database: 51 VaR-changed decisions, 2023-07-14 to
+   2023-12-01, 7 BUY and 44 HOLD, the 7 BUY ids, and the 5 explained
+   decisions with their dates, actions and confidences. Nothing invented.
+   **It exposed two faults in the tool, not the data:** the description
+   said VaR-changed decisions "are the ones that have explanations", so the
+   client read 5 of 51 as a possible silent failure (only a budgeted
+   sample was ever explained, phase 10); and the list could not tell a
+   cut from a block. Fixed (`6c981a8`): `var_effect` = scaled / blocked
+   (7 / 44 here) and a corrected description.
+2. **Questions 2 and 3 run through the same server from Claude Code in the
+   same app**, not a Chat-tab conversation (deviation; the owner judged the
+   first answer sufficient). "Why was decision 2827's trade cut?" returns
+   the stored explanation unchanged: BUY 6 scaled to 1, VaR 3.06% against
+   the 2% budget, 13 shares allowed with 12 held, five loss days with 18
+   cited headlines, citation check passed. "Which model wrote it, how many
+   tokens?" `claude-haiku-4-5-20251001`, 1,846 in / 331 out, matching the
+   phase 10 record.
+3. `get_trace` for 2827 is **identical** to `scripts/audit_decision.py 2827`,
+   line for line, completeness line included.
+
+**MCP add-on done** by the plan's definition: tests in CI, a real client
+check, README. One deviation logged above.

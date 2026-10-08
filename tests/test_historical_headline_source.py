@@ -96,7 +96,7 @@ async def test_excludes_headlines_at_or_after_as_of(pool):
 async def test_excludes_headlines_older_than_lookback_window(pool):
     as_of = datetime(2022, 6, 15, tzinfo=timezone.utc)
     await _insert_headline(
-        pool, published_at=as_of - timedelta(days=1), headline="within window"
+        pool, published_at=as_of - timedelta(days=1, hours=-3), headline="within window"
     )
     await _insert_headline(
         pool, published_at=as_of - timedelta(days=10), headline="too old"
@@ -149,3 +149,49 @@ async def test_only_returns_headlines_for_requested_symbol(pool):
             await conn.execute(
                 "DELETE FROM historical_headlines WHERE symbol = 'OTHER'"
             )
+
+
+
+# --------------------------------------------------------------------------
+# Date-only stamps (FNSPID: 99.7% of rows are 00:00 UTC). Found 2026-10-06:
+# a decision at D 08:00 New York was reading headlines dated D, published
+# after that day's close. A date-only headline is available only once its
+# date has ended in New York.
+# --------------------------------------------------------------------------
+
+def _midnight(y, m, d):
+    return datetime(y, m, d, tzinfo=timezone.utc)
+
+
+DECISION = datetime(2022, 6, 3, 12, tzinfo=timezone.utc)  # 08:00 New York, Friday
+
+
+@pytest.mark.asyncio
+async def test_headline_dated_decision_day_is_not_visible(pool):
+    # The real case: at 08:00 Friday the backtest was reading this.
+    await _insert_headline(pool, published_at=_midnight(2022, 6, 3),
+                           headline="Apple Was the Worst Stock in the Dow Friday")
+    await _insert_headline(pool, published_at=_midnight(2022, 6, 2),
+                           headline="dated the day before")
+    results = await HistoricalHeadlineSource(pool).get_recent_headlines("TEST", DECISION)
+    assert [h.headline for h in results] == ["dated the day before"]
+
+
+@pytest.mark.asyncio
+async def test_previous_date_waits_for_its_new_york_day_to_end(pool):
+    # Dated June 2 is available from June 3 00:00 New York = 04:00 UTC.
+    await _insert_headline(pool, published_at=_midnight(2022, 6, 2), headline="dated June 2")
+    source = HistoricalHeadlineSource(pool)
+    early = await source.get_recent_headlines("TEST", datetime(2022, 6, 3, 3, 59, tzinfo=timezone.utc))
+    later = await source.get_recent_headlines("TEST", datetime(2022, 6, 3, 4, 1, tzinfo=timezone.utc))
+    assert early == [] and [h.headline for h in later] == ["dated June 2"]
+
+
+@pytest.mark.asyncio
+async def test_lookback_counts_three_full_dates_before_the_decision(pool):
+    for day in (31, 1, 2):  # May 31, June 1, June 2
+        month = 5 if day == 31 else 6
+        await _insert_headline(pool, published_at=_midnight(2022, month, day), headline=f"dated {month}-{day}")
+    await _insert_headline(pool, published_at=_midnight(2022, 5, 30), headline="dated 5-30")
+    results = await HistoricalHeadlineSource(pool).get_recent_headlines("TEST", DECISION, lookback_days=3)
+    assert [h.headline for h in results] == ["dated 6-2", "dated 6-1", "dated 5-31"]

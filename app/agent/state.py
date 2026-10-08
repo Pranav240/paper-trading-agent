@@ -59,6 +59,24 @@ class RiskVerdict(BaseModel):
     adjusted_quantity: int | None = None
 
 
+class RiskExplanation(BaseModel):
+    """The explainer node's account of a risk decision (phase 08), as
+    stored in risk_explanations. `citations_valid` is checked by the node
+    against what was actually retrieved, never taken from the model."""
+
+    trigger_flags: list[str]
+    model: str
+    prompt_version: str
+    retrieval_method: str
+    retrieved: dict[str, list[int]]
+    cited_headline_ids: list[int]
+    citations_valid: bool
+    validation_problems: list[str]
+    summary: str
+    drivers: list[dict]
+    template_baseline: str
+
+
 class GraphState(TypedDict, total=False):
     symbol: str
     as_of: datetime
@@ -74,3 +92,5 @@ class GraphState(TypedDict, total=False):
 
     final_action: Literal["BUY", "SELL", "HOLD"]
     final_quantity: int
+
+    risk_explanation: RiskExplanation | None  # phase 08; None when not triggered

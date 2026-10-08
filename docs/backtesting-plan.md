@@ -72,6 +72,11 @@ for this system specifically:
 - **Headline timing.** Only headlines with a published timestamp before
   the decision's `as_of` time are visible to the Sentiment Analyst.
   FNSPID's per-article timestamps make this a filter, not a guess.
+  **Corrected 2026-10-06:** they don't. 99.7% of FNSPID stamps are dates
+  at 00:00 UTC, so `published_at < as_of` let a decision at D 08:00 New
+  York read headlines dated D, published after the close. A date-only
+  headline now counts as available only once its date has ended in New
+  York (`HEADLINE_AVAILABLE_AT` in app/agent/data_sources.py).
 - **Model training cutoff.** Covered above — no fine-tuning on
   in-window-or-later data.
 - **Survivorship bias.** Don't pick the watchlist symbols based on

@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Paper Trading Agent</title>
-<meta name="description" content="A multi-agent trading decision system, built across six phases and evaluated honestly. Seven backtests, a negative result, and the machinery built to establish it.">
+<meta name="description" content="A multi-agent trading decision system, built across six phases and evaluated honestly. Seven backtests, a negative result, two look-ahead flaws found and corrected, and the machinery built to establish all of it.">
 <meta property="og:title" content="Paper Trading Agent">
-<meta property="og:description" content="Built properly, measured honestly, and found to have no edge. Seven backtests against real market data.">
+<meta property="og:description" content="Built properly, measured honestly, and corrected in public. No edge established, on backtests against real market data.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -210,14 +210,14 @@
   <header class="top">
     <div class="eyebrow">Multi-agent decision system &middot; paper trading only</div>
     <h1>Paper Trading Agent</h1>
-    <p class="tagline">Built properly, measured honestly, and found to have no edge. This site is the record of that result and of the machinery built to establish it.</p>
+    <p class="tagline">Built properly, measured honestly, and corrected in public. No edge has been established. This site is the record of that result, of the flaws that changed it, and of the machinery built to establish both.</p>
     <div class="meta">
-      <span>7 real-LLM backtests</span>
+      <span>10 real-LLM backtests, 1 fully corrected</span>
       <span>41,701-example fine-tuning dataset</span>
       <span>Deployed to AWS, then destroyed</span>
       <span>Never touched real capital</span>
-      <span>V2 in planning &mdash; real risk engine &amp; explainability</span>
-      <span>V3 in planning &mdash; Indian markets</span>
+      <span>V2 shipped &mdash; risk engine, explainer, eval &amp; trace</span>
+      <span>V3 &mdash; Indian markets, a future track</span>
     </div>
   </header>
 
@@ -225,21 +225,25 @@
     <h2 class="sec">What is it</h2>
     <p class="lead">A daily trading decision-support agent. It reads a stock&rsquo;s recent price history and news headlines, has four specialist components argue about them, and produces one paper trade &mdash; every decision, every opinion and every simulated fill recorded and auditable.</p>
     <p>It was built to close six engineering gaps at once: a backend API, a real relational database, agentic orchestration, LLM fine-tuning, containerisation with CI/CD, and cloud deployment. Building one system rather than six tutorials forces the parts to interoperate and produces decisions that only arise when components have to live together.</p>
-    <p>The second half of the project was spent trying to establish whether it actually works. It does not, and that turned out to be the more interesting outcome &mdash; five separate attempts to improve it produced five measured negative results, each of which says something specific about why.</p>
+    <p>The second half of the project was spent trying to establish whether it actually works. As first measured, it did not &mdash; and five separate attempts to improve it produced five measured negative results, each of which says something specific about why. V2 then found two flaws in those measurements, both look-ahead; reruns with them fixed are under way, and nothing yet shows an edge either way.</p>
     <p><strong>Nothing here ever touched real money.</strong> Trades are simulated against historical prices with slippage modelled; the account is fictional by design.</p>
   </section>
 
   <div class="finding">
     <div class="label">The finding</div>
-    <p>Every backtest longer than a single quarter underperformed buy-and-hold, by <strong>$39 to $225</strong> on a 20-share basis. The out-of-sample run &mdash; executed once, with nothing changed after seeing the in-sample result &mdash; lost <strong>$63</strong> in a market that was essentially flat.</p>
-    <p>The project&rsquo;s founding rule was that an honestly evaluated failure is the correct thing to report. So it is reported, and the evaluation discipline that caught it is the actual deliverable.</p>
+    <p><strong>V2 found two look-ahead flaws in the backtests.</strong> First, each decision could see that day&rsquo;s own closing price. Then, while those runs were being redone, a second: the news data carries dates, not times, so a decision at 8&nbsp;a.m. was reading headlines from later that day &mdash; &ldquo;Apple was the worst stock in the Dow Friday&rdquo;, at 8&nbsp;a.m. Friday. That happened on 98&ndash;100% of decisions in every run. Both are fixed, along with two smaller issues: decisions on market holidays, and fills at a price already gone by the open.</p>
+    <p>As originally published, every backtest longer than a single quarter underperformed buy-and-hold, by $39 to $225 on a 20-share basis, and the out-of-sample run lost $63 in a flat market. <strong>None of those figures, nor the two reruns made after the first fix, are valid</strong>: the reruns still had the headline leak. <strong>The out-of-sample run has now been redone with both fixed: it finished $72 ahead of buy-and-hold in a flat market</strong> (+$73.88 against +$2.20), where it had been published as a $63 loss. That is one run on one stock &mdash; about twice the spread between V1&rsquo;s repeat runs, not evidence of an edge &mdash; but the published loss was an artefact of the flaws, not the strategy. <strong>No edge has been established.</strong> The in-sample runs are not yet redone.</p>
+    <!-- RERUN-PENDING: remove this paragraph once the remaining V1 backtests (#3, #4, #7) are rerun with the fixes (engineering-log, Phase 07). -->
+    <p><strong>Reruns pending.</strong> Apart from the one row marked clean, every figure in the table below comes from a run with at least one leak. Reruns also use a different language model (Claude in place of GPT-4o), so a change in result cannot be pinned on the leaks alone.</p>
+    <!-- /RERUN-PENDING -->
+    <p>The project&rsquo;s founding rule was that an honestly evaluated result is the correct thing to report, including when a correction moves it. So it is reported, and the evaluation discipline that caught it is the actual deliverable.</p>
   </div>
 
   <div class="stats">
-    <div class="stat"><div class="k">Backtests</div><div class="v">7</div><div class="s">real LLM calls throughout</div></div>
-    <div class="stat"><div class="k">Best vs. buy &amp; hold</div><div class="v neg">&minus;$39</div><div class="s">over a full window</div></div>
+    <div class="stat"><div class="k">Backtests</div><div class="v">10</div><div class="s">7 original, 3 reruns (1 clean)</div></div>
+    <div class="stat"><div class="k">Look-ahead leaks found</div><div class="v">2</div><div class="s">prices, then headline dates</div></div>
     <div class="stat"><div class="k">Fine-tune attempts</div><div class="v">5</div><div class="s">two framings, all negative</div></div>
-    <div class="stat"><div class="k">Tests</div><div class="v pos">39</div><div class="s">CI fails if any skips</div></div>
+    <div class="stat"><div class="k">Tests</div><div class="v pos">134</div><div class="s">CI fails if any skips</div></div>
     <div class="stat"><div class="k">Total cloud spend</div><div class="v">~$0.02</div><div class="s">applied, verified, destroyed</div></div>
   </div>
 
@@ -268,7 +272,7 @@
   </section>
 
   <section>
-    <h2 class="sec">The seven runs</h2>
+    <h2 class="sec">The runs</h2>
     <div class="scroll">
       <table>
         <thead><tr><th>Run</th><th>Configuration</th><th>Closed</th><th>Result</th><th>Buy &amp; hold</th><th>Gap</th></tr></thead>
@@ -276,15 +280,19 @@
           <tr><td>#3</td><td class="l">categorical sentiment, pilot quarter</td><td>4</td><td>+6.21<span class="pct">+0.22%</span></td><td class="neg">&minus;15.40<span class="pct">&minus;0.55%</span></td><td class="pos">+0.78%</td></tr>
           <tr><td>#4</td><td class="l">categorical sentiment, in-sample</td><td>32</td><td>+864.62<span class="pct">+29.07%</span></td><td>+903.80<span class="pct">+30.38%</span></td><td class="neg">&minus;1.32%</td></tr>
           <tr><td>#6</td><td class="l">categorical sentiment, out-of-sample</td><td>2</td><td class="neg">&minus;63.10<span class="pct">&minus;1.64%</span></td><td>+2.20<span class="pct">+0.06%</span></td><td class="neg">&minus;1.70%</td></tr>
+          <tr><td>#6 &rArr;</td><td class="l"><strong>clean rerun: both leaks fixed</strong> (backtest 136)</td><td>9</td><td>+73.88<span class="pct">+1.91%</span></td><td>+2.20<span class="pct">+0.06%</span></td><td class="pos">+1.85%</td></tr>
+          <tr><td>#6 &rarr;</td><td class="l"><strong>price-corrected rerun</strong> (backtest 71) &mdash; headline leak remained</td><td>11</td><td>+66.35<span class="pct">+1.71%</span></td><td>+2.20<span class="pct">+0.06%</span></td><td class="pos">+1.66%</td></tr>
           <tr><td>#7</td><td class="l">sentiment ablated</td><td>33</td><td>+929.84<span class="pct">+31.98%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;1.40%</td></tr>
           <tr><td>#8</td><td class="l">sentiment ablated</td><td>33</td><td>+896.15<span class="pct">+30.82%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;2.56%</td></tr>
           <tr><td>#9</td><td class="l">categorical sentiment, replicate of #4</td><td>31</td><td>+840.45<span class="pct">+28.90%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;4.48%</td></tr>
           <tr><td>#14</td><td class="l">continuous score node</td><td>62</td><td>+745.86<span class="pct">+25.65%</span></td><td>+970.60<span class="pct">+33.38%</span></td><td class="neg">&minus;7.73%</td></tr>
+          <tr><td>#14 &rarr;</td><td class="l"><strong>price-corrected rerun</strong>, #4&rsquo;s window (backtest 45) &mdash; headline leak remained</td><td>29</td><td>+920.81<span class="pct">+30.71%</span></td><td>+837.80<span class="pct">+27.94%</span></td><td class="pos">+2.77%</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="fig">AAPL, mark-to-market, each measured against buy-and-hold over its own window. Percentages are against the capital the position cap implies &mdash; see below. The single positive row is a four-trade quarter that beat the baseline mainly because AAPL fell: buy-and-hold lost money and a largely idle system did not. That is not evidence of skill.</p>
-    <p class="fig"><strong>The percentages are the more honest read.</strong> In dollars, run #4 looks like &ldquo;+864 against +903&rdquo;. In percent it is <strong>29.1% earned in a market that rose 33.4%</strong> &mdash; a strategy tracking a bull run and lagging it, rather than one generating returns of its own.</p>
+    <p class="fig"><strong>Only the row marked &rArr; is clean.</strong> Original rows saw both the day&rsquo;s close and that day&rsquo;s news; rows marked &rarr; fixed the price leak but still saw same-day news, and are kept here as a record, not a result. They differ from the originals in four ways: no price look-ahead, trading days only, fills at the decision day&rsquo;s open, and Claude (Sonnet 5.5 and Haiku 4.5) in place of GPT-4o and GPT-4o-mini. Four things changed at once, so a difference from the original row cannot be attributed to any one of them. Both show V1&rsquo;s own risk rules, replayed exactly over the decisions of a run made with V2&rsquo;s risk engine &mdash; the Portfolio Manager never sees positions, so its proposals are the same either way. The other rows are the original, leaky runs; #8 and #9 repeated #7 and #4 and will not be redone.</p>
+    <p class="fig">AAPL, mark-to-market, each measured against buy-and-hold over its own window. Percentages are against the capital the position cap implies &mdash; see below. Among the original runs, the single positive row is a four-trade quarter that beat the baseline mainly because AAPL fell: buy-and-hold lost money and a largely idle system did not. That is not evidence of skill.</p>
+    <p class="fig"><strong>The percentages are the more honest read.</strong> In dollars, the original run #4 looks like &ldquo;+864 against +903&rdquo;. In percent it is <strong>29.1% earned in a market that rose 33.4%</strong> &mdash; a strategy tracking a bull run and lagging it, rather than one generating returns of its own.</p>
   </section>
 
   <section>
@@ -303,6 +311,8 @@
           <tr><td class="l">Jun 2022&ndash;Jun 2023 (in-sample)</td><td>$148.73</td><td>$2,975</td></tr>
           <tr><td class="l">Jun 2022&ndash;Jun 2023 (281-day runs)</td><td>$145.39</td><td>$2,908</td></tr>
           <tr><td class="l">Jul&ndash;Dec 2023 (out-of-sample)</td><td>$192.50</td><td>$3,850</td></tr>
+          <tr><td class="l">Jun 2022&ndash;Jun 2023 (corrected rerun, priced at the open)</td><td>$149.91</td><td>$2,998</td></tr>
+          <tr><td class="l">Jul&ndash;Dec 2023 (corrected rerun, priced at the open)</td><td>$193.76</td><td>$3,875</td></tr>
         </tbody>
       </table>
     </div>
@@ -315,36 +325,48 @@
       <table>
         <thead><tr><th>Item</th><th>Spent</th></tr></thead>
         <tbody>
-          <tr><td class="l">OpenAI &mdash; 7 backtests and all probes</td><td>~$4.91</td></tr>
+          <tr><td class="l">OpenAI &mdash; 7 backtests and all probes (V1)</td><td>~$4.91</td></tr>
+          <tr><td class="l">Anthropic &mdash; 3 reruns, explanations, evaluation and trace checks (V2)</td><td>~$4.62</td></tr>
           <tr><td class="l">AWS &mdash; applied, verified, destroyed same day</td><td>~$0.02</td></tr>
           <tr><td class="l">Kaggle GPU &mdash; fine-tuning, both rounds</td><td>free</td></tr>
           <tr><td class="l">Alpaca market data &mdash; free tier</td><td>free</td></tr>
           <tr><td class="l">Dataset, baseline, replay, every diagnostic</td><td class="pos">$0.00</td></tr>
-          <tr><td class="l"><strong>Total</strong></td><td><strong>under $5</strong></td></tr>
+          <tr><td class="l"><strong>Total</strong></td><td><strong>about $9.55</strong></td></tr>
         </tbody>
       </table>
     </div>
-    <p class="fig">Starting budget was $4.95, and $0.04 remained at the end &mdash; so the entire evaluation, including the work that established it does not work, cost less than a coffee. The offline replay tooling exists precisely because it made a whole class of question answerable for nothing.</p>
+    <p class="fig">V1&rsquo;s budget was $4.95, and $0.04 remained at the end. V2&rsquo;s reruns had a hard $5 cap; every paid run now carries a spending limit and stops itself before crossing it. Part of the Anthropic figure is extrapolated: one run was killed partway and resumed, and the killed part&rsquo;s token count was lost. The offline replay tooling exists precisely because it made a whole class of question answerable for nothing &mdash; both corrected V1 rows above came from it.</p>
   </section>
 
   <section>
     <h2 class="sec">How it works</h2>
-    <p>Four nodes, split by whether judgment is actually required. A <strong>Technical Analyst</strong> computes RSI-14 and SMA-20 in plain Python &mdash; arithmetic is not worth a language model. A <strong>Sentiment Analyst</strong> reads headlines through GPT-4o-mini. A <strong>Portfolio Manager</strong> on GPT-4o synthesises both into a proposal. A rule-based <strong>Risk Manager</strong> holds final authority and can veto or scale any trade.</p>
+    <p>Four nodes, split by whether judgment is actually required. A <strong>Technical Analyst</strong> computes RSI-14 and SMA-20 in plain Python &mdash; arithmetic is not worth a language model. A <strong>Sentiment Analyst</strong> reads headlines through a small language model. A <strong>Portfolio Manager</strong> on a larger one synthesises both into a proposal. A <strong>Risk Manager</strong> holds final authority and can veto or scale any trade: V1&rsquo;s hard position rules, plus, since V2, a budget on the position&rsquo;s value-at-risk.</p>
+    <p>V1 ran on GPT-4o-mini and GPT-4o. Since V2 the same two nodes run on Claude Haiku 4.5 and Sonnet 5.5 &mdash; a configuration setting, not a code change, and every run records which models produced it.</p>
     <p>That last split &mdash; propose versus gate &mdash; was the most valuable structural decision in the project. Because the risk layer is code and every input it consumed is stored, alternative risk rules could later be replayed against recorded decisions for free, without a single new API call.</p>
+    <p>The stored record can also be questioned directly. A small <strong>MCP server</strong> lets an AI client such as Claude Desktop answer &ldquo;why was this trade cut?&rdquo; from the database itself &mdash; listing backtests and decisions, each agent&rsquo;s opinion, the stored explanation and the full reasoning trace. It is read-only by construction: Postgres itself rejects any write on its connection, and no tool can start a run, because a run spends money.</p>
   </section>
 
   <section>
-    <h2 class="sec">What&rsquo;s next &mdash; V2, then V3</h2>
+    <h2 class="sec">V2, and what comes later</h2>
     <div class="finding" style="border-left-color:var(--ink-bold);">
-      <div class="label" style="color:var(--ink-bold);">In planning &mdash; V2</div>
+      <div class="label" style="color:var(--ink-bold);">Shipped &mdash; V2</div>
       <p><strong>V2 replaces the rule-based Risk Manager with real risk math, and adds an agent that explains its own alerts.</strong> In place of just a hard position cap, the risk layer computes VaR and CVaR, watches for a shift in how the watchlist&rsquo;s holdings move together, and backtests its own risk estimate against what actually happened &mdash; a Kupiec test, the same kind of check that caught this project&rsquo;s own pre-registration flaw in Phase 04.</p>
-      <p>When it flags something, a retrieval agent pulls the relevant recent news and writes the reason in plain language, instead of leaving a number on a dashboard for someone to interpret. Every explanation is checked against a hand-labelled set of past events before it is trusted, and every retrieval and reasoning step is traced, not just the output.</p>
+      <p><strong>Phase 07, the risk engine, has shipped &mdash; with a mixed result, reported as measured.</strong> The value-at-risk forecasts hold up: over the in-sample year they were breached on 4.4% of days against a 5% target, while a naive flat 2% estimate was breached on 10.3% and fails the test. Out of sample they were too cautious, breached on only 1.6% of days. Used as a binding, pre-registered 2% budget, the risk engine cost $492 against V1&rsquo;s rules in-sample and gained $57 out-of-sample, both compared on identical decisions &mdash; decisions that, it later turned out, still had the headline leak. The same rule moving results in opposite directions on two windows is no evidence that it helps. The checks that found the look-ahead leak above were the first step of this phase.</p>
+      <p><strong>Phase 08, the explainer, has shipped too.</strong> When the risk engine cuts or blocks a trade, it explains why in plain language from the headlines around the losses its VaR is built from, and every citation must be a headline it was actually shown. On 20 recorded decisions all 20 explanations were fully grounded, at $0.06 in total &mdash; though its news window turned out to sit a day late (the headline-date flaw above), since fixed. Grounded is not the same as right: in a spot check, one cause in five stretched its headline, which is what the next phase grades.</p>
+      <p><strong>Phase 09, the evaluation harness, has shipped.</strong> On 40 of AAPL&rsquo;s worst days, with every candidate headline labelled and every stage committed before its result: the explainer named the labelled cause 65% of the time, against 22% for simply quoting the best-ranked headline &mdash; 17 days won, none lost &mdash; and 92% of its causes were backed by what it cited. Full-text retrieval beat plain recency on every measure but missed its pre-registered significance bar. <strong>The caveat is stated, not buried:</strong> the labels were written by Claude rather than a person, and the judge and the explainer are Claude models too, so this shows the three agree, not that a human would. Building it is also what exposed the second look-ahead leak.</p>
+      <p><strong>Phase 10, the reasoning trace, completes V2.</strong> Every decision now stores, in the same transaction, each model call&rsquo;s exact prompt and reply, every headline retrieval with its ranking, the risk arithmetic and the citation check &mdash; so any decision can be audited from stored data with one command. A pre-registered check rebuilt every explanation from its trace alone: 19 of 19 on a dry run, 5 of 5 on real model output.</p>
       <p>This does not depend on the strategy having an edge. It makes the existing system&rsquo;s judgment better and its reasoning visible &mdash; the same gap the rest of this project already cares about.</p>
     </div>
 
     <div class="finding" style="border-left-color:var(--ink-bold); margin-top:24px;">
-      <div class="label" style="color:var(--ink-bold);">In planning &mdash; V3</div>
-      <p><strong>V3 moves to Indian markets &mdash; NSE and BSE.</strong> Not as a continuation of a strategy already measured as having no edge, but because it asks a different question: does the same pipeline behave differently on a different market, with different liquidity, different news flow and a different retail-participation profile?</p>
+      <div class="label" style="color:var(--ink-bold);">Shipped &mdash; after V2</div>
+      <p><strong>An MCP server over the decision record.</strong> Five read-only tools &mdash; backtests, decisions, one decision in full, its explanation, its trace &mdash; for Claude Desktop or any MCP client, planned before any code and tested against a live database. Checked in a real Claude Desktop chat: every fact in the answer matched the database, and the answer exposed two faults in the tool&rsquo;s own description, both fixed. The trace tool&rsquo;s output is identical, line for line, to the project&rsquo;s audit script.</p>
+      <p><strong>The fine-tuning runs, redone with experiment tracking.</strong> Both Phase 04 notebooks were rerun on a free Kaggle GPU with every setting and metric logged to MLflow next to its baseline. The regression run was done at full size for the first time &mdash; 1.5B parameters, all 27,591 examples, two epochs &mdash; and found the same answer as the cut-down original: no signal the setup can detect.</p>
+    </div>
+
+    <div class="finding" style="border-left-color:var(--ink-bold); margin-top:24px;">
+      <div class="label" style="color:var(--ink-bold);">Future &mdash; V3, not scheduled</div>
+      <p><strong>V3 would move to Indian markets &mdash; NSE and BSE.</strong> It is not scheduled: the project pauses with V2 complete, and this is recorded as a direction for later rather than work in progress. Not as a continuation of a strategy with no established edge, but because it asks a different question: does the same pipeline behave differently on a different market, with different liquidity, different news flow and a different retail-participation profile?</p>
       <p>The architecture is ready for it. Market data and news arrive through swappable protocols rather than hard-coded clients, so an Indian data source is a new implementation of an existing interface, not a rewrite.</p>
     </div>
 
@@ -356,7 +378,7 @@
     <p>Two measurements were left unrun, both deferred on cost rather than on doubt. Each would sharpen a conclusion already drawn; neither changes the headline, which is why neither blocked V1 from closing.</p>
     <ul style="max-width:70ch; padding-left:20px;">
       <li><strong>Separate the score node from the prompt change.</strong> The final sentiment run altered two things at once &mdash; the node and the Portfolio Manager prompt that reads it &mdash; so its heavy trading cannot be attributed to either. One ablation with the new prompt and a neutral score settles it. About $0.87.</li>
-      <li><strong>Test a second symbol.</strong> Every result here is AAPL. Whether &ldquo;no edge&rdquo; describes the strategy or one stock in one period is untested. The headline data for 108 candidate symbols is already prepared and sitting in the repository. About $0.87 per symbol.</li>
+      <li><strong>Test a second symbol.</strong> Every result here is AAPL. Whether any result here describes the strategy or one stock in one period is untested. The headline data for 108 candidate symbols is already prepared and sitting in the repository. About $0.87 per symbol.</li>
     </ul>
     <p class="fig">Both are documented in the repository with the exact commands, so they are picked up rather than re-derived &mdash; by me when there is budget, or by anyone who wants to run them first.</p>
 
@@ -372,8 +394,9 @@
   <section>
     <h2 class="sec">Everything else</h2>
     <ul class="links">
-      <li><a href="https://github.com/Pranav240/paper-trading-agent"><span class="n">Repository</span><span class="d">FastAPI, LangGraph, Postgres, Docker, Terraform</span><span class="u">github &rarr;</span></a></li>
+      <li><a href="https://github.com/Pranav240/paper-trading-agent"><span class="n">Repository</span><span class="d">FastAPI, LangGraph, Postgres, MCP, Docker, Terraform</span><span class="u">github &rarr;</span></a></li>
       <li><a href="https://github.com/Pranav240/paper-trading-agent/blob/master/PROJECT.md"><span class="n">PROJECT.md</span><span class="d">The complete record in one file</span><span class="u">markdown &rarr;</span></a></li>
+      <li><a href="https://github.com/Pranav240/paper-trading-agent#ask-it-questions-mcp"><span class="n">MCP server</span><span class="d">Ask the decision record questions from Claude Desktop</span><span class="u">readme &rarr;</span></a></li>
       <li><a href="https://github.com/Pranav240/paper-trading-agent/blob/master/docs/engineering-log.md"><span class="n">Engineering log</span><span class="d">Design decisions, and the failure behind each one</span><span class="u">markdown &rarr;</span></a></li>
       <li><a href="https://www.kaggle.com/code/pranavthota/papertrade1"><span class="n">Fine-tuning notebook</span><span class="d">QLoRA regression, headline to forward return</span><span class="u">kaggle &rarr;</span></a></li>
       <li><a href="https://www.kaggle.com/datasets/pranavthota/pta-return-dataset"><span class="n">Training dataset</span><span class="d">41,701 examples, 104 symbols, leak-free splits</span><span class="u">kaggle &rarr;</span></a></li>

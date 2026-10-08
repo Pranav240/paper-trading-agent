@@ -1,0 +1,11 @@
+backtest_id,name,config,version,window_start,window_end,sample,closed_trades,result_usd,buy_hold_usd,diff_usd,look_ahead_status,counts_as_result
+3,AAPL Q3 2022 pilot,"Categorical sentiment, pilot quarter",V1,2022-07-01,2022-09-30,Pilot,4,6.21,-15.4,21.61,Both leaks,No
+4,AAPL in-sample Jun2022-Jun2023,"Categorical sentiment, in-sample",V1,2022-06-01,2023-06-30,In-sample,32,864.62,903.8,-39.18,Both leaks,No
+6,AAPL out-of-sample Jul2023-Dec2023,"Categorical sentiment, out-of-sample",V1,2023-07-01,2023-12-31,Out-of-sample,2,-63.1,2.2,-65.3,Both leaks,No
+7,AAPL ablation no-sentiment (vs bt4),Sentiment ablated,V1,2022-06-03,2023-06-30,In-sample,33,929.84,970.6,-40.76,Both leaks,No
+8,ablation repeat 2,Sentiment ablated (repeat),V1,2022-06-03,2023-06-30,In-sample,33,896.15,970.6,-74.45,Both leaks,No
+9,full config repeat (vs bt4),Replicate of #4,V1,2022-06-03,2023-06-30,In-sample,31,840.45,970.6,-130.15,Both leaks,No
+14,score node run 1,Continuous score node,V1,2022-06-03,2023-06-30,In-sample,62,745.86,970.6,-224.74,Both leaks,No
+45,"V2 VaR node, bt4 window, Claude","#14 rerun, continuous score, #4 window",V2,2022-06-01,2023-06-30,In-sample,29,920.81,837.8,83.01,Price leak fixed; news leak remains,No
+71,"V1 #6 rerun (categorical, Claude)","#6 rerun, categorical, out-of-sample",V2,2023-07-01,2023-12-31,Out-of-sample,11,66.35,2.2,64.15,Price leak fixed; news leak remains,No
+136,"V1 #6 rerun, both leaks fixed (categorical, Claude)","#6 rerun, both leaks fixed, out-of-sample",V2,2023-07-01,2023-12-31,Out-of-sample,9,73.88,2.2,71.68,Both leaks fixed,Yes

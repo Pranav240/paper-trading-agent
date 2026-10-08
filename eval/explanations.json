@@ -1,0 +1,1014 @@
+{
+ "explainer": {
+  "model": "claude-haiku-4-5",
+  "temperature": 0.0,
+  "thinking": "model default"
+ },
+ "retrieval": "fts",
+ "llm_usage": {
+  "claude-haiku-4-5-20251001": {
+   "input_tokens": 45243,
+   "output_tokens": 6872,
+   "total_tokens": 52115
+  }
+ },
+ "cost_usd": 0.0796,
+ "explanations": [
+  {
+   "date": "2022-09-13",
+   "kind": "news",
+   "return": -0.057935,
+   "retrieved": [
+    7348,
+    7350,
+    7354,
+    7366,
+    7343,
+    7346,
+    7349,
+    7358
+   ],
+   "cause": "Inflation data and expectations of large Federal Reserve rate hikes drove broad market losses, with Apple declining 5.79% alongside the wider selloff.",
+   "cited": [
+    7348,
+    7354,
+    7366,
+    7346,
+    7358
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-09-29",
+   "kind": "news",
+   "return": -0.047877,
+   "retrieved": [
+    7128,
+    7115,
+    7084,
+    7091,
+    7118,
+    7122,
+    7132,
+    7134
+   ],
+   "cause": "Apple shelved plans to boost iPhone 14 production on lower demand, and the company faced concerns about slowing iPhone 14 demand more broadly.",
+   "cited": [
+    7132,
+    7115
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2023-08-04",
+   "kind": "news",
+   "return": -0.047519,
+   "retrieved": [
+    2455,
+    2445,
+    2487,
+    2505,
+    2509,
+    2518,
+    2434,
+    2444
+   ],
+   "cause": "Apple reported Q3 earnings that beat estimates but showed year-over-year revenue decline, with iPhone sales weakness dragging the stock down despite the earnings beat.",
+   "cited": [
+    2455,
+    2487
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-12-15",
+   "kind": "news",
+   "return": -0.046353,
+   "retrieved": [
+    5972,
+    5974,
+    5992,
+    5996,
+    5970,
+    5978,
+    5979,
+    5980
+   ],
+   "cause": "Wall Street sold off sharply due to angst over a hawkish Federal Reserve stance, with Apple falling alongside the broader market.",
+   "cited": [
+    5972,
+    5974,
+    5970,
+    5978
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-11-03",
+   "kind": "news",
+   "return": -0.042207,
+   "retrieved": [
+    6547,
+    6542,
+    6544,
+    6546,
+    6549,
+    6554,
+    6559,
+    6560
+   ],
+   "cause": "Federal Reserve signaled more interest rate hikes, triggering broad market selloff concerns over the rate hike path.",
+   "cited": [
+    6547,
+    6542,
+    6544,
+    6546,
+    6549,
+    6559,
+    6560
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-06-16",
+   "kind": "news",
+   "return": -0.039495,
+   "retrieved": [
+    8635,
+    8636,
+    8648,
+    8658,
+    8659,
+    8669,
+    8637,
+    8638
+   ],
+   "cause": "Growth stocks fell sharply as recession fears loomed ahead of the Fed's rate decision; Apple was also pressured by China COVID controls affecting supplier Pegatron's expansion plans.",
+   "cited": [
+    8648,
+    8636,
+    8669
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-06-03",
+   "kind": "news",
+   "return": -0.038617,
+   "retrieved": [
+    8859,
+    8860,
+    8854,
+    8855,
+    8856,
+    8857,
+    8861,
+    8862
+   ],
+   "cause": "Strong US jobs data supported expectations for rate hikes, causing broad market decline and Apple to be among the worst performers in the Dow.",
+   "cited": [
+    8856,
+    8861,
+    8854
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-06-10",
+   "kind": "news",
+   "return": -0.038463,
+   "retrieved": [
+    8732,
+    8757,
+    8734,
+    8737,
+    8755,
+    8768,
+    8724,
+    8725
+   ],
+   "cause": "Wall Street selloff driven by hot inflation data (CPI reading) and weakness in growth stocks, with the market experiencing its biggest weekly loss since January.",
+   "cited": [
+    8737,
+    8755,
+    8725
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-06-13",
+   "kind": "news",
+   "return": -0.038032,
+   "retrieved": [
+    8706,
+    8709,
+    8693,
+    8695,
+    8696,
+    8698,
+    8699,
+    8701
+   ],
+   "cause": "Aggressive Fed rate hike expectations and recession concerns drove a broad market selloff that confirmed the S&P 500 bear market.",
+   "cited": [
+    8706,
+    8695,
+    8696,
+    8699
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-08-26",
+   "kind": "news",
+   "return": -0.037971,
+   "retrieved": [
+    7587,
+    7592,
+    7603,
+    7606,
+    7611,
+    7586,
+    7590,
+    7594
+   ],
+   "cause": "U.S. DOJ antitrust suit concerns against Apple and smartphone market slowdown",
+   "cited": [
+    7587,
+    7592,
+    7594
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-11-02",
+   "kind": "news",
+   "return": -0.037504,
+   "retrieved": [
+    6566,
+    6573,
+    6576,
+    6579,
+    6582,
+    6587,
+    6561,
+    6562
+   ],
+   "cause": "COVID lockdown at Apple's major iPhone manufacturing facility in China, worker departures from Foxconn plants, and broader US stock market weakness from jobs data.",
+   "cited": [
+    6573,
+    6582,
+    6587,
+    6579
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2023-01-03",
+   "kind": "news",
+   "return": -0.036865,
+   "retrieved": [
+    5739,
+    5740,
+    5742,
+    5747,
+    5730,
+    5732,
+    5743,
+    5751
+   ],
+   "cause": "Wall Street declined at the start of 2023 with Apple shares falling sharply, weighed down by reports that Foxconn's iPhone plant in China had only reached 90% production capacity.",
+   "cited": [
+    5739,
+    5742,
+    5747,
+    5730,
+    5740
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-10-07",
+   "kind": "news",
+   "return": -0.03664,
+   "retrieved": [
+    6983,
+    6961,
+    6976,
+    6978,
+    6979,
+    6956,
+    6957,
+    6959
+   ],
+   "cause": "Wall Street declined sharply due to inflation concerns and expectations of further Federal Reserve rate hikes, which drove the market down broadly.",
+   "cited": [
+    6983,
+    6961,
+    6956
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-06-09",
+   "kind": "news",
+   "return": -0.036583,
+   "retrieved": [
+    8757,
+    8791,
+    8755,
+    8768,
+    8749,
+    8750,
+    8751,
+    8754
+   ],
+   "cause": "Growth stocks struggled with inflation reading in focus, and Asian stocks tracked global shares lower amid U.S. CPI concerns.",
+   "cited": [
+    8755,
+    8750
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2023-09-06",
+   "kind": "news",
+   "return": -0.036051,
+   "retrieved": [
+    1950,
+    1925,
+    1926,
+    1927,
+    1929,
+    1936,
+    1948,
+    1953
+   ],
+   "cause": "China banned government officials from using iPhones for work, and US stocks fell sharply as economic data stoked inflation and interest rate concerns, with Apple specifically cited as a drag on the market.",
+   "cited": [
+    1926,
+    1953,
+    1925,
+    1936,
+    1927,
+    1929
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-11-09",
+   "kind": "news",
+   "return": -0.033192,
+   "retrieved": [
+    6469,
+    6466,
+    6467,
+    6473,
+    6478,
+    6483,
+    6486,
+    6465
+   ],
+   "cause": "Apple supplier Foxconn faced China COVID curbs affecting production outlook, and a major supplier Goertek suspended orders from a client. Additionally, a lawsuit alleged Apple and Amazon colluded to raise device prices, and broader Asian market weakness added pressure.",
+   "cited": [
+    6467,
+    6486,
+    6469,
+    6466
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-10-14",
+   "kind": "news",
+   "return": -0.032102,
+   "retrieved": [
+    6899,
+    6893,
+    6873,
+    6875,
+    6876,
+    6878,
+    6885,
+    6886
+   ],
+   "cause": "Hot inflation data drove broad market fears of aggressive rate hikes, causing a sharp selloff across stocks including Apple.",
+   "cited": [
+    6899
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-09-30",
+   "kind": "news",
+   "return": -0.031629,
+   "retrieved": [
+    7067,
+    7073,
+    7084,
+    7091,
+    7068,
+    7070,
+    7072,
+    7077
+   ],
+   "cause": "Wall Street posted its third straight quarterly loss as inflation concerns and recession fears weighed on the market, affecting Apple along with broader equities.",
+   "cited": [
+    7067
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-12-28",
+   "kind": "news",
+   "return": -0.030604,
+   "retrieved": [
+    5827,
+    5822,
+    5845,
+    5846,
+    5821,
+    5823,
+    5829,
+    5841
+   ],
+   "cause": "U.S. stock market decline on recession fears and weak economic data, with AAPL declining more than the broader market.",
+   "cited": [
+    5827,
+    5822,
+    5823,
+    5846
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-10-27",
+   "kind": "news",
+   "return": -0.030567,
+   "retrieved": [
+    6662,
+    6659,
+    6695,
+    6710,
+    6654,
+    6666,
+    6673,
+    6688
+   ],
+   "cause": "Apple fell short on iPhone sales guidance despite earnings beat, and the stock declined amid broader weakness in Big Tech stocks.",
+   "cited": [
+    6662,
+    6688
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-06-28",
+   "kind": "news",
+   "return": -0.029426,
+   "retrieved": [
+    8478,
+    8481,
+    8484,
+    8486,
+    8487,
+    8502,
+    8477,
+    8483
+   ],
+   "cause": "Broad market selloff driven by consumer data fueling recession worries, with Nike's weak guidance spooking investors and dragging down the overall market.",
+   "cited": [
+    8484,
+    8478
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2023-09-07",
+   "kind": "news",
+   "return": -0.029007,
+   "retrieved": [
+    1875,
+    1881,
+    1891,
+    1895,
+    1898,
+    1871,
+    1872,
+    1903
+   ],
+   "cause": "Apple fell sharply on reports of China iPhone curbs affecting the company and its suppliers, combined with broader market weakness from inflation and interest rate concerns.",
+   "cited": [
+    1875,
+    1881,
+    1891,
+    1895,
+    1898,
+    1871,
+    1872,
+    1903
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-11-28",
+   "kind": "news",
+   "return": -0.026728,
+   "retrieved": [
+    6248,
+    6239,
+    6252,
+    6255,
+    6230,
+    6237,
+    6246,
+    6254
+   ],
+   "cause": "China COVID lockdown protests, supply chain concerns, and iPhone Pro unit shortfalls drove a sharp selloff in Apple stock.",
+   "cited": [
+    6248,
+    6239,
+    6252,
+    6255,
+    6230,
+    6237,
+    6246,
+    6254
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2023-08-24",
+   "kind": "news",
+   "return": -0.026714,
+   "retrieved": [
+    2114,
+    2130,
+    2153,
+    2115,
+    2117,
+    2124,
+    2134,
+    2135
+   ],
+   "cause": "Stocks tumbled in a sell-off of mega-cap tech stocks as Nvidia's boost faded and market caution increased ahead of Federal Reserve Chair Powell's speech.",
+   "cited": [
+    2115,
+    2117
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2023-02-21",
+   "kind": "news",
+   "return": -0.026421,
+   "retrieved": [
+    5003,
+    5009,
+    5018,
+    5004,
+    5005,
+    5006,
+    5012,
+    5014
+   ],
+   "cause": "Broad market selloff triggered by disappointing earnings guidance from Walmart and Home Depot; Apple-specific headwinds from COVID-related disruptions at Foxconn's iPhone plant in China and a US trade ruling against Apple Watch imports.",
+   "cited": [
+    5009,
+    5012,
+    5014,
+    5003,
+    5006
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2023-10-26",
+   "kind": "news",
+   "return": -0.025307,
+   "retrieved": [
+    896,
+    908,
+    918,
+    904,
+    926,
+    871,
+    872,
+    876
+   ],
+   "cause": "Nasdaq and S&P 500 decline as mega-cap stocks retreated, combined with Huawei's surge in China smartphone sales at Apple's expense and Apple's price hikes for Apple TV+ and Apple News+.",
+   "cited": [
+    908,
+    926,
+    904,
+    918
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-12-06",
+   "kind": "news",
+   "return": -0.025032,
+   "retrieved": [
+    6092,
+    6096,
+    6118,
+    6087,
+    6089,
+    6090,
+    6091,
+    6093
+   ],
+   "cause": "Wall Street selloff amid recession talk, with the S&P 500 posting its fourth consecutive decline; Apple was among the most active stocks that day.",
+   "cited": [
+    6092,
+    6089,
+    6091,
+    6093
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-12-22",
+   "kind": "news",
+   "return": -0.023486,
+   "retrieved": [
+    5910,
+    5891,
+    5911,
+    5887,
+    5889,
+    5890,
+    5894,
+    5897
+   ],
+   "cause": "Wall Street declined amid Federal Reserve rate hike worries and chipmaker sector weakness, with Apple also facing supply chain disruptions in China due to COVID cases.",
+   "cited": [
+    5891,
+    5897,
+    5910,
+    5891
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2023-09-26",
+   "kind": "news",
+   "return": -0.023309,
+   "retrieved": [
+    1449,
+    1423,
+    1426,
+    1430,
+    1433,
+    1443,
+    1446,
+    1450
+   ],
+   "cause": "Broad market decline driven by rate and Treasury yield concerns, with mixed analyst sentiment on the stock itself.",
+   "cited": [
+    1430,
+    1433,
+    1446,
+    1423,
+    1443
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-08-22",
+   "kind": "news",
+   "return": -0.022963,
+   "retrieved": [
+    7658,
+    7650,
+    7663,
+    7649,
+    7652,
+    7654,
+    7656,
+    7659
+   ],
+   "cause": "Nasdaq and Wall Street declined sharply on fears of aggressive Federal Reserve rate hikes, which drove Apple down 2.30% as part of the broader market selloff.",
+   "cited": [
+    7658,
+    7650,
+    7663,
+    7649
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-11-21",
+   "kind": "news",
+   "return": -0.021677,
+   "retrieved": [
+    6327,
+    6331,
+    6335,
+    6338,
+    6326,
+    6328,
+    6329,
+    6330
+   ],
+   "cause": "Market selloff affecting large-cap stocks including Apple, as indicated by headlines on the day's trading activity and market conditions.",
+   "cited": [
+    6327,
+    6331,
+    6335
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-11-29",
+   "kind": "news",
+   "return": -0.021082,
+   "retrieved": [
+    6248,
+    6207,
+    6215,
+    6239,
+    6252,
+    6255,
+    6220,
+    6230
+   ],
+   "cause": "Apple fell 2.11% amid China-related concerns including COVID lockdowns affecting supply chains, analyst warnings of a 20 million unit iPhone Pro shipment shortfall, and broader market weakness tied to Apple's China exposure.",
+   "cited": [
+    6248,
+    6207,
+    6215,
+    6239,
+    6252,
+    6255,
+    6230
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-09-21",
+   "kind": "news",
+   "return": -0.020456,
+   "retrieved": [
+    7246,
+    7249,
+    7252,
+    7265,
+    7238,
+    7239,
+    7240,
+    7247
+   ],
+   "cause": "Wall Street fell as focus turned to the Federal Reserve's rate-hike decision, offsetting positive headlines about Apple's iPhone 14 and investor interest in the stock.",
+   "cited": [
+    7249,
+    7265,
+    7247
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2023-09-20",
+   "kind": "news",
+   "return": -0.020157,
+   "retrieved": [
+    1550,
+    1516,
+    1523,
+    1525,
+    1532,
+    1543,
+    1547,
+    1552
+   ],
+   "cause": "Federal Reserve held rates steady but signaled rates would remain higher for longer, causing broad market decline; this was partially offset by positive headlines on iPhone 15 demand and analyst support.",
+   "cited": [
+    1523,
+    1552,
+    1550,
+    1532,
+    1543
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2023-01-30",
+   "kind": "news",
+   "return": -0.020075,
+   "retrieved": [
+    5334,
+    5338,
+    5344,
+    5349,
+    5350,
+    5359,
+    5363,
+    5364
+   ],
+   "cause": "Megacap stocks fell ahead of earnings reports and a Federal Reserve meeting; Apple faced specific earnings concerns, and China's smartphone sales had plunged to a decade low.",
+   "cited": [
+    5334,
+    5338,
+    5359,
+    5363,
+    5364
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-11-25",
+   "kind": "news",
+   "return": -0.019717,
+   "retrieved": [
+    6267,
+    6269,
+    6271,
+    6272,
+    6280,
+    6286,
+    6268,
+    6276
+   ],
+   "cause": "Foxconn production crisis in China threatening iPhone shipments, combined with Nasdaq weakness and investor caution over China infections and Black Friday sales concerns.",
+   "cited": [
+    6280,
+    6286,
+    6272,
+    6271
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-07-18",
+   "kind": "news",
+   "return": -0.01966,
+   "retrieved": [
+    8216,
+    8232,
+    8213,
+    8234,
+    8214,
+    8215,
+    8217,
+    8219
+   ],
+   "cause": "Antitrust lawsuit against Apple over Apple Pay, concerns about spending cuts draining the rally, and broader market decline as investors worried about recession indicators and bank stocks.",
+   "cited": [
+    8216,
+    8213,
+    8217,
+    8215
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-09-15",
+   "kind": "news",
+   "return": -0.018962,
+   "retrieved": [
+    7301,
+    7319,
+    7324,
+    7337,
+    7298,
+    7300,
+    7304,
+    7305
+   ],
+   "cause": "Wall Street tumble amid Federal Reserve tightening jitters and economic concerns, with investors losing confidence in Apple alongside the broader market selloff.",
+   "cited": [
+    7301,
+    7298,
+    7305,
+    7300
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-10-26",
+   "kind": "news",
+   "return": -0.018384,
+   "retrieved": [
+    6695,
+    6710,
+    6718,
+    6688,
+    6699,
+    6701,
+    6705,
+    6709
+   ],
+   "cause": "Weak Big Tech earnings and slowdown fears sparked broad Nasdaq declines; Apple-specific concerns included potential pressure on holiday quarter revenues from inflation and weak China demand, plus questions about slowing services growth.",
+   "cited": [
+    6688,
+    6699,
+    6701,
+    6705,
+    6709
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2023-02-24",
+   "kind": "news",
+   "return": -0.018075,
+   "retrieved": [
+    4967,
+    4965,
+    4974,
+    4977,
+    4978,
+    4979,
+    4981,
+    4983
+   ],
+   "cause": "U.S. stock market decline amid resilient economic data stoking fears of rate hikes, combined with Apple breaking below its 200-day moving average.",
+   "cited": [
+    4981,
+    4967
+   ],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2021-12-16",
+   "kind": "no_news",
+   "return": -0.03988738989853946,
+   "retrieved": [],
+   "cause": "No headline on record explains this loss.",
+   "cited": [],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-05-05",
+   "kind": "no_news",
+   "return": -0.055672585013542,
+   "retrieved": [],
+   "cause": "No headline on record explains this loss.",
+   "cited": [],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-05-11",
+   "kind": "no_news",
+   "return": -0.050948404220884314,
+   "retrieved": [],
+   "cause": "No headline on record explains this loss.",
+   "cited": [],
+   "citations_valid": true,
+   "problems": []
+  },
+  {
+   "date": "2022-05-18",
+   "kind": "no_news",
+   "return": -0.05665684436110352,
+   "retrieved": [],
+   "cause": "No headline on record explains this loss.",
+   "cited": [],
+   "citations_valid": true,
+   "problems": []
+  }
+ ]
+}

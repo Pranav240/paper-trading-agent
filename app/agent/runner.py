@@ -37,6 +37,9 @@ from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 from app.agent.graph import CompiledStateGraph
+from app.agent.explainer import record_explanation
+from app.agent.trace import TraceRecorder, record_trace
+from app.agent.var_forecasts import record_var_forecast
 from app.models import Action, Decision, RunResult, RunStatus
 
 
@@ -215,7 +218,15 @@ async def run_decision_cycle(
                 run_id = run_row["id"]
 
             for symbol in symbols:
-                result = await graph.ainvoke({"symbol": symbol, "as_of": started_at})
+                recorder = TraceRecorder()  # phase 10: every live decision is traced
+                token = recorder.activate()
+                try:
+                    result = await graph.ainvoke(
+                        {"symbol": symbol, "as_of": started_at},
+                        config={"callbacks": [recorder]},
+                    )
+                finally:
+                    TraceRecorder.deactivate(token)
 
                 technical = result["technical_opinion"]
                 sentiment = result["sentiment_opinion"]
@@ -272,6 +283,30 @@ async def run_decision_cycle(
                                 psycopg.types.json.Json(op.raw_output),
                             ),
                         )
+
+                await record_trace(conn, decision_id=decision.id, recorder=recorder)
+
+                await record_var_forecast(
+                    conn,
+                    decision_id=decision.id,
+                    backtest_id=None,
+                    symbol=symbol,
+                    as_of=started_at,
+                    risk_raw_output=risk_opinion.raw_output,
+                    final_action=final_action,
+                    final_quantity=final_quantity,
+                )
+
+                # Phase 08: present only when the graph has an explainer and
+                # the VaR budget changed this trade.
+                if result.get("risk_explanation") is not None:
+                    await record_explanation(
+                        conn,
+                        decision_id=decision.id,
+                        symbol=symbol,
+                        as_of=started_at,
+                        explanation=result["risk_explanation"],
+                    )
 
                 price = await _latest_close(conn, symbol)
                 if price is None:

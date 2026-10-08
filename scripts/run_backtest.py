@@ -26,10 +26,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import subprocess
 import sys
 from datetime import date
 from decimal import Decimal
 
+import psycopg
 from dotenv import load_dotenv
 from psycopg_pool import AsyncConnectionPool
 
@@ -48,8 +50,15 @@ if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from app.agent.backtest import DEFAULT_SLIPPAGE_BPS, compute_backtest_metrics, run_backtest
-from app.agent.data_sources import build_historical_data_sources
+from app.agent.data_sources import (
+    OpenPriceBook,
+    alpaca_trading_days,
+    build_historical_data_sources,
+)
+from app.agent.explainer import EXPLAINER_PROMPT_VERSION, HeadlineRetriever
 from app.agent.graph import build_decision_graph
+from app.agent.llm import describe as describe_llms
+from app.agent.risk_manager import MAX_POSITION_QTY, VAR_BUDGET
 from app.agent.state import TentativeDecision
 from app.repository.backtest import BacktestRepository
 
@@ -81,8 +90,9 @@ def _parse_args() -> argparse.Namespace:
         "--use-real-llms",
         action="store_true",
         help=(
-            "Use real ChatOpenAI calls for the Sentiment Analyst and "
-            "Portfolio Manager (needs OPENAI_API_KEY, costs real money, "
+            "Use real LLM calls for the Sentiment Analyst and Portfolio "
+            "Manager, from LLM_PROVIDER (app/agent/llm.py; needs "
+            "OPENAI_API_KEY or ANTHROPIC_API_KEY, costs real money, "
             "one call per node per symbol per simulated day). Without "
             "this flag, both nodes use fixed neutral test doubles instead "
             "— enough to verify the pipeline runs and persists correctly, "
@@ -102,41 +112,154 @@ def _parse_args() -> argparse.Namespace:
             "run over the same window."
         ),
     )
+    parser.add_argument(
+        "--sentiment-mode",
+        choices=["score", "categorical"],
+        default="score",
+        help=(
+            "'score' (default): the current -1..+1 sentiment score. "
+            "'categorical': V1's BUY/SELL/HOLD vote and the Portfolio "
+            "Manager prompt written for it, verbatim "
+            "(app/agent/v1_categorical.py) -- only for rerunning V1 "
+            "backtests #3, #4, #6, #9."
+        ),
+    )
+    parser.add_argument(
+        "--explain",
+        choices=["off", "fts", "recent"],
+        default="off",
+        help=(
+            "Phase 08 explainer: explain each trade the VaR budget changed, "
+            "from headlines around the VaR's worst-loss days. 'fts' ranks "
+            "them by relevance, 'recent' is the recency-only baseline. One "
+            "extra LLM call per explained decision (counts toward the cap)."
+        ),
+    )
+    parser.add_argument(
+        "--resume",
+        type=int,
+        metavar="BACKTEST_ID",
+        help=(
+            "Continue an interrupted backtest after its last completed day "
+            "instead of starting a new one. Window and settings must match "
+            "the original (checked); the resume is recorded in its config."
+        ),
+    )
+    parser.add_argument(
+        "--max-cost-usd",
+        type=float,
+        help=(
+            "Spending cap for this run's LLM calls, in USD. The run stops "
+            "before a day that would likely cross it (marked FAILED, "
+            "resumable with --resume). Required with --use-real-llms."
+        ),
+    )
+    parser.add_argument(
+        "--dry-run-pm",
+        choices=["HOLD", "BUY"],
+        default="HOLD",
+        help=(
+            "Without --use-real-llms: what the fake Portfolio Manager proposes "
+            "every day. BUY lets the VaR budget, and so the explainer, fire "
+            "in a dry run."
+        ),
+    )
+    parser.add_argument(
+        "--no-trace",
+        action="store_true",
+        help="Don't store the phase 10 reasoning trace (the overhead baseline).",
+    )
+    parser.add_argument(
+        "--allow-dirty",
+        action="store_true",
+        help=(
+            "Allow --use-real-llms with uncommitted changes. Off by default: "
+            "a paid run records its git commit in backtests.config, and that "
+            "only identifies the code if the tree is clean."
+        ),
+    )
     return parser.parse_args()
 
 
-def _fake_llms():
-    """Fixed neutral stand-ins (sentiment score 0.00, Portfolio Manager
-    action HOLD), imported from the test suite rather than redefined
+def _git_state() -> tuple[str, bool]:
+    """(HEAD commit, whether tracked files have uncommitted changes)."""
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+    ).stdout.strip()
+    dirty = bool(
+        subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=no"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+    )
+    return commit, dirty
+
+
+def _fake_llms(sentiment_mode: str = "score", pm_action: str = "HOLD"):
+    """Fixed neutral stand-ins (sentiment score 0.00, or a HOLD vote in
+    categorical mode as V1's dry run used; Portfolio Manager action HOLD),
+    imported from the test suite rather than redefined
     here — one definition of "what a fake LLM response looks like," not
     two that can drift apart. Only meant for a dry-run
     smoke test of the pipeline; --use-real-llms is what actually
     evaluates the strategy."""
+    # Real LangChain chat models (fakes), so the phase 10 trace captures
+    # their calls exactly as it would a real model's.
     from app.agent.sentiment_analyst import SentimentScore
-    from tests.agent_fakes import FakeLLM
+    from app.agent.v1_categorical import SentimentCall
+    from tests.agent_fakes import fixed_json_model
 
-    sentiment_llm = FakeLLM(
-        SentimentScore(score=0.0, confidence=0.5, reasoning="dry run — no real LLM")
-    )
-    portfolio_llm = FakeLLM(
-        TentativeDecision(
-            action="HOLD", quantity=0, confidence=0.5, reasoning="dry run — no real LLM"
+    if sentiment_mode == "categorical":
+        sentiment_llm = fixed_json_model(
+            SentimentCall(opinion="HOLD", confidence=0.5, reasoning="dry run — no real LLM"),
+            "fake-sentiment",
         )
+    else:
+        sentiment_llm = fixed_json_model(
+            SentimentScore(score=0.0, confidence=0.5, reasoning="dry run — no real LLM"),
+            "fake-sentiment",
+        )
+    portfolio_llm = fixed_json_model(
+        TentativeDecision(
+            action=pm_action, quantity=5 if pm_action == "BUY" else 0,
+            confidence=0.5, reasoning="dry run — no real LLM",
+        ),
+        "fake-pm",
     )
     return sentiment_llm, portfolio_llm
 
 
+def _fake_explainer_llm():
+    """Dry-run explainer: cites the first headline shown for each driver
+    day, so a dry run exercises retrieval, the citation check, persistence
+    and the trace the way a well-behaved model would."""
+    from tests.agent_fakes import grounded_explainer_model
+
+    return grounded_explainer_model()
+
+
 async def main() -> None:
     args = _parse_args()
+
+    if args.use_real_llms and args.max_cost_usd is None:
+        raise SystemExit("--use-real-llms needs --max-cost-usd: paid runs must have a spending cap.")
+
+    commit, dirty = _git_state()
+    if args.use_real_llms and dirty and not args.allow_dirty:
+        raise SystemExit(
+            "Uncommitted changes to tracked files. Commit first so this paid "
+            "run's recorded git commit identifies the code (or --allow-dirty)."
+        )
 
     pool = AsyncConnectionPool(DATABASE_URL, open=False)
     await pool.open(wait=True, timeout=10)
 
     price_source, headline_source = build_historical_data_sources(pool)
 
-    sentiment_llm = portfolio_llm = None
+    sentiment_llm = portfolio_llm = explainer_llm = None
     if not args.use_real_llms:
-        sentiment_llm, portfolio_llm = _fake_llms()
+        sentiment_llm, portfolio_llm = _fake_llms(args.sentiment_mode, args.dry_run_pm)
+        explainer_llm = _fake_explainer_llm()
         print(
             "NOTE: --use-real-llms not passed — running with fixed "
             "neutral LLM stand-ins. This verifies the pipeline runs "
@@ -145,7 +268,7 @@ async def main() -> None:
         )
 
     if args.no_sentiment:
-        sentiment_llm, _ = _fake_llms()
+        sentiment_llm, _ = _fake_llms(args.sentiment_mode)
         print(
             "ABLATION MODE: sentiment node forced to a neutral score of "
             "0.00 (confidence 0.5). The node still runs and the Portfolio "
@@ -160,7 +283,49 @@ async def main() -> None:
             repository=BacktestRepository(pool, backtest_id),
             sentiment_llm=sentiment_llm,
             portfolio_llm=portfolio_llm,
+            sentiment_mode=args.sentiment_mode,
+            explainer_retriever=(
+                None if args.explain == "off" else HeadlineRetriever(pool, method=args.explain)
+            ),
+            explainer_llm=explainer_llm,
         )
+
+    trading_days = alpaca_trading_days(args.start, args.end)
+    real = args.use_real_llms
+    llms = describe_llms()
+    # Everything needed to say exactly how this result was produced.
+    config = {
+        "symbols": [s.upper() for s in args.symbols],
+        # Provider and models from LLM_PROVIDER / *_MODEL env (app/agent/llm.py).
+        "llm": describe_llms(),
+        "models": {
+            "portfolio_manager": llms["portfolio_manager"]["model"] if real else f"fake:{args.dry_run_pm}",
+            "sentiment_analyst": (
+                "fake:neutral"
+                if (args.no_sentiment or not real)
+                else llms["sentiment_analyst"]["model"]
+            ),
+        },
+        "sentiment_mode": args.sentiment_mode,
+        "trace": not args.no_trace,
+        "explainer": (
+            None
+            if args.explain == "off"
+            else {
+                "retrieval": args.explain,
+                "model": llms["explainer"]["model"] if real else "fake:grounded",
+                "prompt_version": EXPLAINER_PROMPT_VERSION,
+            }
+        ),
+        "no_sentiment_ablation": args.no_sentiment,
+        "risk_node": {"max_position_qty": MAX_POSITION_QTY, "var_budget": VAR_BUDGET},
+        "slippage_bps": str(args.slippage_bps),
+        "fill": "decision-day open + slippage",
+        "calendar": "alpaca market calendar",
+        "trading_days": len(trading_days),
+        "git_commit": commit,
+        "git_dirty": dirty,
+    }
 
     try:
         backtest_id = await run_backtest(
@@ -171,6 +336,12 @@ async def main() -> None:
             window_start=args.start,
             window_end=args.end,
             slippage_bps=args.slippage_bps,
+            config=config,
+            trading_days=trading_days,
+            execution_prices=OpenPriceBook(price_source, args.start, args.end),
+            resume_backtest_id=args.resume,
+            max_cost_usd=args.max_cost_usd,
+            trace=not args.no_trace,
         )
         metrics = await compute_backtest_metrics(pool, backtest_id)
     finally:
@@ -179,6 +350,10 @@ async def main() -> None:
     print(f"\nbacktest_id: {backtest_id}")
     for key, value in metrics.items():
         print(f"  {key}: {value}")
+
+    async with await psycopg.AsyncConnection.connect(DATABASE_URL) as conn:
+        cur = await conn.execute("SELECT llm_usage FROM backtests WHERE id = %s", (backtest_id,))
+        print(f"  llm_usage: {(await cur.fetchone())[0]}")
 
 
 if __name__ == "__main__":

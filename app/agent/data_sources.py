@@ -31,9 +31,10 @@ price bars, Alpaca news, and the response shapes below (`BarSet.data`,
 from __future__ import annotations
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 from typing import Protocol
+from zoneinfo import ZoneInfo
 
 from alpaca.data.historical.news import NewsClient
 from alpaca.data.historical.stock import StockHistoricalDataClient
@@ -74,6 +75,30 @@ class HeadlineSource(Protocol):
     ) -> list[Headline]: ...
 
 
+NEW_YORK = ZoneInfo("America/New_York")
+# Regular-session close. Early-close days (13:00) are treated as 16:00,
+# which can only drop a bar that was already final, never leak one.
+SESSION_CLOSE = time(16, 0)
+
+
+def bars_closed_before(bars: list[PriceBar], as_of: datetime) -> list[PriceBar]:
+    """Keep only daily bars whose session had closed by `as_of`.
+
+    Alpaca stamps a daily bar at midnight New York (04:00/05:00 UTC), so
+    `end=as_of` alone returns the decision day's own bar -- close included --
+    for any as_of after that midnight. Confirmed live by
+    scripts/check_bar_timing.py (2026-09-28): as_of 12:00 UTC got that
+    day's bar. docs/backtesting-plan.md requires prior-day close only.
+    """
+    kept = []
+    for bar in bars:
+        session_day = bar.timestamp.astimezone(NEW_YORK).date()
+        closed_at = datetime.combine(session_day, SESSION_CLOSE, tzinfo=NEW_YORK)
+        if closed_at <= as_of:
+            kept.append(bar)
+    return kept
+
+
 class AlpacaPriceSource:
     """Live implementation of PriceDataSource, backed by Alpaca's
     historical bars endpoint (which also serves "recent" data — there's
@@ -107,7 +132,7 @@ class AlpacaPriceSource:
         # actually needs many concurrent requests.
         bar_set = self._client.get_stock_bars(request)
         bars = bar_set.data.get(symbol, [])
-        return [
+        return bars_closed_before([
             PriceBar(
                 symbol=symbol,
                 timestamp=bar.timestamp,
@@ -118,7 +143,7 @@ class AlpacaPriceSource:
                 volume=int(bar.volume),
             )
             for bar in bars
-        ]
+        ], as_of)
 
 
 class AlpacaHeadlineSource:
@@ -150,6 +175,33 @@ class AlpacaHeadlineSource:
         ]
 
 
+# FNSPID timestamps are dates, not times: 99.7% of `historical_headlines`
+# rows are stamped exactly 00:00 UTC (found 2026-10-06; see the engineering
+# log). A headline stamped D 00:00 UTC was published at some unknown time
+# ON date D -- possibly after the close -- so treating the stamp as the
+# publication time let a decision at D 08:00 New York read that evening's
+# "Apple was the worst stock in the Dow today". These two SQL expressions
+# are the fix, shared by every query that reads headlines:
+#
+# HEADLINE_AVAILABLE_AT: when a headline could first have been read. A
+# date-only stamp becomes available only once its whole date has ended in
+# New York, the latest time zone the date could be in; a stamp with a real
+# time is available from that time. (A genuine 00:00:00 UTC publication is
+# delayed a day: conservative, never a leak.)
+HEADLINE_AVAILABLE_AT = (
+    "(CASE WHEN (published_at AT TIME ZONE 'UTC')::time = time '00:00' "
+    "THEN (((published_at AT TIME ZONE 'UTC')::date + 1)::timestamp "
+    "AT TIME ZONE 'America/New_York') ELSE published_at END)"
+)
+# HEADLINE_DATE: the calendar date a headline belongs to -- its stamped
+# date if date-only, its New York date otherwise.
+HEADLINE_DATE = (
+    "(CASE WHEN (published_at AT TIME ZONE 'UTC')::time = time '00:00' "
+    "THEN (published_at AT TIME ZONE 'UTC')::date "
+    "ELSE (published_at AT TIME ZONE 'America/New_York')::date END)"
+)
+
+
 class HistoricalHeadlineSource:
     """Backtest implementation of HeadlineSource, backed by the imported
     FNSPID data in `historical_headlines` (see
@@ -167,25 +219,44 @@ class HistoricalHeadlineSource:
     async def get_recent_headlines(
         self, symbol: str, as_of: datetime, lookback_days: int = 3
     ) -> list[Headline]:
-        # `published_at < as_of` (strictly less than, not <=) is the
-        # look-ahead-bias guard from docs/backtesting-plan.md's checklist:
-        # a headline published exactly at as_of wasn't necessarily readable
-        # yet at decision time, so treat as_of as the earliest excluded
-        # moment rather than the latest included one.
+        # Look-ahead guard: a headline is visible only if it was AVAILABLE
+        # strictly before as_of (HEADLINE_AVAILABLE_AT above), not merely
+        # stamped before it. For a backtest decision at D 12:00 UTC this
+        # means headlines dated D-1 or earlier; the lookback window is
+        # measured on availability too. The plain `published_at` bounds
+        # only narrow the scan for the index.
         async with self._pool.connection() as conn:
             async with conn.cursor(row_factory=dict_row) as cur:
                 await cur.execute(
-                    """
+                    f"""
                     SELECT symbol, published_at, headline, source
                     FROM historical_headlines
-                    WHERE symbol = %s
-                      AND published_at < %s
-                      AND published_at >= %s
+                    WHERE symbol = %(symbol)s
+                      AND published_at < %(as_of)s
+                      AND published_at >= %(scan_from)s
+                      AND {HEADLINE_AVAILABLE_AT} < %(as_of)s
+                      AND {HEADLINE_AVAILABLE_AT} >= %(from)s
                     ORDER BY published_at DESC
                     """,
-                    (symbol, as_of, as_of - timedelta(days=lookback_days)),
+                    {
+                        "symbol": symbol,
+                        "as_of": as_of,
+                        "from": as_of - timedelta(days=lookback_days),
+                        "scan_from": as_of - timedelta(days=lookback_days + 2),
+                    },
                 )
                 rows = await cur.fetchall()
+        from app.agent import trace  # local: trace imports nothing from here
+
+        trace.record(
+            node="sentiment_analyst", kind="retrieval",
+            input={"symbol": symbol, "as_of": as_of.isoformat(), "lookback_days": lookback_days,
+                   "rule": "available (HEADLINE_AVAILABLE_AT) strictly before as_of"},
+            output={"results": [
+                {"published_at": r["published_at"].isoformat(), "headline": r["headline"]}
+                for r in rows
+            ]},
+        )
         return [Headline(**row) for row in rows]
 
 
@@ -234,3 +305,47 @@ def build_historical_data_sources(
         AlpacaPriceSource(api_key, secret_key),
         HistoricalHeadlineSource(pool),
     )
+
+
+def alpaca_trading_days(window_start: date, window_end: date) -> list[date]:
+    """NYSE trading days in [window_start, window_end], from Alpaca's market
+    calendar. Replaces "every weekday", which put V1 backtests through
+    market holidays (11 in run #4's window: 283 weekdays, 272 sessions)."""
+    from alpaca.trading.client import TradingClient
+    from alpaca.trading.requests import GetCalendarRequest
+
+    client = TradingClient(
+        os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"], paper=True
+    )
+    calendar = client.get_calendar(GetCalendarRequest(start=window_start, end=window_end))
+    return [session.date for session in calendar]
+
+
+class OpenPriceBook:
+    """Day D's opening price per symbol: the price a backtest trade decided
+    before the open on D fills at (docs/backtesting-plan.md, "fill at the
+    next bar's open"). Used for execution only, never shown to an agent.
+
+    Bars for the whole window are fetched once per symbol and cached.
+    """
+
+    def __init__(self, price_source: PriceDataSource, window_start: date, window_end: date) -> None:
+        self._source = price_source
+        self._start = window_start
+        self._end = window_end
+        self._opens: dict[str, dict[date, Decimal]] = {}
+
+    async def open_on(self, symbol: str, day: date) -> Decimal | None:
+        if symbol not in self._opens:
+            # Noon UTC the day after window_end: window_end's session has
+            # closed, so bars_closed_before keeps its bar.
+            as_of = datetime.combine(
+                self._end + timedelta(days=1), time(12), tzinfo=timezone.utc
+            )
+            bars = await self._source.get_recent_bars(
+                symbol, as_of, lookback_days=(as_of.date() - self._start).days + 7
+            )
+            self._opens[symbol] = {
+                bar.timestamp.astimezone(NEW_YORK).date(): bar.open for bar in bars
+            }
+        return self._opens[symbol].get(day)

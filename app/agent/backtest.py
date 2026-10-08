@@ -31,35 +31,44 @@ loudly, which could quietly narrow the effective in-sample window
 without anyone noticing. Worth a real check before trusting 2015-2016
 results specifically.
 
-Trading-day loop: this walks calendar days from window_start to
-window_end and skips Saturday/Sunday only. It does NOT know about market
-holidays (Thanksgiving, Christmas, etc.) — a real trading calendar
-(e.g. the `pandas_market_calendars` package) would be a fair follow-up,
-but for V1 the cost of running (and getting a HOLD/no-data result on) a
-handful of holiday dates is a wasted-cycle nit, not a correctness bug
-that would flip a "no edge" result into a false positive.
+Trading-day loop: by default this walks calendar days from window_start
+to window_end and skips Saturday/Sunday only, which is how every V1 run
+worked -- including 11 market holidays in run #4's window. Callers pass
+`trading_days` (scripts/run_backtest.py uses Alpaca's market calendar,
+data_sources.alpaca_trading_days) to run real sessions only.
+
+Fills (V2, phase 07): V1 filled every trade at the Technical Analyst's
+current_price, which turned out to be day D's own close (the look-ahead
+leak). With `execution_prices` given, a trade decided before the open on
+D fills at D's open, plus slippage, as docs/backtesting-plan.md
+specifies; that open is stored on the decision (decisions.execution_price)
+so offline replays fill at the same price. Without it, the V1 rule stands.
 """
 
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Callable
+from typing import Callable, Protocol
 
 import psycopg
+from langchain_core.callbacks import UsageMetadataCallbackHandler
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 from app.agent.graph import CompiledStateGraph
+from app.agent.llm import usage_cost_usd
+from app.agent.trace import TraceRecorder, record_trace
+from app.agent.explainer import record_explanation
+from app.agent.var_forecasts import record_var_forecast
 from app.models import Action
 
-# Applied against the decision-time price to approximate the cost of
-# actually getting a fill, instead of assuming perfect, instant,
-# frictionless execution — docs/backtesting-plan.md's slippage section
-# explicitly allows this basis-point approach as an alternative to
-# fetching the next bar's open (which would need a second price-source
-# call per symbol per day for comparatively little extra realism at V1
-# scale). BUY fills worse (higher) than the quoted price, SELL fills
+# Applied against the fill price to approximate the cost of actually
+# getting a fill, instead of assuming perfect, instant, frictionless
+# execution. V1 used this basis-point cost INSTEAD of the next bar's open
+# (docs/backtesting-plan.md allows either); with `execution_prices` the
+# fill is now at the open AND this still applies on top, as a spread
+# cost. BUY fills worse (higher) than the quoted price, SELL fills
 # worse (lower). 5 bps (0.05%) is a small, deliberately conservative
 # default for a liquid large-cap like AAPL — a placeholder assumption,
 # not a researched constant, and worth sensitivity-checking once real
@@ -79,6 +88,25 @@ def _apply_slippage(price: Decimal, action: Action, bps: Decimal) -> Decimal:
     if action == Action.SELL:
         return price * (Decimal("1") - factor)
     return price
+
+
+class ExecutionPrices(Protocol):
+    async def open_on(self, symbol: str, day: date) -> Decimal | None: ...
+
+
+def usage_summary(handler: UsageMetadataCallbackHandler) -> dict:
+    """Tokens per model, as plain JSON-able ints."""
+    return {
+        model: {
+            key: usage.get(key, 0)
+            for key in ("input_tokens", "output_tokens", "total_tokens")
+        }
+        for model, usage in handler.usage_metadata.items()
+    }
+
+
+class BudgetExceeded(RuntimeError):
+    """A run stopped itself at its spending cap (see max_cost_usd)."""
 
 
 def _trading_days(window_start: date, window_end: date) -> list[date]:
@@ -186,6 +214,107 @@ async def _record_backtest_trade(
             remaining -= close_qty
 
 
+def _add_usage(a: dict | None, b: dict) -> dict:
+    total = {model: dict(counts) for model, counts in (a or {}).items()}
+    for model, counts in b.items():
+        slot = total.setdefault(model, {})
+        for key, value in counts.items():
+            slot[key] = slot.get(key, 0) + value
+    return total
+
+
+async def _finish(
+    conn: psycopg.AsyncConnection,
+    backtest_id: int,
+    status: str,
+    usage: UsageMetadataCallbackHandler,
+) -> None:
+    """Set the final status and add this process's tokens to any already
+    recorded (a resumed run keeps the earlier part's usage)."""
+    async with conn.cursor() as cur:
+        await cur.execute("SELECT llm_usage FROM backtests WHERE id = %s", (backtest_id,))
+        previous = (await cur.fetchone())[0]
+        await cur.execute(
+            "UPDATE backtests SET status = %s, finished_at = %s, llm_usage = %s "
+            "WHERE id = %s AND status = 'RUNNING'",
+            (
+                status,
+                datetime.now(timezone.utc),
+                psycopg.types.json.Json(_add_usage(previous, usage_summary(usage))),
+                backtest_id,
+            ),
+        )
+
+
+async def _mark_failed(
+    pool: AsyncConnectionPool, backtest_id: int, usage: UsageMetadataCallbackHandler
+) -> None:
+    """Fresh connection: the run's own one may be the thing that broke."""
+    async with pool.connection() as conn:
+        await _finish(conn, backtest_id, "FAILED", usage)
+
+
+# Settings a resumed run must share with the run it continues; anything
+# else (git commit, dirty flag) may differ and is recorded per resume.
+RESUME_MUST_MATCH = (
+    "symbols", "llm", "models", "sentiment_mode", "no_sentiment_ablation",
+    "risk_node", "slippage_bps", "fill", "calendar", "explainer",
+)
+
+
+async def _start_resume(
+    cur, backtest_id: int, window_start: date, window_end: date, config: dict
+) -> tuple[int, date]:
+    """Validate that `backtest_id` can be continued with this config, mark
+    it RUNNING again, and return (id, last completed day)."""
+    await cur.execute(
+        "SELECT window_start, window_end, status, config, llm_usage "
+        "FROM backtests WHERE id = %s FOR UPDATE",
+        (backtest_id,),
+    )
+    row = await cur.fetchone()
+    if row is None:
+        raise ValueError(f"No backtest {backtest_id} to resume.")
+    if row["status"] not in ("RUNNING", "FAILED"):
+        raise ValueError(f"Backtest {backtest_id} is {row['status']}; only an unfinished run resumes.")
+    if (row["window_start"], row["window_end"]) != (window_start, window_end):
+        raise ValueError(
+            f"Window {window_start}..{window_end} does not match backtest "
+            f"{backtest_id}'s {row['window_start']}..{row['window_end']}."
+        )
+    stored = row["config"] or {}
+    mismatched = [k for k in RESUME_MUST_MATCH if stored.get(k) != config.get(k)]
+    if mismatched:
+        raise ValueError(f"Cannot resume backtest {backtest_id}: settings differ: {mismatched}")
+
+    await cur.execute(
+        "SELECT count(*) FILTER (WHERE status <> 'SUCCESS') AS unfinished, max(as_of) AS last "
+        "FROM runs WHERE backtest_id = %s",
+        (backtest_id,),
+    )
+    runs = await cur.fetchone()
+    if runs["unfinished"]:
+        raise ValueError(f"Backtest {backtest_id} has a partly written day; inspect before resuming.")
+    last_done = runs["last"].date() if runs["last"] else date.min
+
+    resume = {
+        "after_day": str(last_done),
+        "at": datetime.now(timezone.utc).isoformat(),
+        "git_commit": config.get("git_commit"),
+        "git_dirty": config.get("git_dirty"),
+        # None: the earlier part's tokens were never recorded (the process
+        # was killed outright), so llm_usage covers only what came after.
+        "llm_usage_before": row["llm_usage"],
+    }
+    await cur.execute(
+        "UPDATE backtests SET status = 'RUNNING', finished_at = NULL, "
+        "config = jsonb_set(config, '{resumes}', COALESCE(config->'resumes', '[]'::jsonb) || %s::jsonb) "
+        "WHERE id = %s",
+        (psycopg.types.json.Json([resume]), backtest_id),
+    )
+    return backtest_id, last_done
+
+
 async def run_backtest(
     pool: AsyncConnectionPool,
     graph_factory: Callable[[int], CompiledStateGraph],
@@ -196,10 +325,76 @@ async def run_backtest(
     window_end: date,
     slippage_bps: Decimal = DEFAULT_SLIPPAGE_BPS,
     config: dict | None = None,
+    trading_days: list[date] | None = None,
+    execution_prices: ExecutionPrices | None = None,
+    resume_backtest_id: int | None = None,
+    max_cost_usd: float | None = None,
+    trace: bool = True,
+) -> int:
+    """Runs one full backtest (see _run_backtest). If it raises -- an API
+    out of credits, a network drop, Ctrl-C -- the `backtests` row is marked
+    FAILED with the tokens used so far, instead of being left RUNNING
+    forever as backtests 5 and 18 were. The exception still propagates.
+
+    `resume_backtest_id` continues an interrupted run after its last
+    completed day instead of starting a new one (see _start_resume). That
+    is sound because a run's only cross-day state -- open positions --
+    lives in backtest_outcomes, and each day commits as one transaction,
+    so a killed run leaves whole days or nothing.
+
+    `max_cost_usd` caps what THIS process spends on LLM calls (priced by
+    app/agent/llm.py); the run stops before a day that would likely cross
+    it, raising BudgetExceeded, and can be resumed later."""
+    usage = UsageMetadataCallbackHandler()
+    created: list[int] = []
+    try:
+        return await _run_backtest(
+            pool,
+            graph_factory,
+            name=name,
+            symbols=symbols,
+            window_start=window_start,
+            window_end=window_end,
+            slippage_bps=slippage_bps,
+            config=config,
+            trading_days=trading_days,
+            execution_prices=execution_prices,
+            usage=usage,
+            created=created,
+            resume_backtest_id=resume_backtest_id,
+            max_cost_usd=max_cost_usd,
+            trace=trace,
+        )
+    except BaseException:
+        if created:
+            await _mark_failed(pool, created[0], usage)
+        raise
+
+
+async def _run_backtest(
+    pool: AsyncConnectionPool,
+    graph_factory: Callable[[int], CompiledStateGraph],
+    *,
+    name: str,
+    symbols: list[str],
+    window_start: date,
+    window_end: date,
+    slippage_bps: Decimal,
+    config: dict | None,
+    trading_days: list[date] | None,
+    execution_prices: ExecutionPrices | None,
+    usage: UsageMetadataCallbackHandler,
+    created: list[int],
+    resume_backtest_id: int | None = None,
+    max_cost_usd: float | None = None,
+    trace: bool = True,
 ) -> int:
     """Runs one full backtest: one simulated decision cycle per trading
     day per symbol across [window_start, window_end], all persisted
     under one `backtests` row (id returned).
+
+    Every graph call carries `usage` as a LangChain callback, so token
+    counts per model are summed into backtests.llm_usage.
 
     `graph_factory` builds the graph, given the backtest_id this run just
     got assigned — a callback rather than a pre-built graph, because of a
@@ -220,7 +415,8 @@ async def run_backtest(
             )
         backtest_id = await run_backtest(pool, make_graph, name=..., ...)
     """
-    trading_days = _trading_days(window_start, window_end)
+    if trading_days is None:
+        trading_days = _trading_days(window_start, window_end)
 
     async with pool.connection() as conn:
         # This insert must commit for real before the day loop starts —
@@ -242,19 +438,36 @@ async def run_backtest(
         # positions.
         async with conn.transaction():
             async with conn.cursor(row_factory=dict_row) as cur:
-                await cur.execute(
-                    """
-                    INSERT INTO backtests (name, window_start, window_end, config)
-                    VALUES (%s, %s, %s, %s)
-                    RETURNING id
-                    """,
-                    (name, window_start, window_end, psycopg.types.json.Json(config or {})),
-                )
-                backtest_id = (await cur.fetchone())["id"]
+                if resume_backtest_id is None:
+                    await cur.execute(
+                        """
+                        INSERT INTO backtests (name, window_start, window_end, config)
+                        VALUES (%s, %s, %s, %s)
+                        RETURNING id
+                        """,
+                        (name, window_start, window_end, psycopg.types.json.Json(config or {})),
+                    )
+                    backtest_id = (await cur.fetchone())["id"]
+                else:
+                    backtest_id, last_done = await _start_resume(
+                        cur, resume_backtest_id, window_start, window_end, config or {}
+                    )
+                    trading_days = [d for d in trading_days if d > last_done]
+        created.append(backtest_id)
 
         graph = graph_factory(backtest_id)
 
-        for day in trading_days:
+        for done, day in enumerate(trading_days):
+            if max_cost_usd is not None and done:
+                # Stop BEFORE a day that would likely cross the cap: spent
+                # so far plus this run's average cost per day. The run is
+                # marked FAILED and can be continued with --resume.
+                spent = usage_cost_usd(usage_summary(usage))
+                if spent + spent / done > max_cost_usd:
+                    raise BudgetExceeded(
+                        f"Stopping before {day}: ${spent:.2f} spent over {done} days, "
+                        f"next day would likely pass the ${max_cost_usd:.2f} cap."
+                    )
             # Midday UTC, not midnight — purely so this sits visibly
             # between the prior day's close and this day's open when
             # eyeballing raw rows. Has no effect on what data gets
@@ -277,7 +490,30 @@ async def run_backtest(
                     run_id = (await cur.fetchone())["id"]
 
                 for symbol in symbols:
-                    result = await graph.ainvoke({"symbol": symbol, "as_of": as_of})
+                    # Phase 10: one recorder per decision; it is both a
+                    # callback (LLM calls) and the target of trace.record().
+                    recorder = TraceRecorder() if trace else None
+                    token = recorder.activate() if recorder else None
+                    try:
+                        result = await graph.ainvoke(
+                            {"symbol": symbol, "as_of": as_of},
+                            config={"callbacks": [usage] + ([recorder] if recorder else [])},
+                        )
+                    finally:
+                        if token is not None:
+                            TraceRecorder.deactivate(token)
+
+                    execution_price = None
+                    if execution_prices is not None:
+                        execution_price = await execution_prices.open_on(symbol, day)
+                        if execution_price is None:
+                            # Loud, not silent: a real session with no bar
+                            # means the price data is wrong, and a skipped
+                            # fill would quietly change the result.
+                            raise ValueError(
+                                f"No opening price for {symbol} on {day}; "
+                                "cannot fill this day's decision."
+                            )
 
                     technical = result["technical_opinion"]
                     sentiment = result["sentiment_opinion"]
@@ -291,8 +527,9 @@ async def run_backtest(
                             """
                             INSERT INTO decisions
                                 (run_id, symbol, action, confidence, reasoning,
-                                 technicals_snapshot, sentiment_snapshot)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                                 technicals_snapshot, sentiment_snapshot,
+                                 execution_price)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                             RETURNING id
                             """,
                             (
@@ -303,6 +540,7 @@ async def run_backtest(
                                 risk_opinion.reasoning,
                                 psycopg.types.json.Json(technical.raw_output),
                                 psycopg.types.json.Json(sentiment.raw_output),
+                                execution_price,
                             ),
                         )
                         decision_id = (await cur.fetchone())["id"]
@@ -331,6 +569,31 @@ async def run_backtest(
                                 ),
                             )
 
+                    if recorder is not None:
+                        await record_trace(conn, decision_id=decision_id, recorder=recorder)
+
+                    await record_var_forecast(
+                        conn,
+                        decision_id=decision_id,
+                        backtest_id=backtest_id,
+                        symbol=symbol,
+                        as_of=as_of,
+                        risk_raw_output=risk_opinion.raw_output,
+                        final_action=final_action,
+                        final_quantity=final_quantity,
+                    )
+
+                    # Phase 08: present only when the graph has an explainer and
+                    # the VaR budget changed this trade.
+                    if result.get("risk_explanation") is not None:
+                        await record_explanation(
+                            conn,
+                            decision_id=decision_id,
+                            symbol=symbol,
+                            as_of=as_of,
+                            explanation=result["risk_explanation"],
+                        )
+
                     # Same fallback as runner.py: the Technical Analyst's
                     # raw_output is the only price source here (backtests
                     # never write price_snapshots — see this module's
@@ -341,7 +604,11 @@ async def run_backtest(
                     # new gap introduced here.
                     raw_price = technical.raw_output.get("current_price")
                     if raw_price is not None and final_quantity:
-                        decision_price = Decimal(str(raw_price))
+                        decision_price = (
+                            execution_price
+                            if execution_price is not None
+                            else Decimal(str(raw_price))
+                        )
                         fill_price = _apply_slippage(
                             decision_price, Action(final_action), slippage_bps
                         )
@@ -363,12 +630,7 @@ async def run_backtest(
                         (datetime.now(timezone.utc), run_id),
                     )
 
-        async with conn.cursor() as cur:
-            await cur.execute(
-                "UPDATE backtests SET status = 'SUCCESS', finished_at = %s "
-                "WHERE id = %s",
-                (datetime.now(timezone.utc), backtest_id),
-            )
+        await _finish(conn, backtest_id, "SUCCESS", usage)
 
     return backtest_id
 
