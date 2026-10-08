@@ -157,6 +157,30 @@ stop themselves before crossing it; an interrupted run continues with
 `--resume <backtest_id>`. `--sentiment-mode categorical` reproduces V1's
 original sentiment prompts for faithful reruns.
 
+## Ask it questions (MCP)
+
+[`app/mcp_server.py`](app/mcp_server.py) is a read-only
+[MCP](https://modelcontextprotocol.io) server over the stored record, so an
+MCP client such as Claude Desktop can answer "why was this trade cut?" from
+the database itself. Five tools: `list_backtests`, `list_decisions`,
+`get_decision`, `explain_decision`, `get_trace`. It runs locally over
+stdio (no port), its database connection is read-only in Postgres, and no
+tool can start a run. Plan: [`docs/mcp-plan.md`](docs/mcp-plan.md).
+
+Claude Desktop (`claude_desktop_config.json`), with Postgres running:
+
+```json
+{
+  "mcpServers": {
+    "paper-trading-agent": {
+      "command": "C:\\path\\to\\paper-trading-agent\\papertrading\\Scripts\\python.exe",
+      "args": ["-m", "app.mcp_server"],
+      "env": { "PYTHONPATH": "C:\\path\\to\\paper-trading-agent" }
+    }
+  }
+}
+```
+
 ## What this does and doesn't show
 
 **Does:** a working service over Postgres with hand-written SQL; a four-node

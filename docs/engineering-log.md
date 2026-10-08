@@ -1503,3 +1503,33 @@ Browse: `mlflow ui --backend-store-uri sqlite:///eval/mlflow/mlflow_regression.d
 
 To browse the run: `pip install mlflow`, then
 `mlflow ui --backend-store-uri sqlite:///eval/mlflow/mlflow_sentiment.db`.
+
+## MCP server (add-on, 2026-10-08)
+
+Plan committed first (`61fb254`, `docs/mcp-plan.md`). `app/mcp_server.py`:
+a read-only MCP server over the stored record, official `mcp` SDK 2.3
+(where `FastMCP` is now `MCPServer`), stdio transport, five tools —
+`list_backtests`, `list_decisions`, `get_decision`, `explain_decision`,
+`get_trace`. Hand-written SQL; `get_trace` reuses `trace_audit` rather
+than a second implementation.
+
+- **Read-only in Postgres, not by convention:** connections open with
+  `default_transaction_read_only=on`; a test proves a `DELETE` through the
+  server's connection raises `ReadOnlySqlTransaction` and the row survives.
+  Every tool also carries `readOnlyHint` for the client.
+- No tool starts a run (runs spend API money). Lists capped at 200 rows;
+  trace text shortened unless `full=True`, and sent once (structured copy
+  turned off). Missing rows and a down database come back as plain
+  sentences, not stack traces.
+- **Tests: 10 new, 134 pass, none skipped.** A fake-model backtest with one
+  VaR-cut decision is read back through the SDK's in-process client; the
+  `get_trace` text is asserted equal to what `scripts/audit_decision.py`
+  prints for the same decision.
+- **Launched as a client would** (subprocess over stdio, Windows): lists
+  the five tools and returns the stored explanation of decision 2827
+  (backtest 136) unchanged.
+- `requirements.txt`: `mcp` and its 11 dependencies pinned (`pywin32`
+  marked Windows-only).
+
+Not yet done: the real check in Claude Desktop (three questions about
+backtest 136, each answer compared against `audit_decision.py`).
