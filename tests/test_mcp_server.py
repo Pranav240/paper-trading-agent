@@ -150,7 +150,7 @@ async def test_list_backtests_and_decisions(recorded):
     rows = (await call("list_decisions", {"backtest_id": recorded["backtest_id"],
                                           "var_changed_only": True})).structured_content["decisions"]
     assert [r["id"] for r in rows] == [recorded["decision_id"]]
-    assert rows[0]["var_changed"] and rows[0]["has_explanation"] and rows[0]["has_trace"]
+    assert rows[0]["var_effect"] in ("scaled", "blocked") and rows[0]["has_explanation"] and rows[0]["has_trace"]
     none = (await call("list_decisions", {"backtest_id": recorded["backtest_id"], "action": "sell"}))
     assert none.structured_content["count"] == 0
 

@@ -138,8 +138,11 @@ async def list_decisions(
 ) -> dict[str, Any]:
     """List recorded decisions, oldest first within the filters. Without
     backtest_id, only live (non-backtest) decisions are listed.
-    var_changed_only keeps decisions where the VaR budget cut or blocked
-    the trade -- the ones that have explanations."""
+    var_effect says what the VaR budget did: "scaled" (buy cut to fewer
+    shares), "blocked" (buy vetoed, final HOLD) or null (no change).
+    var_changed_only keeps the scaled and blocked ones. Those are the only
+    decisions that CAN have an explanation, but explanations were generated
+    for a sample only (budget), so check has_explanation per row."""
     if action is not None and action.upper() not in ACTIONS:
         raise ToolError(f"action must be one of {', '.join(ACTIONS)}.")
     where = ["r.backtest_id = %s" if backtest_id is not None else "r.mode = 'LIVE'"]
@@ -156,13 +159,14 @@ async def list_decisions(
     params.append(_limit(limit))
     rows = await _fetch(
         "SELECT d.id, r.as_of, d.symbol, d.action, d.confidence, r.backtest_id, "
-        "COALESCE(v.risk_flags && %s, false) AS var_changed, "
+        "CASE WHEN 'var_budget_veto' = ANY(v.risk_flags) THEN 'blocked' "
+        "WHEN 'var_budget_scale' = ANY(v.risk_flags) THEN 'scaled' END AS var_effect, "
         "EXISTS (SELECT 1 FROM risk_explanations e WHERE e.decision_id = d.id) AS has_explanation, "
         "EXISTS (SELECT 1 FROM trace_steps t WHERE t.decision_id = d.id) AS has_trace "
         "FROM decisions d JOIN runs r ON r.id = d.run_id "
         "LEFT JOIN var_forecasts v ON v.decision_id = d.id "
         f"WHERE {' AND '.join(where)} ORDER BY r.as_of, d.id LIMIT %s",
-        (list(TRIGGER_FLAGS), *params),
+        tuple(params),
     )
     return {"decisions": rows, "count": len(rows)}
 
