@@ -1531,5 +1531,34 @@ than a second implementation.
 - `requirements.txt`: `mcp` and its 11 dependencies pinned (`pywin32`
   marked Windows-only).
 
-Not yet done: the real check in Claude Desktop (three questions about
-backtest 136, each answer compared against `audit_decision.py`).
+### Real check (2026-10-08)
+
+Claude Desktop (Store build: its config lives under
+`%LOCALAPPDATA%\Packages\Claude_*\LocalCache\Roaming\Claude\`, and the
+app overwrites that file from memory on quit, so the entry has to be added
+with the app closed).
+
+1. **Asked in a Claude Desktop chat:** "In backtest 136, which decisions did
+   the VaR budget cut, and which have explanations?" Every fact in the
+   answer matched the database: 51 VaR-changed decisions, 2023-07-14 to
+   2023-12-01, 7 BUY and 44 HOLD, the 7 BUY ids, and the 5 explained
+   decisions with their dates, actions and confidences. Nothing invented.
+   **It exposed two faults in the tool, not the data:** the description
+   said VaR-changed decisions "are the ones that have explanations", so the
+   client read 5 of 51 as a possible silent failure (only a budgeted
+   sample was ever explained, phase 10); and the list could not tell a
+   cut from a block. Fixed (`6c981a8`): `var_effect` = scaled / blocked
+   (7 / 44 here) and a corrected description.
+2. **Questions 2 and 3 run through the same server from Claude Code in the
+   same app**, not a Chat-tab conversation (deviation; the owner judged the
+   first answer sufficient). "Why was decision 2827's trade cut?" returns
+   the stored explanation unchanged: BUY 6 scaled to 1, VaR 3.06% against
+   the 2% budget, 13 shares allowed with 12 held, five loss days with 18
+   cited headlines, citation check passed. "Which model wrote it, how many
+   tokens?" `claude-haiku-4-5-20251001`, 1,846 in / 331 out, matching the
+   phase 10 record.
+3. `get_trace` for 2827 is **identical** to `scripts/audit_decision.py 2827`,
+   line for line, completeness line included.
+
+**MCP add-on done** by the plan's definition: tests in CI, a real client
+check, README. One deviation logged above.
