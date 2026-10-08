@@ -48,6 +48,7 @@ The project's founding rule was that an honestly evaluated result is the correct
 | [`README.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/README.md) | Start here — result, architecture, how to run |
 | [`docs/engineering-log.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/docs/engineering-log.md) | Design decisions log, phase-by-phase writeup |
 | [`docs/backtesting-plan.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/docs/backtesting-plan.md) | Backtest requirements, written before the code |
+| [`docs/mcp-plan.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/docs/mcp-plan.md) | The MCP server's plan, written before the code |
 | [`infra/README.md`](https://github.com/Pranav240/paper-trading-agent/blob/master/infra/README.md) | Deployment, cost breakdown, deliberate omissions |
 
 ---
@@ -325,6 +326,24 @@ Note also that three "different" rules land on exactly −49.24. They block the 
 
 ---
 
+## Asking the record questions (MCP)
+
+[`app/mcp_server.py`](https://github.com/Pranav240/paper-trading-agent/blob/master/app/mcp_server.py) is a read-only [MCP](https://modelcontextprotocol.io) server, so Claude Desktop or any MCP client can answer questions from the stored record itself. It runs locally over stdio and opens no port.
+
+| Tool | Answers |
+|---|---|
+| `list_backtests` | Which runs exist: window, models, git commit |
+| `list_decisions` | What the system did, and whether the VaR budget scaled or blocked it |
+| `get_decision` | One decision: every agent's opinion, the VaR forecast, the final action |
+| `explain_decision` | Why a trade was cut: the stored explanation and the headlines it cited |
+| `get_trace` | The full reasoning trace, step by step |
+
+**Read-only in the database, not by convention:** every connection opens with `default_transaction_read_only=on`, and a test proves a `DELETE` through it fails. No tool starts a run — a run spends money, and an LLM client should not be able to start one.
+
+**Checked in a real Claude Desktop chat.** Every fact in the answer matched the database, and the answer exposed two faults in the tool's own description — it implied every VaR-cut decision had an explanation (only a sample was explained) and could not tell a cut from a block. Both fixed. `get_trace` output is identical, line for line, to `scripts/audit_decision.py`. Config snippet in the [README](https://github.com/Pranav240/paper-trading-agent#ask-it-questions-mcp).
+
+---
+
 ## Deployment
 
 [Terraform](https://github.com/Pranav240/paper-trading-agent/tree/master/infra) provisioning a purpose-built VPC, a `t3.micro` running the container, ECR, encrypted SSM parameters, scoped IAM roles, and an EventBridge schedule firing through SSM.
@@ -398,7 +417,7 @@ Not imported from a checklist. Each is traceable to a specific mistake in this p
 
 ```bash
 docker compose up --build     # API + fresh database
-pytest -q                     # 124 tests, none skipped
+pytest -q                     # 134 tests, none skipped
 ```
 
 **A backtest** *(needs Alpaca + an Anthropic or OpenAI key; `LLM_PROVIDER` picks)*

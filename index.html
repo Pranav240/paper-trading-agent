@@ -243,7 +243,7 @@
     <div class="stat"><div class="k">Backtests</div><div class="v">10</div><div class="s">7 original, 3 reruns (1 clean)</div></div>
     <div class="stat"><div class="k">Look-ahead leaks found</div><div class="v">2</div><div class="s">prices, then headline dates</div></div>
     <div class="stat"><div class="k">Fine-tune attempts</div><div class="v">5</div><div class="s">two framings, all negative</div></div>
-    <div class="stat"><div class="k">Tests</div><div class="v pos">124</div><div class="s">CI fails if any skips</div></div>
+    <div class="stat"><div class="k">Tests</div><div class="v pos">134</div><div class="s">CI fails if any skips</div></div>
     <div class="stat"><div class="k">Total cloud spend</div><div class="v">~$0.02</div><div class="s">applied, verified, destroyed</div></div>
   </div>
 
@@ -343,6 +343,7 @@
     <p>Four nodes, split by whether judgment is actually required. A <strong>Technical Analyst</strong> computes RSI-14 and SMA-20 in plain Python &mdash; arithmetic is not worth a language model. A <strong>Sentiment Analyst</strong> reads headlines through a small language model. A <strong>Portfolio Manager</strong> on a larger one synthesises both into a proposal. A <strong>Risk Manager</strong> holds final authority and can veto or scale any trade: V1&rsquo;s hard position rules, plus, since V2, a budget on the position&rsquo;s value-at-risk.</p>
     <p>V1 ran on GPT-4o-mini and GPT-4o. Since V2 the same two nodes run on Claude Haiku 4.5 and Sonnet 5.5 &mdash; a configuration setting, not a code change, and every run records which models produced it.</p>
     <p>That last split &mdash; propose versus gate &mdash; was the most valuable structural decision in the project. Because the risk layer is code and every input it consumed is stored, alternative risk rules could later be replayed against recorded decisions for free, without a single new API call.</p>
+    <p>The stored record can also be questioned directly. A small <strong>MCP server</strong> lets an AI client such as Claude Desktop answer &ldquo;why was this trade cut?&rdquo; from the database itself &mdash; listing backtests and decisions, each agent&rsquo;s opinion, the stored explanation and the full reasoning trace. It is read-only by construction: Postgres itself rejects any write on its connection, and no tool can start a run, because a run spends money.</p>
   </section>
 
   <section>
@@ -355,6 +356,12 @@
       <p><strong>Phase 09, the evaluation harness, has shipped.</strong> On 40 of AAPL&rsquo;s worst days, with every candidate headline labelled and every stage committed before its result: the explainer named the labelled cause 65% of the time, against 22% for simply quoting the best-ranked headline &mdash; 17 days won, none lost &mdash; and 92% of its causes were backed by what it cited. Full-text retrieval beat plain recency on every measure but missed its pre-registered significance bar. <strong>The caveat is stated, not buried:</strong> the labels were written by Claude rather than a person, and the judge and the explainer are Claude models too, so this shows the three agree, not that a human would. Building it is also what exposed the second look-ahead leak.</p>
       <p><strong>Phase 10, the reasoning trace, completes V2.</strong> Every decision now stores, in the same transaction, each model call&rsquo;s exact prompt and reply, every headline retrieval with its ranking, the risk arithmetic and the citation check &mdash; so any decision can be audited from stored data with one command. A pre-registered check rebuilt every explanation from its trace alone: 19 of 19 on a dry run, 5 of 5 on real model output.</p>
       <p>This does not depend on the strategy having an edge. It makes the existing system&rsquo;s judgment better and its reasoning visible &mdash; the same gap the rest of this project already cares about.</p>
+    </div>
+
+    <div class="finding" style="border-left-color:var(--ink-bold); margin-top:24px;">
+      <div class="label" style="color:var(--ink-bold);">Shipped &mdash; after V2</div>
+      <p><strong>An MCP server over the decision record.</strong> Five read-only tools &mdash; backtests, decisions, one decision in full, its explanation, its trace &mdash; for Claude Desktop or any MCP client, planned before any code and tested against a live database. Checked in a real Claude Desktop chat: every fact in the answer matched the database, and the answer exposed two faults in the tool&rsquo;s own description, both fixed. The trace tool&rsquo;s output is identical, line for line, to the project&rsquo;s audit script.</p>
+      <p><strong>The fine-tuning runs, redone with experiment tracking.</strong> Both Phase 04 notebooks were rerun on a free Kaggle GPU with every setting and metric logged to MLflow next to its baseline. The regression run was done at full size for the first time &mdash; 1.5B parameters, all 27,591 examples, two epochs &mdash; and found the same answer as the cut-down original: no signal the setup can detect.</p>
     </div>
 
     <div class="finding" style="border-left-color:var(--ink-bold); margin-top:24px;">
@@ -387,8 +394,9 @@
   <section>
     <h2 class="sec">Everything else</h2>
     <ul class="links">
-      <li><a href="https://github.com/Pranav240/paper-trading-agent"><span class="n">Repository</span><span class="d">FastAPI, LangGraph, Postgres, Docker, Terraform</span><span class="u">github &rarr;</span></a></li>
+      <li><a href="https://github.com/Pranav240/paper-trading-agent"><span class="n">Repository</span><span class="d">FastAPI, LangGraph, Postgres, MCP, Docker, Terraform</span><span class="u">github &rarr;</span></a></li>
       <li><a href="https://github.com/Pranav240/paper-trading-agent/blob/master/PROJECT.md"><span class="n">PROJECT.md</span><span class="d">The complete record in one file</span><span class="u">markdown &rarr;</span></a></li>
+      <li><a href="https://github.com/Pranav240/paper-trading-agent#ask-it-questions-mcp"><span class="n">MCP server</span><span class="d">Ask the decision record questions from Claude Desktop</span><span class="u">readme &rarr;</span></a></li>
       <li><a href="https://github.com/Pranav240/paper-trading-agent/blob/master/docs/engineering-log.md"><span class="n">Engineering log</span><span class="d">Design decisions, and the failure behind each one</span><span class="u">markdown &rarr;</span></a></li>
       <li><a href="https://www.kaggle.com/code/pranavthota/papertrade1"><span class="n">Fine-tuning notebook</span><span class="d">QLoRA regression, headline to forward return</span><span class="u">kaggle &rarr;</span></a></li>
       <li><a href="https://www.kaggle.com/datasets/pranavthota/pta-return-dataset"><span class="n">Training dataset</span><span class="d">41,701 examples, 104 symbols, leak-free splits</span><span class="u">kaggle &rarr;</span></a></li>
