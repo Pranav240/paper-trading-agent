@@ -31,6 +31,8 @@ runs are not yet redone.
 [interactive results dashboard](https://pranav240.github.io/paper-trading-agent/dashboard/backtest_dashboard.html) ·
 [roadmap](https://pranav240.github.io/paper-trading-agent/dashboard/roadmap.html)
 
+**Power BI** — [`powerbi/`](powerbi/) has the data extracts, Power Query, DAX measures and rebuild guide for a report on the backtest, trade and evaluation results.
+
 ---
 
 ## The result
@@ -130,6 +132,7 @@ notebooks/      QLoRA fine-tuning — v1 classification, v2 return regression
 infra/          Terraform: VPC, ECR, IAM, SSM, EventBridge schedule
 tests/          pytest; CI runs against a real Postgres and fails on skips
 dashboard/      Interactive results pages
+powerbi/        Power BI report source: data, queries, DAX, theme, rebuild guide
 docs/           Backtesting plan, engineering log
 ```
 
