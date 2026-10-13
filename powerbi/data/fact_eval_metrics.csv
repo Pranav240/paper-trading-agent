@@ -10,7 +10,7 @@ Paper Trading Agent,Risk / VaR,Max drawdown vs V1 rules,-185,,USD,Out-of-sample 
 Paper Trading Agent,Explainer / RAG,Explanation names labelled cause,65,22,%,40 worst AAPL days,PROJECT.md,"Baseline = quoting top headline; 17 won, 0 lost, p<0.0001; LLM-judged vs LLM-written labels"
 Paper Trading Agent,Explainer / RAG,Top headline relevant (full-text vs recency),50,30,%,40 worst AAPL days,PROJECT.md,"Not significant, p=0.12"
 Paper Trading Agent,Explainer / RAG,Explainer causes supported by own citations,92,90,%,40 worst AAPL days,PROJECT.md,Baseline = pre-registered bar (90%)
-Paper Trading Agent,Trace,Explanations rebuilt from stored traces,100,,%,,resume,Resume claim; not re-verified here
+Paper Trading Agent,Trace,Explanations rebuilt from stored traces,100,,%,bt 136 (5 explanations),docs/engineering-log.md,Phase 10: 5 / 5 rebuilt exactly from the trace on real model output (bt 136); 19 / 19 on a dry run with fake models. Pre-registered check: scripts/trace_completeness.py
 Paper Trading Agent,QLoRA,Financial PhraseBank adapter accuracy (v1),84.0,96.8,%,Project headlines,PROJECT.md,Baseline = majority class; below baseline
 Paper Trading Agent,QLoRA,Distilled adapter accuracy (v1),90.9,90.9,%,Project headlines,PROJECT.md,Baseline = majority class; exactly baseline
 Paper Trading Agent,QLoRA,"PhraseBank adapter, held-out PhraseBank (Oct 2026 rerun)",91.3,59.3,%,PhraseBank held-out,PROJECT.md,Baseline = always-HOLD
@@ -26,5 +26,5 @@ Paper Trading Agent,QLoRA regression,"Spearman IC [Rerun Qwen2.5-1.5B, 27,591 ex
 Paper Trading Agent,QLoRA regression,"Sign accuracy [Rerun Qwen2.5-1.5B, 27,591 ex, 2 epochs (MLflow)]",0.501,0.509,ratio,"Unseen symbols, overlapping dates (n=4774)",PROJECT.md,"Baseline = base rate of ""up"""
 Paper Trading Agent,QLoRA regression,"Spearman IC [Rerun Qwen2.5-1.5B, 27,591 ex, 2 epochs (MLflow)]",0.0278,0.03,IC,Unseen symbols and dates (n=1221),PROJECT.md,Baseline = pre-registered bar IC>=0.03; TF-IDF baseline IC=+0.002
 Paper Trading Agent,QLoRA regression,"Sign accuracy [Rerun Qwen2.5-1.5B, 27,591 ex, 2 epochs (MLflow)]",0.508,0.524,ratio,Unseen symbols and dates (n=1221),PROJECT.md,"Baseline = base rate of ""up"""
-Paper Trading Agent,Engineering,pytest test functions in repo,132,124,count,HEAD,repo scan,Baseline = 124 stated on resume; resume likely stale
+Paper Trading Agent,Engineering,pytest tests collected,134,,count,tests/,tests/,"pytest --collect-only -q: 134 tests (Python 3.13, dependencies from requirements.txt). 132 test functions; one is parametrized into 3 cases. No baseline: the resume figure of 124 is not in this repo"
 Paper Trading Agent,Engineering,Training dataset size,41701,,examples,,PROJECT.md,"104 symbols, 19 months"

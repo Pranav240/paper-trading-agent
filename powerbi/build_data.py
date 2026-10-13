@@ -100,7 +100,8 @@ def eval_rows() -> list[dict]:
     m(P, "Explainer / RAG", "Explanation names labelled cause", 65, 22, "%", "40 worst AAPL days", "PROJECT.md", "Baseline = quoting top headline; 17 won, 0 lost, p<0.0001; LLM-judged vs LLM-written labels")
     m(P, "Explainer / RAG", "Top headline relevant (full-text vs recency)", 50, 30, "%", "40 worst AAPL days", "PROJECT.md", "Not significant, p=0.12")
     m(P, "Explainer / RAG", "Explainer causes supported by own citations", 92, 90, "%", "40 worst AAPL days", "PROJECT.md", "Baseline = pre-registered bar (90%)")
-    m(P, "Trace", "Explanations rebuilt from stored traces", 100, "", "%", "", "resume", "Resume claim; not re-verified here")
+    m(P, "Trace", "Explanations rebuilt from stored traces", 100, "", "%", "bt 136 (5 explanations)", "docs/engineering-log.md",
+      "Phase 10: 5 / 5 rebuilt exactly from the trace on real model output (bt 136); 19 / 19 on a dry run with fake models. Pre-registered check: scripts/trace_completeness.py")
     m(P, "QLoRA", "Financial PhraseBank adapter accuracy (v1)", 84.0, 96.8, "%", "Project headlines", "PROJECT.md", "Baseline = majority class; below baseline")
     m(P, "QLoRA", "Distilled adapter accuracy (v1)", 90.9, 90.9, "%", "Project headlines", "PROJECT.md", "Baseline = majority class; exactly baseline")
     m(P, "QLoRA", "PhraseBank adapter, held-out PhraseBank (Oct 2026 rerun)", 91.3, 59.3, "%", "PhraseBank held-out", "PROJECT.md", "Baseline = always-HOLD")
@@ -115,7 +116,8 @@ def eval_rows() -> list[dict]:
         for sp, n, ic, sa, br in rr:
             m(P, "QLoRA regression", f"Spearman IC [{run}]", ic, 0.03, "IC", f"{sp} (n={n})", "PROJECT.md", "Baseline = pre-registered bar IC>=0.03; TF-IDF baseline IC=+0.002")
             m(P, "QLoRA regression", f"Sign accuracy [{run}]", sa, br, "ratio", f"{sp} (n={n})", "PROJECT.md", 'Baseline = base rate of "up"')
-    m(P, "Engineering", "pytest test functions in repo", 132, 124, "count", "HEAD", "repo scan", "Baseline = 124 stated on resume; resume likely stale")
+    m(P, "Engineering", "pytest tests collected", 134, "", "count", "tests/", "tests/",
+      "pytest --collect-only -q: 134 tests (Python 3.13, dependencies from requirements.txt). 132 test functions; one is parametrized into 3 cases. No baseline: the resume figure of 124 is not in this repo")
     m(P, "Engineering", "Training dataset size", 41701, "", "examples", "", "PROJECT.md", "104 symbols, 19 months")
     return rows
 

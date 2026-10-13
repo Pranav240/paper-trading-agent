@@ -23,11 +23,15 @@ from pathlib import Path
 import pandas as pd
 
 DEFAULT_DATA = Path(__file__).resolve().parent / "data"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+# Every row in fact_eval_metrics.csv must cite one of these repo files or folders.
+# Add a path here only when a metric genuinely comes from it.
+ALLOWED_SOURCES = ("PROJECT.md", "README.md", "docs/engineering-log.md", "tests/")
 LEAK_FREE = "Both leaks fixed"  # same literal as the Leak-Free Runs measure
 
 
 def load(data_dir: Path) -> dict[str, pd.DataFrame]:
-    names = ["fact_daily_decisions", "fact_trades", "fact_backtest_runs"]
+    names = ["fact_daily_decisions", "fact_trades", "fact_backtest_runs", "fact_eval_metrics"]
     missing = [n for n in names if not (data_dir / f"{n}.csv").exists()]
     if missing:
         sys.exit(f"Missing CSV(s) in {data_dir}: {', '.join(m + '.csv' for m in missing)}")
@@ -99,13 +103,29 @@ def trade_count_check(b: pd.DataFrame, t: pd.DataFrame) -> bool:
     return ok
 
 
+def source_label_check(e: pd.DataFrame) -> bool:
+    """Every fact_eval_metrics.source must be in ALLOWED_SOURCES and exist in this repo."""
+    ok = True
+    print("\nEvaluation-metric source labels")
+    for src, n in e["source"].fillna("(blank)").value_counts().items():
+        if src not in ALLOWED_SOURCES:
+            print(f"  FAIL: {n} row(s) cite {src!r}, which is not in the allowed list")
+            ok = False
+        elif not (REPO_ROOT / src).exists():
+            print(f"  FAIL: {n} row(s) cite {src!r}, which does not exist in the repo")
+            ok = False
+        else:
+            print(f"  ok: {n} row(s) cite {src}")
+    return ok
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--data", type=Path, default=DEFAULT_DATA, help="folder holding the CSVs")
     args = ap.parse_args()
 
     f = load(args.data)
-    d, t, b = f["fact_daily_decisions"], f["fact_trades"], f["fact_backtest_runs"]
+    d, t, b, e = f["fact_daily_decisions"], f["fact_trades"], f["fact_backtest_runs"], f["fact_eval_metrics"]
 
     rows = [
         ("Decisions", f"{decisions(d):,}"),
@@ -120,6 +140,7 @@ def main() -> None:
         print(f"{name:<{width}}  {value}")
 
     ok = trade_count_check(b, t)
+    ok = source_label_check(e) and ok
 
     # Sanity check on the source column the DAX does not use: diff_usd must
     # equal result_usd - buy_hold_usd on every run.
