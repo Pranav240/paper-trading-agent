@@ -225,7 +225,19 @@ def main() -> None:
     tables["fact_eval_metrics"] = (ev, list(ev[0]))
     for name, (rows, cols) in tables.items():
         print(f"{name:<24} {write_csv(args.out, name, rows, cols):>5} rows")
-    print(f"git ref: {args.ref} ({git('rev-parse', '--short', args.ref).strip()})")
+    sha = git("rev-parse", args.ref).strip()
+    latest = git("log", args.ref, "-1", "--abbrev=7", "--format=%h|%aI").strip().split("|")
+    info = {
+        "exported_on": dt.date.today().isoformat(),
+        "git_ref": args.ref,
+        "git_ref_sha": sha,
+        "latest_commit": latest[0],
+        "latest_commit_date": latest[1],
+        "dashboard_data": str(args.json) if args.json else "dashboard/backtest_dashboard.html",
+        "row_counts": {name: len(rows) for name, (rows, _) in tables.items()},
+    }
+    (args.out / "export_info.json").write_text(json.dumps(info, indent=2) + "\n", encoding="utf-8")
+    print(f"git ref: {args.ref} ({sha[:7]}), exported_on {info['exported_on']}")
 
 
 if __name__ == "__main__":

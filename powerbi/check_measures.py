@@ -17,6 +17,8 @@ the code that produces it is scripts/evaluate_var.py.
 from __future__ import annotations
 
 import argparse
+import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -119,6 +121,25 @@ def source_label_check(e: pd.DataFrame) -> bool:
     return ok
 
 
+def freshness(data_dir: Path) -> None:
+    """Print when the CSVs were exported and warn (never fail) if the ref has moved on."""
+    info_path = data_dir / "export_info.json"
+    if not info_path.exists():
+        print("\nExport info: export_info.json not found (regenerate with powerbi/build_data.py)")
+        return
+    info = json.loads(info_path.read_text(encoding="utf-8"))
+    print(f"\nData exported {info['exported_on']} from {info['git_ref']} "
+          f"at {info['latest_commit']} ({info['latest_commit_date'][:10]})")
+    try:
+        now = subprocess.run(["git", "rev-parse", info["git_ref"]], cwd=REPO_ROOT, check=True,
+                             capture_output=True, text=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return  # not inside a git checkout; nothing to compare with
+    if now != info["git_ref_sha"]:
+        print(f"WARNING: {info['git_ref']} is now at {now[:7]}; the commit data is behind. "
+              f"Refresh with: python powerbi/build_data.py")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--data", type=Path, default=DEFAULT_DATA, help="folder holding the CSVs")
@@ -141,6 +162,7 @@ def main() -> None:
 
     ok = trade_count_check(b, t)
     ok = source_label_check(e) and ok
+    freshness(args.data)
 
     # Sanity check on the source column the DAX does not use: diff_usd must
     # equal result_usd - buy_hold_usd on every run.

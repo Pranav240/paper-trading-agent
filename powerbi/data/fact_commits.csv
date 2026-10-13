@@ -1,4 +1,6 @@
 repo,sha,author,committed_at,commit_date,message,files_changed,insertions,deletions
+paper-trading-agent,ad0efd8,Pranav T N,2026-10-08T19:46:39+05:30,2026-10-08,Merge pull request #1 from Pranav240/add-powerbi-report,0,0,0
+paper-trading-agent,f860f2a,Pranav,2026-10-08T14:11:41+00:00,2026-10-08,Add Power BI report pack,85,26408,290
 paper-trading-agent,99424bd,Pranav,2026-10-08T11:44:24+05:30,2026-10-08,Homepage and PROJECT.md: MCP server (and the MLflow reruns on the homepage),2,30,3
 paper-trading-agent,25ede21,Pranav,2026-10-08T11:35:08+05:30,2026-10-08,MCP add-on done: Claude Desktop check logged,1,31,2
 paper-trading-agent,6c981a8,Pranav,2026-10-08T11:29:41+05:30,2026-10-08,MCP list_decisions: var_effect (scaled/blocked); explanations are a sample,2,9,5

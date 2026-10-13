@@ -1,0 +1,19 @@
+{
+  "exported_on": "2026-10-13",
+  "git_ref": "origin/master",
+  "git_ref_sha": "ad0efd8112f491a1df42ef56a546455ff357b233",
+  "latest_commit": "ad0efd8",
+  "latest_commit_date": "2026-10-08T19:46:39+05:30",
+  "dashboard_data": "dashboard/backtest_dashboard.html",
+  "row_counts": {
+    "dim_repo": 1,
+    "fact_commits": 122,
+    "fact_repo_language": 8,
+    "fact_backtest_runs": 10,
+    "fact_daily_decisions": 2127,
+    "fact_trades": 272,
+    "fact_agent_opinions": 117,
+    "fact_sentiment_scores": 553,
+    "fact_eval_metrics": 29
+  }
+}

@@ -19,19 +19,20 @@ All files are in `data/`, UTF-8 CSV with a header row. Row counts and date range
 
 | File | Contents | Rows | Date range | Source |
 |---|---|---|---|---|
-| `dim_repo.csv` | One row describing this repo | 1 | first commit 2026-08-29, last commit 2026-10-08 | `git log` and `git ls-files` of this repo |
-| `fact_commits.csv` | One row per commit: date, message, files changed, lines added and deleted | 120 | commit_date 2026-08-29 to 2026-10-08 | `git log --shortstat` of this repo |
-| `fact_repo_language.csv` | Lines of code per language | 8 | none (snapshot) | line counts of tracked files, grouped by file extension |
+| `dim_repo.csv` | One row describing this repo | 1 | first commit 2026-08-29, last commit 2026-10-08 | `git log` and `git ls-tree` of this repo, via `build_data.py` |
+| `fact_commits.csv` | One row per commit: date, message, files changed, lines added and deleted | 122 | commit_date 2026-08-29 to 2026-10-08 | `git log --shortstat` of `origin/master`, via `build_data.py` |
+| `fact_repo_language.csv` | Lines of code per language | 8 | none (snapshot) | line counts of tracked files at `origin/master`, grouped by file extension, via `build_data.py`. The `powerbi/` folder is excluded |
 | `fact_backtest_runs.csv` | One row per backtest run: window, configuration, result, buy-and-hold result, look-ahead status | 10 | windows 2022-06-01 to 2023-12-31 | `id`, `name` and window columns: the `BACKTESTS` query in `scripts/export_dashboard_data.py` (table `backtests`). `result_usd`, `buy_hold_usd`, `diff_usd`, `closed_trades`: the result tables in the repo [README](../README.md). `look_ahead_status`, `sample`, `config`, `version`, `counts_as_result`: entered by hand from the README tables and the run-id comments in the export script. `result_basis`: entered by hand in `build_data.py` (see [Known data caveats](#known-data-caveats)) |
 | `fact_daily_decisions.csv` | One row per daily decision: date, price, action, confidence | 2,127 | as_of 2022-06-01 to 2023-12-29 | `DAILY` query in `scripts/export_dashboard_data.py` (tables `decisions`, `runs`) |
 | `fact_trades.csv` | One row per trade lot: entry and exit, status, realized P&L | 272 (239 CLOSED, 33 OPEN) | opened 2022-06-01 to 2023-12-21; closed 2022-06-10 to 2023-12-11 | `TRADES` query in the export script (table `backtest_outcomes`) |
 | `fact_agent_opinions.csv` | Count of each agent's opinions per run | 117 | none | `OPINIONS` query in the export script (table `agent_opinions`) |
 | `fact_sentiment_scores.csv` | Daily sentiment-analyst score and confidence | 553 | as_of 2022-06-01 to 2023-06-30 (runs 14 and 45 only) | `SCORES` query in the export script |
 | `fact_eval_metrics.csv` | Evaluation results in long format: metric, value, baseline, split, source | 29 | none | 27 rows transcribed from `PROJECT.md`; 1 row from `docs/engineering-log.md` (trace completeness); 1 row from `tests/` (pytest collection). `check_measures.py` fails if a row cites any other source |
+| `export_info.json` | When and from which commit the CSVs were generated, with row counts | n/a | exported_on 2026-10-13 | written by `build_data.py` |
 
-How the extracts were made: the five tables from `scripts/export_dashboard_data.py` were read from the `DATA` object embedded in `dashboard/backtest_dashboard.html`, which that script produces. They were not re-queried from Postgres. Their row counts match the embedded data exactly (2,127 / 272 / 117 / 553 / 10). The commit, repo and language files were generated from git; the script that generated them is not committed to this repo.
+How the extracts were made: `build_data.py` generates every CSV. The five tables from `scripts/export_dashboard_data.py` are read from the `DATA` object embedded in `dashboard/backtest_dashboard.html`, which that script produces; they were not re-queried from Postgres. Their row counts match the embedded data exactly (2,127 / 272 / 117 / 553 / 10). The commit, repo and language files come from git history. The hand-entered result and metric tables live in `build_data.py` with the repo file each came from.
 
-Snapshot: 2026-10-08.
+Last exported: 2026-10-13, from `origin/master` at `ad0efd8` (see `data/export_info.json`).
 
 ## Power Query
 
@@ -141,7 +142,7 @@ Requires Power BI Desktop on Windows.
 python powerbi/check_measures.py
 ```
 
-Output on the 2026-10-08 snapshot:
+Output on the data exported 2026-10-13:
 
 ```
 Decisions         2,127
@@ -159,12 +160,26 @@ The VaR breach rate is not recomputed here, because it needs the per-decision fo
 
 ## Known data caveats
 
-- **Snapshot age.** `fact_commits.csv` has 120 commits; the repo had 122 on 2026-10-13. Regenerate before relying on the activity pages.
 - **Result versus realized P&L.** `result_usd` is mark-to-market including open positions; `fact_trades.realized_pnl` covers closed lots only. For run #14 they are 745.86 and 120.49.
 - **Two bases in one model: runs #45, #71 and #136.** These three reruns were recorded with the VaR risk node on, then V1's risk rules were replayed over the same decisions (`docs/engineering-log.md`). `result_usd`, `buy_hold_usd` and `closed_trades` in `fact_backtest_runs` are the README's V1-rules-replay figures, so the column `result_basis` is `v1_rules_replay` for them and `recorded_run` for the other seven. `fact_trades`, `fact_daily_decisions` and `fact_agent_opinions` hold what the run itself recorded, with the VaR node. That is why `closed_trades` is 29 and 11 against 23 and 10 CLOSED rows for #45 and #71 (run #136 shows 9 and 9, which happens to agree). For #45 the log gives the recorded result as +428.56 against +920.81 replayed; for #71, +123.20 against +66.35. Neither file is wrong, but the Backtests page (replay basis) and the Decisions page (recorded basis) describe different things for these three runs. `check_measures.py` fails if `closed_trades` and the CLOSED trade rows differ for any run that is not declared `v1_rules_replay`.
 - **Test count and trace completeness.** The pytest row is 134, from `pytest --collect-only -q`; counting `def test_` lines gives 132 because one test is parametrized into 3 cases. It has no baseline, because the resume's figure of 124 is not in this repo. The trace-completeness row (100%) comes from `docs/engineering-log.md`: 5 of 5 explanations on real model output (backtest 136) and 19 of 19 on a dry run.
 - **Explainer evaluation.** The labels were written by Claude (Opus 5.5) and judged by Claude (Sonnet 5.5), as `PROJECT.md` notes. The result shows the models agree; whether a person would is untested.
 - **Sentiment scores** exist only for runs 14 and 45.
+
+## Refreshing the data
+
+The CSVs are generated; do not edit them by hand. The git-derived files describe `origin/master`, so refresh after merging to it.
+
+```
+git fetch origin master
+python powerbi/build_data.py
+python powerbi/check_measures.py
+git add -f powerbi/data     # data/ is in .gitignore, so -f is needed
+```
+
+`build_data.py` rewrites every CSV and `data/export_info.json`, which records the export date and the commit it was taken from. `check_measures.py` prints that line and warns if `origin/master` has moved on. To refresh the backtest tables from Postgres first, run `scripts/export_dashboard_data.py` and pass its output with `--json`.
+
+Last exported: 2026-10-13, from `origin/master` at `ad0efd8` (latest commit dated 2026-10-08).
 
 ## Screenshots
 
