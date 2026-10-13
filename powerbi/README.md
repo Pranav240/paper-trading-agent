@@ -34,6 +34,48 @@ How the extracts were made: `build_data.py` generates every CSV. The five tables
 
 Last exported: 2026-10-13, from `origin/master` at `ad0efd8` (see `data/export_info.json`).
 
+## Result bases
+
+Every number in this report is measured on one of three bases. They differ only for runs #45, #71 and #136, the V2 reruns, which were recorded with the VaR risk node and then had V1's risk rules replayed over the same decisions (`docs/engineering-log.md`, sections for backtests 45, 71 and 136).
+
+| Basis | What it is | Where it appears |
+|---|---|---|
+| `recorded (V1 rules)` | The run's own recorded outcome, with V1's risk rules. Runs #3, #4, #6, #7, #8, #9, #14. | `fact_backtest_runs.result_usd` and `closed_trades` for those seven runs; `fact_trades`, `fact_daily_decisions` for those runs |
+| `recorded (VaR node)` | The run's own recorded outcome, with V2's VaR risk node. Runs #45, #71, #136. | `fact_trades`, `fact_daily_decisions`, `fact_agent_opinions` for those three runs; the interactive dashboard (`dashboard/backtest_dashboard.html`) |
+| `V1 rules replayed on the same decisions` | V1's risk rules re-run offline over a VaR-node run's recorded decisions. Runs #45, #71, #136. | `fact_backtest_runs.result_usd` and `closed_trades` for those three runs; the repo README, `PROJECT.md` and the homepage |
+
+`fact_daily_decisions.action` is the risk-gated final action (`app/agent/backtest.py` stores `final_action`), so for #45, #71 and #136 the decision and trade tables are the VaR-node run.
+
+The recorded return of any run can be derived from the CSVs: realized P&L of its CLOSED lots plus its OPEN lots marked at the run's last decision-day price. `check_measures.py` does this and checks it against the published `result_usd` for the seven V1 runs, where it matches to the cent. For the three VaR-node runs it gives the figures the engineering log reports (+428.56, +123.20, +132.64).
+
+### Both bases, runs #45, #71 and #136
+
+Output of `check_measures.py` on the data exported 2026-10-13. Buy-and-hold is the same on both bases.
+
+| Run | Basis | Closed trades | Open lots | Return $ | vs buy-and-hold $ |
+|---|---|---|---|---|---|
+| #45 | recorded (VaR node) | 23 | 4 | 428.56 | -409.24 |
+| #45 | V1 rules replayed on the same decisions | 29 | n/a | 920.81 | +83.01 |
+| #71 | recorded (VaR node) | 10 | 9 | 123.20 | +121.00 |
+| #71 | V1 rules replayed on the same decisions | 11 | n/a | 66.35 | +64.15 |
+| #136 | recorded (VaR node) | 9 | 10 | 132.64 | +130.44 |
+| #136 | V1 rules replayed on the same decisions | 9 | n/a | 73.88 | +71.68 |
+
+The replayed trade counts come from the repo README; the number of open lots under replay is not in the repo data.
+
+### Headline numbers and their basis
+
+| Number | Value | Basis |
+|---|---|---|
+| `Decisions` | 2,127 | recorded (V1 rules: 7 runs; VaR node: #45, #71, #136) |
+| `HOLD %` | 83.12% | recorded (V1 rules: 7 runs; VaR node: #45, #71, #136) |
+| `Closed Trades` | 239 | recorded (V1 rules: 7 runs; VaR node: #45, #71, #136) |
+| `Win Rate` | 69.46% | recorded (V1 rules: 7 runs; VaR node: #45, #71, #136) |
+| `Leak-Free Diff $` (run #136 only) | +71.68 | V1 rules replayed on the same decisions. On the recorded (VaR node) basis the same run is +130.44 |
+| `Strategy Result $`, `Diff vs B&H $` per run | per run, in `fact_backtest_runs` | recorded (V1 rules) for #3, #4, #6, #7, #8, #9, #14; V1 rules replayed on the same decisions for #45, #71, #136 |
+
+The first four are totals over all ten runs, so they mix the V1-rules runs with the VaR-node runs; filter to one run to get a single basis.
+
 ## Power Query
 
 `queries.pq` holds nine queries. Create one blank query per block and name it as shown. Each loads its CSV from the `DataFolder` parameter, promotes headers and sets column types.
@@ -101,13 +143,57 @@ I can explain every measure above. These are the ones where the logic is easy to
 
 ## Report pages
 
-Planned layout, carried over from the earlier version of this README. Nothing in the repo records that these pages have been built, so each still needs confirming once screenshots exist. TODO: confirm each page against the built report.
+Layout agreed 2026-10-13. Every card and chart carries its basis in its title or subtitle; the text to use is in the tables. Status: **ready** means it can be built from the current CSVs, measures and queries. **needs approval** means it needs a change to the data or the DAX that has not been made.
 
-1. **Overview**: cards for `Commits`, `Active Days`, `Closed Trades`, `Leak-Free Runs`; commits by month; lines by language.
-2. **Backtests**: clustered bar of `run_label` against `Strategy Result $` and `Buy&Hold Result $`, with `look_ahead_status` as the legend.
-3. **Decisions**: 100% stacked bar of `action` by `backtest_id`; price line by `as_of` for one selected run; histogram of `realized_pnl`; cards for `HOLD %`, `Win Rate`, `Avg Hold Days`.
-4. **Risk and explainer**: `fact_eval_metrics` filtered to area "Risk / VaR" (value against baseline, reference line at `VaR Breach Target`) and area "Explainer / RAG".
-5. **QLoRA**: `fact_eval_metrics` filtered to area "QLoRA regression" and metric containing "Spearman IC", with a reference line at 0.03; a table of classification accuracy against the majority-class baseline.
+Basis in titles: `recorded` means the run's own recorded trades (V1 rules for #3 to #14, VaR node for #45, #71 and #136). The replay basis is always written out as `V1 rules replayed on the same decisions`. Activity and model-evaluation visuals say `basis n/a`.
+
+### Page 1: Overview
+
+| Visual | Title / subtitle | Status |
+|---|---|---|
+| Card `Commits`, `Active Days` | "Commits" / "Git history, basis n/a" | ready |
+| Card `Closed Trades` | "Closed Trades" / "recorded (V1 rules: 7 runs; VaR node: #45, #71, #136)" | ready |
+| Card `Leak-Free Runs` | "Leak-Free Runs" / "Count of runs, basis n/a" | ready |
+| Commits by `DimDate[Month]` | "Commits by month" / "Git history, basis n/a" | ready |
+| Lines by language | "Lines of code by language" / "origin/master, basis n/a" | ready |
+
+### Page 2: Backtests
+
+| Visual | Title / subtitle | Status |
+|---|---|---|
+| Slicer on `result_basis` | Values `recorded (VaR node)` and `V1 rules replayed on the same decisions`; default `recorded (VaR node)` | needs approval |
+| Clustered bar: `run_label` by `Strategy Result $` and `Buy&Hold Result $`, legend `look_ahead_status` | "Result against buy-and-hold, by run" / "Basis: as selected in the slicer" | needs approval for the slicer; with the current data it can only show one basis per run (see the table in [Result bases](#result-bases)) |
+| Table for #45, #71, #136 | "Both bases, runs recorded with the VaR node" / columns: basis, closed trades, return $, vs buy-and-hold $ | needs approval |
+
+What the slicer needs: `fact_backtest_runs.csv` has one row per run, so it cannot show two bases side by side. It would need a second row for each of #45, #71 and #136 with `result_basis` = `recorded (VaR node)`, `closed_trades` = the CLOSED rows in `fact_trades` (23, 10, 9) and `result_usd` = the derived recorded return (428.56, 123.20, 132.64). `check_measures.py` already computes all of these.
+
+Open point on the default: runs #3 to #14 were recorded with V1's rules, so they have no `recorded (VaR node)` row. With that default selected, the chart would show only #45, #71 and #136 unless those seven runs are also tagged to appear under it.
+
+### Page 3: Decisions
+
+| Visual | Title / subtitle | Status |
+|---|---|---|
+| 100% stacked bar of `action` by `backtest_id` | "Decision mix by run" / "recorded (risk-gated final action)" | ready |
+| Price line by `as_of`, one selected run | "Price and decisions, selected run" / "recorded" | ready |
+| Histogram of `realized_pnl` | "Realized P&L per closed lot" / "recorded" | ready |
+| Cards `HOLD %`, `Win Rate`, `Avg Hold Days` | "HOLD %", "Win Rate", "Avg Hold Days" / "recorded" | ready |
+
+### Page 4: Risk and explainer
+
+| Visual | Title / subtitle | Status |
+|---|---|---|
+| Risk / VaR, VaR breach rate against target (`VaR Breach Target`) | "VaR forecast breach rate (target 5%)" / "Forecasts on the recorded VaR-node runs: #45 in-sample, #71 out-of-sample" | ready |
+| Risk / VaR, "VaR node P&L vs V1 rules" and "Max drawdown vs V1 rules" | "Recorded (VaR node) minus V1 rules replayed on the same decisions" / "#45 in-sample, #71 out-of-sample" | ready |
+| Explainer / RAG | "Explainer evaluation" / "40 worst AAPL days; labels and judge are Claude models; not a backtest result, basis n/a" | ready |
+
+The "VaR node P&L vs V1 rules" values are the difference between two bases: -492 is 428.56 - 920.81 for #45 and +57 is 123.20 - 66.35 for #71, rounded.
+
+### Page 5: QLoRA
+
+| Visual | Title / subtitle | Status |
+|---|---|---|
+| Spearman IC by split, reference line at 0.03 | "Spearman IC by split" / "Model evaluation, not a backtest result, basis n/a" | ready |
+| Classification accuracy against majority-class baseline | "Accuracy against majority-class baseline" / "Model evaluation, basis n/a" | ready |
 
 ## How to rebuild
 
@@ -136,23 +222,23 @@ Requires Power BI Desktop on Windows.
 
 ## Consistency check
 
-`check_measures.py` recomputes five headline measures from the CSVs with pandas, independently of Power BI. Its values should match the corresponding Power BI cards: `Decisions`, `HOLD %`, `Closed Trades`, `Win Rate` and `Leak-Free Diff $`.
+`check_measures.py` recomputes five headline measures from the CSVs with pandas, independently of Power BI. Its values and bases should match the corresponding Power BI cards: `Decisions`, `HOLD %`, `Closed Trades`, `Win Rate` and `Leak-Free Diff $`.
 
 ```
 python powerbi/check_measures.py
 ```
 
-Output on the data exported 2026-10-13:
+Output on the data exported 2026-10-13 (first five lines; the script then prints the trade-count check, the recorded-return derivation, the table of both bases, the source-label check and the export date):
 
 ```
-Decisions         2,127
-HOLD %            83.12%
-Closed Trades     239
-Win Rate          69.46%
-Leak-Free Diff $  +71.68
+Decisions         2,127   basis: recorded (V1 rules: 7 runs; VaR node: #45, #71, #136)
+HOLD %            83.12%  basis: recorded (V1 rules: 7 runs; VaR node: #45, #71, #136)
+Closed Trades     239     basis: recorded (V1 rules: 7 runs; VaR node: #45, #71, #136)
+Win Rate          69.46%  basis: recorded (V1 rules: 7 runs; VaR node: #45, #71, #136)
+Leak-Free Diff $  +71.68  basis: V1 rules replayed on the same decisions: #136
 ```
 
-The script also compares `fact_backtest_runs.closed_trades` with the CLOSED rows in `fact_trades` for every run and exits with an error if they differ without being declared (see [Known data caveats](#known-data-caveats)).
+Each number is printed with the basis it is measured on (see [Result bases](#result-bases)).
 
 These are the script's values. They have not yet been confirmed against the Power BI cards. TODO: compare and update this note.
 
@@ -161,7 +247,7 @@ The VaR breach rate is not recomputed here, because it needs the per-decision fo
 ## Known data caveats
 
 - **Result versus realized P&L.** `result_usd` is mark-to-market including open positions; `fact_trades.realized_pnl` covers closed lots only. For run #14 they are 745.86 and 120.49.
-- **Two bases in one model: runs #45, #71 and #136.** These three reruns were recorded with the VaR risk node on, then V1's risk rules were replayed over the same decisions (`docs/engineering-log.md`). `result_usd`, `buy_hold_usd` and `closed_trades` in `fact_backtest_runs` are the README's V1-rules-replay figures, so the column `result_basis` is `v1_rules_replay` for them and `recorded_run` for the other seven. `fact_trades`, `fact_daily_decisions` and `fact_agent_opinions` hold what the run itself recorded, with the VaR node. That is why `closed_trades` is 29 and 11 against 23 and 10 CLOSED rows for #45 and #71 (run #136 shows 9 and 9, which happens to agree). For #45 the log gives the recorded result as +428.56 against +920.81 replayed; for #71, +123.20 against +66.35. Neither file is wrong, but the Backtests page (replay basis) and the Decisions page (recorded basis) describe different things for these three runs. `check_measures.py` fails if `closed_trades` and the CLOSED trade rows differ for any run that is not declared `v1_rules_replay`.
+- **Two bases in one model: runs #45, #71 and #136.** See [Result bases](#result-bases). In short: `result_usd` and `closed_trades` for these runs are the V1-rules replay, while `fact_trades`, `fact_daily_decisions` and `fact_agent_opinions` are the VaR-node run. That is why `closed_trades` is 29 and 11 against 23 and 10 CLOSED rows for #45 and #71; run #136 shows 9 and 9, which happens to agree. `check_measures.py` fails if `closed_trades` and the CLOSED trade rows differ for any run not declared `v1_rules_replay`.
 - **Test count and trace completeness.** The pytest row is 134, from `pytest --collect-only -q`; counting `def test_` lines gives 132 because one test is parametrized into 3 cases. It has no baseline, because the resume's figure of 124 is not in this repo. The trace-completeness row (100%) comes from `docs/engineering-log.md`: 5 of 5 explanations on real model output (backtest 136) and 19 of 19 on a dry run.
 - **Explainer evaluation.** The labels were written by Claude (Opus 5.5) and judged by Claude (Sonnet 5.5), as `PROJECT.md` notes. The result shows the models agree; whether a person would is untested.
 - **Sentiment scores** exist only for runs 14 and 45.

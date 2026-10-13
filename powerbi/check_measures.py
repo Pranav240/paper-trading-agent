@@ -70,6 +70,71 @@ def leak_free_diff(b: pd.DataFrame) -> float:
 
 
 BASES = {"recorded_run", "v1_rules_replay"}
+# What each result_basis value means in the report.
+REPLAY_NAME = "V1 rules replayed on the same decisions"
+
+
+def recorded_name(basis: str) -> str:
+    """How a run's own recorded trades should be labelled. Runs #3-#14 were recorded under
+    V1's rules; the three V2 reruns were recorded with the VaR node."""
+    return "recorded (VaR node)" if basis == "v1_rules_replay" else "recorded (V1 rules)"
+
+
+def run_list(ids) -> str:
+    return ", ".join(f"#{i}" for i in ids)
+
+
+def recorded_basis_label(b: pd.DataFrame) -> str:
+    """Basis of anything computed from fact_daily_decisions / fact_trades."""
+    v1 = b.loc[b["result_basis"] != "v1_rules_replay", "backtest_id"]
+    var = b.loc[b["result_basis"] == "v1_rules_replay", "backtest_id"]
+    return f"recorded (V1 rules: {len(v1)} runs; VaR node: {run_list(var)})"
+
+
+def result_basis_label(sel: pd.DataFrame) -> str:
+    """Basis of anything computed from fact_backtest_runs.result_usd for the selected runs."""
+    parts = []
+    for basis, g in sel.groupby("result_basis"):
+        name = REPLAY_NAME if basis == "v1_rules_replay" else "recorded (V1 rules)"
+        parts.append(f"{name}: {run_list(g['backtest_id'])}")
+    return "; ".join(parts)
+
+
+def recorded_mtm(t: pd.DataFrame, d: pd.DataFrame, run: int) -> tuple[float, int, int]:
+    """Mark-to-market return of a run's own recorded trades, from the CSVs alone.
+
+    closed lots' realized_pnl + open lots marked at the run's last decision-day price.
+    Returns (return_usd, closed_lots, open_lots).
+    """
+    tt = t[t["backtest_id"] == run]
+    last_price = d[d["backtest_id"] == run].sort_values("as_of").iloc[-1]["price"]
+    closed, opened = tt[tt["status"] == "CLOSED"], tt[tt["status"] == "OPEN"]
+    unrealized = (opened["quantity"] * (last_price - opened["entry_price"])).sum()
+    return float(closed["realized_pnl"].sum() + unrealized), len(closed), len(opened)
+
+
+def recorded_derivation_check(b: pd.DataFrame, t: pd.DataFrame, d: pd.DataFrame) -> bool:
+    """For runs whose result_basis is recorded_run, the return derived from fact_trades and
+    fact_daily_decisions must equal result_usd. This validates the derivation that the
+    side-by-side table below uses for the VaR-node runs."""
+    ok = True
+    print("\nRecorded-return derivation vs published result_usd (recorded_run basis)")
+    for r in b[b["result_basis"] == "recorded_run"].sort_values("backtest_id").itertuples():
+        mtm, _, _ = recorded_mtm(t, d, r.backtest_id)
+        good = abs(mtm - r.result_usd) <= 0.011
+        ok = ok and good
+        print(f"  #{r.backtest_id:<4} derived={mtm:>9.2f} result_usd={r.result_usd:>9.2f}  {'ok' if good else 'FAIL'}")
+    return ok
+
+
+def side_by_side(b: pd.DataFrame, t: pd.DataFrame, d: pd.DataFrame) -> None:
+    """Both bases for the runs that have two: trade count and return."""
+    print("\nBoth bases, runs recorded with the VaR node")
+    print(f"  {'run':<5} {'basis':<42} {'closed':>6} {'open':>5} {'return $':>9} {'vs B&H $':>9}")
+    for r in b[b["result_basis"] == "v1_rules_replay"].sort_values("backtest_id").itertuples():
+        mtm, closed, opened = recorded_mtm(t, d, r.backtest_id)
+        print(f"  #{r.backtest_id:<4} {recorded_name(r.result_basis):<42} {closed:>6} {opened:>5} {mtm:>9.2f} {mtm - r.buy_hold_usd:>+9.2f}")
+        print(f"  #{r.backtest_id:<4} {REPLAY_NAME:<42} {r.closed_trades:>6} {'-':>5} {r.result_usd:>9.2f} {r.result_usd - r.buy_hold_usd:>+9.2f}")
 
 
 def trade_count_check(b: pd.DataFrame, t: pd.DataFrame) -> bool:
@@ -148,19 +213,25 @@ def main() -> None:
     f = load(args.data)
     d, t, b, e = f["fact_daily_decisions"], f["fact_trades"], f["fact_backtest_runs"], f["fact_eval_metrics"]
 
+    lf = b[b["look_ahead_status"] == LEAK_FREE]
+    rec = recorded_basis_label(b) if "result_basis" in b.columns else "recorded"
     rows = [
-        ("Decisions", f"{decisions(d):,}"),
-        ("HOLD %", f"{hold_pct(d):.2%}"),
-        ("Closed Trades", f"{closed_trades(t):,}"),
-        ("Win Rate", f"{win_rate(t):.2%}"),
-        ("Leak-Free Diff $", f"{leak_free_diff(b):+.2f}"),
+        ("Decisions", f"{decisions(d):,}", rec),
+        ("HOLD %", f"{hold_pct(d):.2%}", rec),
+        ("Closed Trades", f"{closed_trades(t):,}", rec),
+        ("Win Rate", f"{win_rate(t):.2%}", rec),
+        ("Leak-Free Diff $", f"{leak_free_diff(b):+.2f}",
+         result_basis_label(lf) if "result_basis" in b.columns else "unknown"),
     ]
-    width = max(len(n) for n, _ in rows)
+    width = max(len(n) for n, _, _ in rows)
+    vwidth = max(len(v) for _, v, _ in rows)
     print(f"Data folder: {args.data}")
-    for name, value in rows:
-        print(f"{name:<{width}}  {value}")
+    for name, value, basis in rows:
+        print(f"{name:<{width}}  {value:<{vwidth}}  basis: {basis}")
 
     ok = trade_count_check(b, t)
+    ok = recorded_derivation_check(b, t, d) and ok
+    side_by_side(b, t, d)
     ok = source_label_check(e) and ok
     freshness(args.data)
 
