@@ -63,6 +63,42 @@ def leak_free_diff(b: pd.DataFrame) -> float:
     return sel["result_usd"].sum() - sel["buy_hold_usd"].sum()
 
 
+BASES = {"recorded_run", "v1_rules_replay"}
+
+
+def trade_count_check(b: pd.DataFrame, t: pd.DataFrame) -> bool:
+    """fact_backtest_runs.closed_trades must equal the CLOSED rows in fact_trades.
+
+    The only accepted difference is a run whose result_basis is "v1_rules_replay":
+    its closed_trades counts the trades of V1's rules replayed over the run's
+    decisions, while fact_trades holds the trades the run itself recorded (with
+    the VaR node). Any other difference, an unknown basis, or a run missing from
+    either file is a failure.
+    """
+    ok = True
+    if "result_basis" not in b.columns:
+        print("\nFAIL: fact_backtest_runs.csv has no result_basis column")
+        return False
+    counts = t[t["status"] == "CLOSED"].groupby("backtest_id").size()
+    print("\nTrade counts: fact_backtest_runs.closed_trades vs CLOSED rows in fact_trades")
+    for r in b.sort_values("backtest_id").itertuples():
+        n = int(counts.get(r.backtest_id, 0))
+        if r.result_basis not in BASES:
+            verdict, ok = f"FAIL (unknown result_basis {r.result_basis!r})", False
+        elif n == r.closed_trades:
+            verdict = "ok"
+        elif r.result_basis == "v1_rules_replay":
+            verdict = "differs, declared (v1_rules_replay)"
+        else:
+            verdict, ok = "FAIL (unexplained difference)", False
+        print(f"  #{r.backtest_id:<4} runs={r.closed_trades:<3} trades={n:<3} {verdict}")
+    unknown = sorted(set(t["backtest_id"]) - set(b["backtest_id"]))
+    if unknown:
+        print(f"  FAIL: fact_trades has backtest_id(s) missing from fact_backtest_runs: {unknown}")
+        ok = False
+    return ok
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--data", type=Path, default=DEFAULT_DATA, help="folder holding the CSVs")
@@ -83,12 +119,16 @@ def main() -> None:
     for name, value in rows:
         print(f"{name:<{width}}  {value}")
 
+    ok = trade_count_check(b, t)
+
     # Sanity check on the source column the DAX does not use: diff_usd must
     # equal result_usd - buy_hold_usd on every run.
     bad = b[(b["result_usd"] - b["buy_hold_usd"] - b["diff_usd"]).abs() > 0.011]
     if len(bad):
         print(f"\nWARNING: diff_usd != result_usd - buy_hold_usd for backtest_id(s): "
               f"{', '.join(map(str, bad['backtest_id']))}")
+        ok = False
+    if not ok:
         sys.exit(1)
 
 

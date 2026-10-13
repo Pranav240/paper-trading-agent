@@ -65,6 +65,19 @@ RUN_FACTS = {
     136: ("#6 rerun, both leaks fixed, out-of-sample", "V2", "Out-of-sample", 9, 73.88, 2.20,
           "Both leaks fixed", "Yes"),
 }
+# What the result_usd / closed_trades figures measure for each run.
+#   recorded_run     the run's own recorded outcome (V1 runs used V1's risk rules).
+#   v1_rules_replay  V1 risk rules replayed over the decisions of a run that was
+#                    recorded with the VaR node. docs/engineering-log.md: "Replay
+#                    gate: recorded MtM +428.56, replayed +428.56" (bt 45), "V1's
+#                    rules replayed over the same 126 decisions" (bt 71), and the
+#                    "Same 126 decisions" table (bt 136). fact_trades.csv holds
+#                    the recorded (VaR-node) trades of those runs, so its counts
+#                    differ from closed_trades wherever the two bases diverge.
+RESULT_BASIS = {3: "recorded_run", 4: "recorded_run", 6: "recorded_run", 7: "recorded_run",
+                8: "recorded_run", 9: "recorded_run", 14: "recorded_run",
+                45: "v1_rules_replay", 71: "v1_rules_replay", 136: "v1_rules_replay"}
+
 # --- hand-entered: evaluation metrics -------------------------------------------
 P = "Paper Trading Agent"
 
@@ -186,7 +199,8 @@ def backtest_tables(d: dict) -> dict[str, tuple[list[dict], list[str]]]:
         runs.append(dict(backtest_id=i, name=b["name"], config=cfg, version=ver,
                          window_start=b["window_start"], window_end=b["window_end"], sample=sample,
                          closed_trades=closed, result_usd=res, buy_hold_usd=bh,
-                         diff_usd=round(res - bh, 2), look_ahead_status=leak, counts_as_result=counts))
+                         diff_usd=round(res - bh, 2), look_ahead_status=leak, counts_as_result=counts,
+                         result_basis=RESULT_BASIS[i]))
     return {
         "fact_backtest_runs": (runs, list(runs[0])),
         "fact_daily_decisions": (d["daily"], ["backtest_id", "as_of", "price", "action", "confidence"]),
