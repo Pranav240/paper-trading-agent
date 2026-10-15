@@ -76,7 +76,7 @@ REDACTIONS = {
     "api_key": re.compile(r"\b(?:sk-[A-Za-z0-9_\-]{16,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{20,}|xox[abp]-[A-Za-z0-9\-]{10,})"),
     "db_url": re.compile(r"\b(?:postgres(?:ql)?|mysql|mongodb|redis)://\S+", re.I),
     "arn": re.compile(r"arn:aws[a-z\-]*:[A-Za-z0-9\-]*:[A-Za-z0-9\-]*:\d*:[^\s\"']+"),
-    "aws_account": re.compile(r"(?<!\d)\d{12}(?!\d)(?=[^\n]{0,40}(?:aws|account|iam))", re.I),
+    "aws_account": re.compile(r"(?:(?:aws|account|iam)[^\n]{0,40}(?<!\d)\d{12}(?!\d)|(?<!\d)\d{12}(?!\d)[^\n]{0,40}(?:aws|account|iam))", re.I),
     "email": re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b"),
 }
 redaction_counts: dict[str, int] = {k: 0 for k in REDACTIONS}
