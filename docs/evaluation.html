@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation: Paper Trading Agent static demo</title>
+<meta name="description" content="The pre-registered evaluation of the explainer: design, baseline, result and caveats.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main class="wrap">
+  <h1>Evaluation</h1>
+  <p class="lede">Phase 09 graded one thing: when the risk engine cuts a trade because of large past losses, does the explainer name the real cause of those losses using only headlines it actually cites? It does not grade returns, and it claims no trading edge.</p>
+
+  <div class="banner">
+    <strong>Read the caveats first.</strong> The reference labels were written by Claude, not a person; the judge and the explainer are Claude models too; it is one run on 40 days of one stock. The result shows these models agree with each other. Whether a person would agree is untested.
+  </div>
+
+  <div id="body"><p class="muted">Loading…</p></div>
+
+  <h2>Why a pre-registration</h2>
+  <p>The plan, the baseline and the pass rule were committed before any label existed or any explanation was judged
+    (<a href="https://github.com/Pranav240/paper-trading-agent/blob/master/docs/phase09-plan.md">phase09-plan.md</a>). Three deviations were forced along the way and each is logged in the
+    <a href="https://github.com/Pranav240/paper-trading-agent/blob/master/docs/engineering-log.md">engineering log</a> before the step it changed: labels written by Claude instead of by hand, a test set rebuilt on headline dates, and the judge check scored by Claude.</p>
+
+  <h2>Regression harness</h2>
+  <p>The test set (<code>eval/golden_days.json</code>), the labels and a 1,415-headline fixture are committed. A CI test re-runs retrieval over the fixture and fails if the rankings the labelled test set was built on ever change, until the test set is rebuilt on purpose. The judged part is not re-run in CI because it spends money.</p>
+</main>
+<script src="assets/app.js"></script>
+<script>
+nav("evaluation.html");
+const body = document.getElementById("body");
+const row = (cells, head) => el("tr", {}, cells.map((c, i) => el(head ? "th" : "td", { class: i > 0 ? "num" : "", text: String(c) })));
+function table(head, rows) { return el("div", { class: "tablewrap" }, el("table", {}, el("thead", {}, row(head, true)), el("tbody", {}, rows.map((r) => row(r))))); }
+
+(async () => {
+  try {
+    const e = await getJSON("data/eval.json");
+    const x = e.explanation_test.primary, u = e.explanation_test.excluding_5_days_seen_before_labelling;
+    const r = e.retrieval_test.all_labelled_days, ru = e.retrieval_test.excluding_5_days_seen_before_labelling;
+    const n = x.days, pc = (k, m) => k + "/" + m + " (" + (100 * k / m).toFixed(1) + "%)";
+    body.replaceChildren(
+      el("h2", { text: "Design" }),
+      el("ul", {},
+        el("li", { text: "Test set: " + e.design.test_set + ". Plus " + e.design.no_news_days + " driver days with no headline at all, used only to check the \"say so, cite nothing\" rule." }),
+        el("li", { text: "Explainer: " + e.design.explainer.model + " at temperature " + e.design.explainer.temperature + ", full-text retrieval of headlines around each loss day." }),
+        el("li", { text: "Baseline: " + e.design.baseline + "." }),
+        el("li", { text: "Judge: " + e.design.judge.model + ", shown the reference cause and the relevant headlines, with the two answers in a shuffled A/B order." }),
+        el("li", { text: "Pass rule (written in advance): " + e.design.pass_rule + "." })),
+
+      el("h2", { text: "Result: explanation test" }),
+      table(["Over " + n + " news days", "Explainer", "Quote baseline"], [
+        ["Names the labelled cause (yes)", pc(x.explainer.matches_yes, n), pc(x.quote_baseline.matches_yes, n)],
+        ["Partly", x.explainer.matches_partly, x.quote_baseline.matches_partly],
+        ["Supported by its own citations", pc(x.explainer.supported, n), pc(x.quote_baseline.supported, n)]]),
+      el("p", {}, "Paired on \"names the cause\": the explainer won " + x.paired.explainer_wins + " days, the baseline won " + x.paired.quote_wins + ", " + x.paired.ties + " tied; two-sided sign test " + fmt.p(x.paired.sign_test_p) + ". By the pre-registered rule the explainer ",
+        el("strong", { text: x.meets_pre_registered_bar ? "meets the bar" : "does not meet the bar" }), "."),
+      el("p", { class: "small muted", text: "Excluding the 5 days whose explainer output the labeller had seen before labelling: " + pc(u.explainer.matches_yes, u.days) + " vs " + pc(u.quote_baseline.matches_yes, u.days) + ", " + fmt.p(u.paired.sign_test_p) + ". Same conclusion." }),
+      el("p", {}, "Grounding: " + e.grounding.news_days_all_citations_grounded + "/" + e.grounding.news_days + " news-day explanations cited only headlines they were shown; on the " + e.grounding.no_news_days + " no-news days the explainer cited nothing in " + e.grounding.no_news_days_cited_nothing + "/" + e.grounding.no_news_days + "."),
+
+      el("h2", { text: "Result: retrieval test (not significant)" }),
+      table(["Over " + r.days + " news days", "Full-text search", "Recency only"], [
+        ["Top headline relevant (hit@1)", pc(r.fts.hit_at_1, r.days), pc(r.recent.hit_at_1, r.days)],
+        ["Precision@8", fmt.pct(r.fts.precision_at_8, 0), fmt.pct(r.recent.precision_at_8, 0)],
+        ["Recall (over " + r.fts.recall_days + " days with a relevant headline)", fmt.pct(r.fts.recall, 0), fmt.pct(r.recent.recall, 0)]]),
+      el("p", {}, "Paired on hit@1: full-text won " + r.paired.fts_wins + ", recency won " + r.paired.recent_wins + ", " + r.paired.ties + " tied; " + fmt.p(r.paired.sign_test_p) + ". Verdict by the pre-registered test: ",
+        el("strong", { text: r.verdict }), ". Without the 5 seen days: " + fmt.p(ru.paired.sign_test_p) + "."),
+
+      el("h2", { text: "Judge check" }),
+      el("p", {}, "20 judge items were re-scored and compared with the judge: agreement " + e.judge_check.agree_supported + "/" + e.judge_check.items + " on \"supported\" and " + e.judge_check.agree_matches + "/" + e.judge_check.items + " on \"names the cause\". The pre-registration asked for a person to do this scoring; it was done by Claude instead, so this is ",
+        el("strong", { text: "not independent validation" }), "."),
+
+      el("h2", { text: "Caveats" }),
+      el("ul", {}, e.caveats.map((c) => el("li", { text: c }))),
+      el("p", { class: "small muted" }, "Cost of the paid steps: " + fmt.plain(e.cost_usd.explanations) + " for explanations, " + fmt.plain(e.cost_usd.judge) + " for the judge. Every figure on this page is recomputed from the committed eval files: " + e.sources.join(", ") + ". Raw: ", el("a", { href: "data/eval.json", text: "eval.json" }), "."));
+  } catch (err) { showError(body, err); }
+})();
+footer();
+</script>
+</body>
+</html>

@@ -28,3 +28,4 @@ AWS_Screenshots/
 # The public demo snapshot is generated, committed JSON (scripts/export_public_snapshot.py)
 # so CI never needs a database. The rule above would otherwise swallow it.
 !docs/data/
+_site/
