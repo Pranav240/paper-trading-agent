@@ -181,6 +181,59 @@ Claude Desktop (`claude_desktop_config.json`), with Postgres running:
 }
 ```
 
+## Public demo
+
+**Live URL:** <https://pranav240.github.io/paper-trading-agent/> *(placeholder
+until the Pages source is switched to GitHub Actions; confirm after merging)*
+
+A free, read-only, static demo of recorded decisions: a filterable table of
+524 decisions from the three backtests that used real models, and for each one
+the agents' opinions, the risk gate's outcome, the stored explanation with the
+headlines it cited, and the reasoning trace where one was recorded. Plus the
+pre-registered [evaluation](https://pranav240.github.io/paper-trading-agent/evaluation.html) and the
+[known failures](https://pranav240.github.io/paper-trading-agent/failures.html). Plain HTML, CSS and JavaScript in
+[`docs/`](docs/), no build step, no external scripts, fonts or trackers.
+
+**What it is:** a static demo of recorded decisions, exported once from the
+database through a read-only connection and committed as JSON
+(`docs/data/`). **What it is not:** a live or production system, a product,
+or evidence of a trading edge. No live model is called, there are no keys,
+no database and no write path, and nothing here has users, traffic or an
+uptime record.
+
+**Honesty notes**
+
+- Headline performance is on the **recorded basis** (the VaR node's own
+  recorded decisions, marked to market). The figure for the older V1 rules is
+  a **replay** of the same decisions, labelled as a comparison. The two bases
+  are never subtracted from each other.
+- Only backtest 136 has both look-ahead leaks fixed; 45 and 71 are marked
+  superseded on the site.
+- The evaluation was labelled and judged by Claude models, not a person; one
+  run, 40 days of one stock. The retrieval comparison was not significant.
+
+**Regenerate the snapshot** (needs the local Postgres; makes no LLM call):
+
+```bash
+PYTHONPATH=. python scripts/export_public_snapshot.py
+pytest -q tests/test_public_site.py     # secret scan, schemas, links, GET-only API
+python scripts/build_site.py _site && python -m http.server -d _site 8000
+```
+
+The export redacts key, URL, ARN and email patterns, caps the snapshot at
+20 MB and reports what it trimmed in `docs/data/manifest.json`.
+
+**Pages deployment:** [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
+runs the demo tests and publishes `docs/` (plus the existing `dashboard/` and
+the earlier homepage, at `/home-classic.html`) on every push to `master`.
+
+**Optional read-only API:** [`public_api/`](public_api/) is a small FastAPI
+app over the same snapshot (GET routes only, no model client, no database;
+the snapshot is baked into the image). [`render.yaml`](render.yaml) describes a
+Render free-plan service for it. **A free Render service sleeps when idle and
+the first request after that takes tens of seconds**; the static site does not
+depend on it.
+
 ## What this does and doesn't show
 
 **Does:** a working service over Postgres with hand-written SQL; a four-node
