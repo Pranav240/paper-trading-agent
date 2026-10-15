@@ -41,7 +41,7 @@ function traceBlock(trace) {
       } else if (s.kind === "retrieval") {
         const rs = (s.output.results || []);
         inner = [el("p", { class: "small", text: "Window " + (s.input.dates || []).join(" to ") + ", limit " + s.input.limit + ", cutoff " + s.input.as_of }),
-                 el("div", { class: "tablewrap" }, el("table", {}, el("tbody", {}, rs.map((r) => el("tr", {}, el("td", { text: String(r.rank) }), el("td", { text: "#" + r.id }), el("td", { text: r.headline }), el("td", { class: "num", text: r.score === null || r.score === undefined ? "" : String(r.score) }))))))];
+                 el("div", { class: "tablewrap" }, el("table", {}, el("tbody", {}, rs.map((r) => el("tr", {}, el("td", { text: String(r.rank) }), el("td", { text: "#" + r.id }), el("td", { text: cut(r.headline) }), el("td", { class: "num", text: r.score === null || r.score === undefined ? "" : String(r.score) }))))))];
       } else {
         inner = [el("strong", { text: "input" }), el("pre", { text: pretty(s.input) }), el("strong", { text: "output" }), el("pre", { text: pretty(s.output) })];
       }
@@ -90,7 +90,7 @@ function traceBlock(trace) {
         el("div", { class: "tablewrap" }, el("table", {}, el("thead", {}, el("tr", {}, ["Date", "Return", "Cause given", "Cited headline ids"].map((h) => el("th", { text: h })))),
           el("tbody", {}, e.drivers.map((x) => el("tr", {}, el("td", { text: x.date }), el("td", { class: "num", text: fmt.pct(x.return, 2) }), el("td", { text: x.cause }), el("td", { text: (x.headline_ids || []).join(", ") })))))),
         el("h3", { text: "Headlines cited" }),
-        el("div", { class: "tablewrap" }, el("table", {}, el("tbody", {}, e.cited_headlines.map((h) => el("tr", {}, el("td", { text: "#" + h.id }), el("td", { text: h.date }), el("td", { text: h.headline })))))),
+        el("div", { class: "tablewrap" }, el("table", {}, el("tbody", {}, e.cited_headlines.map((h) => el("tr", {}, el("td", { text: "#" + h.id }), el("td", { text: h.date }), el("td", { text: cut(h.headline) })))))),
         el("h3", { text: "No-news baseline the explanation has to beat" }),
         el("blockquote", { text: e.template_baseline }));
     } else {

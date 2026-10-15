@@ -212,6 +212,14 @@ uptime record.
 - The evaluation was labelled and judged by Claude models, not a person; one
   run, 40 days of one stock. The retrieval comparison was not significant.
 
+**Data attribution:** the news headlines come from the FNSPID dataset
+([github.com/Zdong104/FNSPID_Financial_News_Dataset](https://github.com/Zdong104/FNSPID_Financial_News_Dataset);
+Dong et al., *FNSPID: A Comprehensive Financial News Dataset in Time Series*,
+[arXiv:2402.06698](https://arxiv.org/abs/2402.06698)). The site shows each
+headline cut to its first 100 characters with an ellipsis; the full text is in
+the dataset. The headline records carry no per-headline URL, so there is no
+per-item source link, only this dataset link (also in every page's footer).
+
 **Regenerate the snapshot** (needs the local Postgres; makes no LLM call):
 
 ```bash

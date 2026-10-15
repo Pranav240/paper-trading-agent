@@ -98,7 +98,8 @@ def test_no_env_files_or_dumps_shipped():
 
 def test_no_external_scripts_styles_or_trackers():
     """Only plain outbound links to the repository are allowed; nothing is loaded from elsewhere."""
-    allowed = ("https://github.com/Pranav240/paper-trading-agent",)
+    allowed = ("https://github.com/Pranav240/paper-trading-agent", "https://github.com/Zdong104/FNSPID_Financial_News_Dataset",
+               "https://arxiv.org/abs/2402.06698")
     for page in DOCS.glob("*.html"):
         parser = Refs()
         text = page.read_text(encoding="utf-8")
@@ -108,7 +109,10 @@ def test_no_external_scripts_styles_or_trackers():
                 assert ref.startswith(allowed), f"{page.name}: external reference {ref}"
         assert not re.search(r"<(?:script|link|img|iframe)[^>]+(?:src|href)=[\"']https?://", text, re.I), page.name
     for asset in (DOCS / "assets").glob("*"):
-        text = asset.read_text(encoding="utf-8").replace("https://github.com/Pranav240/paper-trading-agent", "")
+        text = asset.read_text(encoding="utf-8")
+        for url in ("https://github.com/Pranav240/paper-trading-agent", "https://github.com/Zdong104/FNSPID_Financial_News_Dataset",
+                    "https://arxiv.org/abs/2402.06698"):
+            text = text.replace(url, "")
         assert not re.search(r"@import|https?://", text, re.I), asset.name
 
 
@@ -200,6 +204,40 @@ def test_the_mixed_basis_headline_figure_is_not_published():
     for page in DOCS.glob("*.html"):
         text = page.read_text(encoding="utf-8")
         assert not re.search(r"63\.10|−63|-\$?63|became \+\$72", text), page.name
+
+
+def test_headlines_are_cut_to_100_characters():
+    """FNSPID headlines appear nowhere in full: cited, retrieved, listed in prompts or in opinions."""
+    def check(path, d):
+        for e in (d.get("explanation") or {}).get("cited_headlines", []):
+            assert len(e["headline"]) <= 101, path.name
+        for o in d["agent_opinions"]:
+            for h in o["raw"].get("headlines", []) if isinstance(o["raw"].get("headlines"), list) else []:
+                assert len(h) <= 101, path.name
+        for s in (d.get("trace") or {}).get("steps", []):
+            for r in s["output"].get("results", []):
+                assert len(r.get("headline", "")) <= 101, path.name
+            for m in s["input"].get("messages", []):
+                for line in m["content"].splitlines():
+                    if re.match(r"^\s+\[\d+\]\s", line):
+                        assert len(line.split("] ", 1)[1]) <= 101, path.name
+
+    cut_seen = 0
+    for path in (DATA / "decisions").glob("*.json"):
+        d = json.loads(path.read_text(encoding="utf-8"))
+        check(path, d)
+        cut_seen += path.read_text(encoding="utf-8").count("…")
+    assert cut_seen > 0, "expected at least one headline to have been cut"
+
+
+def test_fnspid_attribution_on_every_page_and_in_readme():
+    for page in DOCS.glob("*.html"):
+        text = page.read_text(encoding="utf-8")
+        assert "assets/app.js" in text and "footer();" in text, f"{page.name} does not render the footer"
+    js = (DOCS / "assets" / "app.js").read_text(encoding="utf-8")
+    assert "https://github.com/Zdong104/FNSPID_Financial_News_Dataset" in js and "2402.06698" in js
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "https://github.com/Zdong104/FNSPID_Financial_News_Dataset" in readme and "2402.06698" in readme
 
 
 # -------------------------------------------------------------------- links --

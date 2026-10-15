@@ -60,6 +60,8 @@ LEAK_STATUS = {
     136: ("both look-ahead leaks fixed", "clean"),
 }
 
+HEADLINE_CAP = 100  # news headlines are shown in full nowhere on the site (FNSPID content)
+
 TRIGGER_FLAGS = ("var_budget_scale", "var_budget_veto")
 
 
@@ -68,6 +70,19 @@ def database_url() -> str:
         "DATABASE_URL",
         "postgresql://pta:pta_dev_password@127.0.0.1:5432/paper_trading_agent",
     )
+
+
+def cut(text: str) -> str:
+    """A headline cut to its first HEADLINE_CAP characters, with an ellipsis."""
+    return text if len(text) <= HEADLINE_CAP else text[:HEADLINE_CAP].rstrip() + "…"
+
+
+PROMPT_HEADLINE = re.compile(r"^(\s+\[\d+\]\s+)(.+)$", re.M)
+
+
+def cut_prompt(text: str) -> str:
+    """Cut the '  [id] headline' lines the explainer prompt lists."""
+    return PROMPT_HEADLINE.sub(lambda m: m.group(1) + cut(m.group(2)), text)
 
 
 # --------------------------------------------------------------- redaction --
@@ -177,7 +192,7 @@ def decision_detail(cur, row: dict) -> dict:
         raw = o.pop("raw_output") or {}
         # Keep the arithmetic, drop bulky repeats of what other sections show.
         if o["agent_name"] == "sentiment_analyst" and isinstance(raw.get("headlines"), list):
-            raw = {**raw, "headlines": raw["headlines"][:20]}
+            raw = {**raw, "headlines": [cut(h) for h in raw["headlines"][:20]]}
         o["raw"] = raw
     var = fetch(
         cur,
@@ -216,7 +231,7 @@ def decision_detail(cur, row: dict) -> dict:
             "SELECT id, published_at::date AS date, headline FROM historical_headlines "
             "WHERE id = ANY(%s) ORDER BY published_at, id", (e["cited_headline_ids"] or [],),
         )
-        explanation = {**e, "cited_headlines": cited}
+        explanation = {**e, "cited_headlines": [{**h, "headline": cut(h["headline"])} for h in cited]}
 
     trace = None
     if row["has_trace"]:
@@ -226,6 +241,13 @@ def decision_detail(cur, row: dict) -> dict:
             "output_tokens, started_at, duration_ms, error FROM trace_steps "
             "WHERE decision_id = %s ORDER BY step", (did,),
         )
+        for st in steps:
+            for r in (st["output"] or {}).get("results", []):
+                if isinstance(r, dict) and isinstance(r.get("headline"), str):
+                    r["headline"] = cut(r["headline"])
+            for m in (st["input"] or {}).get("messages", []):
+                if isinstance(m.get("content"), str):
+                    m["content"] = cut_prompt(m["content"])
         trace = {"steps": steps, "step_count": len(steps)}
 
     return {

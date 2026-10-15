@@ -3,6 +3,10 @@
 "use strict";
 
 const REPO = "https://github.com/Pranav240/paper-trading-agent";
+const FNSPID = "https://github.com/Zdong104/FNSPID_Financial_News_Dataset";
+
+// Defence in depth: the exported JSON is already cut; never show more than 100 characters.
+const cut = (t) => (t.length <= 100 ? t : t.slice(0, 100).trimEnd() + "…");
 
 function el(tag, attrs, ...kids) {
   const node = document.createElement(tag);
@@ -54,7 +58,11 @@ function footer() {
   document.querySelector("main").append(el("footer", {},
     "A static demo of recorded decisions. Paper trading only; nothing here is financial advice. ",
     "No live model is called and the site only reads files. ",
-    el("a", { href: REPO, text: "Source repository" }), "."));
+    el("a", { href: REPO, text: "Source repository" }), ". ",
+    el("br"), "News headlines come from the ",
+    el("a", { href: FNSPID, text: "FNSPID dataset" }),
+    " (Dong et al., ", el("a", { href: "https://arxiv.org/abs/2402.06698", text: "arXiv:2402.06698" }),
+    ") and are cut to their first 100 characters; the full text is in the dataset."));
 }
 
 const actionTag = (a) => el("span", { class: "tag " + (a === "BUY" ? "ok" : a === "SELL" ? "bad" : ""), text: a });
