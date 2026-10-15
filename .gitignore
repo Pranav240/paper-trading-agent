@@ -24,3 +24,7 @@ infra/terraform.tfvars
 # account id, instance ids and role ARNs — not credentials, but not worth
 # publishing on a public repo either.
 AWS_Screenshots/
+
+# The public demo snapshot is generated, committed JSON (scripts/export_public_snapshot.py)
+# so CI never needs a database. The rule above would otherwise swallow it.
+!docs/data/
