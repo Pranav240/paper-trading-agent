@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decisions: Paper Trading Agent static demo</title>
+<meta name="description" content="Every recorded decision from the three real-model backtests, filterable, each linking to its trace, explanation and risk-gate outcome.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main class="wrap">
+  <h1>Decisions</h1>
+  <p class="lede">Every decision recorded by the three backtests that used real models. Open one to see what each agent said, what the risk gate did to the proposal, the stored explanation with its cited headlines, and the reasoning trace where one was recorded.</p>
+
+  <div class="filters" role="search">
+    <label>Backtest<select id="f-bt"><option value="">All</option></select></label>
+    <label>Final action<select id="f-action"><option value="">All</option><option>BUY</option><option>SELL</option><option>HOLD</option></select></label>
+    <label>VaR budget effect<select id="f-var"><option value="">All</option><option value="scaled">scaled (buy cut)</option><option value="blocked">blocked (buy vetoed)</option><option value="none">no change</option></select></label>
+    <label>Has<select id="f-has"><option value="">Anything</option><option value="explanation">an explanation</option><option value="trace">a full trace</option></select></label>
+    <label>Date contains<input id="f-date" type="search" placeholder="2023-09" size="9"></label>
+    <button id="f-reset" type="button">Reset</button>
+  </div>
+  <p class="small muted" id="summary" aria-live="polite">Loading…</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Decision</th><th>Date</th><th>Backtest</th><th>Proposed</th><th>Final</th><th class="num">Confidence</th><th>VaR effect</th><th>Explained</th><th>Trace</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+  <p><button id="more" type="button" hidden>Show more</button></p>
+
+  <h2>The backtests behind these decisions</h2>
+  <div class="tablewrap"><table id="bts"><tbody><tr><td>Loading…</td></tr></tbody></table></div>
+  <p class="small muted">Dry runs with fake models and older or failed runs are listed in <a href="data/backtests.json">backtests.json</a> but their decisions are not published here. "Superseded" means the run still read same-day headlines (see <a href="failures.html">known failures</a>).</p>
+</main>
+<script src="assets/app.js"></script>
+<script>
+nav("decisions.html");
+const PAGE = 100;
+let all = [], shown = PAGE;
+const $ = (id) => document.getElementById(id);
+
+function matches(d) {
+  const bt = $("f-bt").value, a = $("f-action").value, v = $("f-var").value, h = $("f-has").value, t = $("f-date").value.trim();
+  if (bt && String(d.backtest_id) !== bt) return false;
+  if (a && d.action !== a) return false;
+  if (v === "none" ? d.var_effect !== null : (v && d.var_effect !== v)) return false;
+  if (h === "explanation" && !d.has_explanation) return false;
+  if (h === "trace" && !d.has_trace) return false;
+  if (t && !d.date.includes(t)) return false;
+  return true;
+}
+
+function render() {
+  const hits = all.filter(matches);
+  $("summary").textContent = hits.length + " of " + all.length + " decisions match.";
+  $("rows").replaceChildren(...hits.slice(0, shown).map((d) => el("tr", {},
+    el("td", {}, el("a", { href: "decision.html?id=" + d.id, text: "#" + d.id })),
+    el("td", { text: d.date }),
+    el("td", { text: "#" + d.backtest_id }),
+    el("td", { text: d.proposed || "" }),
+    el("td", {}, actionTag(d.action)),
+    el("td", { class: "num", text: d.confidence.toFixed(2) }),
+    el("td", {}, effectTag(d.var_effect)),
+    el("td", { text: d.has_explanation ? "yes" : "" }),
+    el("td", { text: d.has_trace ? "yes" : "" }))));
+  $("more").hidden = hits.length <= shown;
+}
+
+(async () => {
+  try {
+    const [idx, bts] = await Promise.all([getJSON("data/decisions.json"), getJSON("data/backtests.json")]);
+    all = idx.decisions;
+    for (const id of [...new Set(all.map((d) => d.backtest_id))])
+      $("f-bt").append(el("option", { value: id, text: "#" + id }));
+    const want = new URLSearchParams(location.search).get("bt");
+    if (want) $("f-bt").value = want;
+    for (const id of ["f-bt", "f-action", "f-var", "f-has"]) $(id).addEventListener("change", () => { shown = PAGE; render(); });
+    $("f-date").addEventListener("input", () => { shown = PAGE; render(); });
+    $("f-reset").addEventListener("click", () => {
+      for (const id of ["f-bt", "f-action", "f-var", "f-has", "f-date"]) $(id).value = "";
+      shown = PAGE; render();
+    });
+    $("more").addEventListener("click", () => { shown += PAGE; render(); });
+    render();
+
+    const real = bts.backtests.filter((b) => b.results);
+    $("bts").replaceChildren(
+      el("thead", {}, el("tr", {}, ["#", "Window", "Models", "Sentiment mode", "Leak status", "Decisions", "Max drawdown (recorded)"].map((h) => el("th", { text: h })))),
+      el("tbody", {}, real.map((b) => el("tr", {},
+        el("td", { text: "#" + b.id }),
+        el("td", { text: b.window_start + " to " + b.window_end }),
+        el("td", { text: Object.values(b.models || {}).join(", ") }),
+        el("td", { text: b.sentiment_mode || "" }),
+        el("td", {}, el("span", { class: "tag " + (b.state === "clean" ? "ok" : "warn"), text: b.leak_status })),
+        el("td", { text: String(b.decisions) }),
+        el("td", { text: fmt.plain(b.results.recorded_var_node.max_drawdown) })))));
+  } catch (err) { showError($("rows").parentElement.parentElement, err); }
+})();
+footer();
+</script>
+</body>
+</html>

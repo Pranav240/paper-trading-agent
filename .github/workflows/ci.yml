@@ -135,3 +135,12 @@ jobs:
         run: |
           docker run --rm -e SKIP_DB_STARTUP=1 paper-trading-agent:ci \
             python -c "from app.main import app; print(app.title)"
+
+      - name: Build the public read-only API image
+        # Separate allowlisted build context (public_api/Dockerfile.dockerignore):
+        # only the API code and the committed snapshot may enter it.
+        run: docker build -f public_api/Dockerfile -t pta-public-api:ci .
+
+      - name: Smoke-test the public API image
+        run: |
+          docker run --rm pta-public-api:ci python -c "from public_api.main import app; print(app.title)"

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper Trading Agent: static demo</title>
+<meta name="description" content="A static demo of the recorded decisions of a multi-agent paper-trading system, with its reasoning traces, risk-gate outcomes and a pre-registered evaluation.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main class="wrap">
+  <h1>Paper Trading Agent</h1>
+  <p class="lede">A static demo of recorded decisions. A four-node agent proposed paper trades on AAPL in backtests; a rule-based risk gate set what actually traded; every decision was stored with its reasoning trace. This site lets you read that record. It does not run anything.</p>
+
+  <div class="banner">
+    <strong>What this is not.</strong> Not a live system, not a product, and not evidence of a trading edge: <strong>no edge has been established.</strong> Paper trading only, never real money. There is no live model behind this site, no login, and nothing to submit. It is a read-only copy of a database snapshot.
+  </div>
+
+  <h2>What is in the record</h2>
+  <div class="cards" id="counts"><div class="card"><div class="l">Loading the snapshot…</div></div></div>
+  <p><a href="decisions.html">Browse the decisions →</a> &nbsp; <a href="evaluation.html">Read the evaluation →</a> &nbsp; <a href="failures.html">See what went wrong →</a></p>
+
+  <h2>How a decision is made</h2>
+  <svg class="diagram" viewBox="0 0 880 330" role="img" aria-labelledby="dg-t dg-d">
+    <title id="dg-t">Architecture of the decision pipeline</title>
+    <desc id="dg-d">Two analysts run in parallel, a portfolio manager synthesises a proposal, the rule-based risk manager gates it and has final authority. An explainer then explains trades the VaR budget cut or blocked. Everything is stored in Postgres, and the stored record is exported to this static site.</desc>
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="currentColor" style="color:var(--muted)"/></marker></defs>
+    <rect class="box" x="10" y="30" width="190" height="62" rx="6"/><text x="22" y="56">Technical Analyst</text><text class="sub" x="22" y="76">rule-based: RSI-14, SMA-20</text>
+    <rect class="box" x="10" y="120" width="190" height="62" rx="6"/><text x="22" y="146">Sentiment Analyst</text><text class="sub" x="22" y="166">Claude Haiku 4.5, headlines</text>
+    <rect class="box" x="270" y="75" width="190" height="62" rx="6"/><text x="282" y="101">Portfolio Manager</text><text class="sub" x="282" y="121">Claude Sonnet 5.5, proposes</text>
+    <rect class="gate" x="530" y="75" width="190" height="62" rx="6"/><text x="542" y="101">Risk Manager</text><text class="sub" x="542" y="121">code: caps + 2% VaR budget</text>
+    <text class="sub" x="530" y="64">holds final authority</text>
+    <rect class="box" x="530" y="190" width="190" height="62" rx="6"/><text x="542" y="216">Explainer</text><text class="sub" x="542" y="236">only for cut or blocked trades</text>
+    <rect class="store" x="270" y="270" width="450" height="46" rx="6"/><text x="282" y="291">Postgres: decisions, opinions, VaR forecasts,</text><text class="sub" x="282" y="307">explanations, full trace of every step</text>
+    <rect class="store" x="770" y="270" width="100" height="46" rx="6"/><text x="780" y="291">This site</text><text class="sub" x="780" y="307">JSON, read-only</text>
+    <path class="line" d="M200 61 H235 V95 H268" marker-end="url(#ar)"/>
+    <path class="line" d="M200 151 H235 V117 H268" marker-end="url(#ar)"/>
+    <path class="line" d="M460 106 H528" marker-end="url(#ar)"/>
+    <path class="line" d="M625 137 V188" marker-end="url(#ar)"/>
+    <path class="line" d="M720 106 H790 V80" marker-end="url(#ar)"/>
+    <text class="sub" x="722" y="70">final action</text>
+    <path class="line" d="M625 252 V268" marker-end="url(#ar)"/>
+    <path class="line" d="M720 293 H768" marker-end="url(#ar)"/>
+  </svg>
+  <p class="small muted">The split between a proposing model and a gating rule is what made the analysis possible: because the Risk Manager is code and every input it saw is stored, other rules can be replayed over the recorded decisions at no cost. Details in the <a href="https://github.com/Pranav240/paper-trading-agent/blob/master/PROJECT.md">project record</a>.</p>
+
+  <h2>Recorded results</h2>
+  <p>Each row is the VaR node's own recorded decisions, marked to market on a 20-share cap, against buying and holding 20 shares over the same window. The V1-rules column is a <em>replay</em> of the same decisions under the older rules: a comparison, not a second run.</p>
+  <div class="tablewrap"><table id="results"><tbody><tr><td>Loading…</td></tr></tbody></table></div>
+  <p class="small muted" id="results-note"></p>
+
+  <h2>Read more</h2>
+  <ul>
+    <li><a href="decisions.html">Decisions</a>: every recorded decision with its trace, risk-gate outcome and explanation where one exists.</li>
+    <li><a href="evaluation.html">Evaluation</a>: the pre-registered test of the explainer, its baseline, its result and its caveats.</li>
+    <li><a href="failures.html">Known failures</a>: two look-ahead leaks and adapters that did not beat a majority-class guess.</li>
+    <li><a href="https://github.com/Pranav240/paper-trading-agent">Repository</a> and the <a href="https://github.com/Pranav240/paper-trading-agent/blob/master/README.md">README</a>.</li>
+    <li><a href="home-classic.html">Earlier project homepage</a> and its <a href="dashboard/report.html">technical report</a>.</li>
+  </ul>
+</main>
+<script src="assets/app.js"></script>
+<script>
+nav("index.html");
+(async () => {
+  const counts = document.getElementById("counts");
+  try {
+    const [manifest, bts] = await Promise.all([getJSON("data/manifest.json"), getJSON("data/backtests.json")]);
+    const card = (n, l) => el("div", { class: "card" }, el("div", { class: "n", text: String(n) }), el("div", { class: "l", text: l }));
+    counts.replaceChildren(
+      card(manifest.decisions, "recorded decisions published"),
+      card(manifest.published_backtests.length, "backtests with real models (AAPL)"),
+      card(manifest.with_explanation, "decisions with a stored explanation"),
+      card(manifest.with_trace, "decisions with a full reasoning trace"),
+      card("snapshot " + manifest.generated, "date the snapshot was exported"));
+
+    const real = bts.backtests.filter((b) => b.results);
+    const head = el("thead", {}, el("tr", {}, ["Backtest", "Window", "Leak status", "Recorded (VaR node)", "Buy & hold", "Replay: V1 rules"].map((h, i) => el("th", { class: i > 2 ? "num" : "", text: h }))));
+    const body = el("tbody", {}, real.map((b) => el("tr", {},
+      el("td", {}, el("a", { href: "decisions.html?bt=" + b.id, text: "#" + b.id })),
+      el("td", { text: b.window_start + " to " + b.window_end }),
+      el("td", {}, el("span", { class: "tag " + (b.state === "clean" ? "ok" : "warn"), text: b.state === "clean" ? "both leaks fixed" : "superseded: headline leak" })),
+      el("td", { class: "num", text: fmt.money(b.results.recorded_var_node.mtm_pnl) }),
+      el("td", { class: "num", text: fmt.money(b.results.buy_and_hold_20_shares.mtm_pnl) }),
+      el("td", { class: "num", text: fmt.money(b.results.replay_v1_rules.mtm_pnl) }))));
+    document.getElementById("results").replaceChildren(head, body);
+    document.getElementById("results-note").textContent =
+      "Only backtest 136 has both look-ahead leaks fixed; 45 and 71 still read same-day headlines and are kept as a record, not as results. " +
+      "Each row is one run on one stock over one price path: a difference, not a significance result, and no edge is claimed. " +
+      "Source: scripts/compare_var_node.py, run against the stored decisions.";
+  } catch (err) { showError(counts, err); }
+})();
+footer();
+</script>
+</body>
+</html>

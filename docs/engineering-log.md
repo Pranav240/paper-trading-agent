@@ -300,8 +300,8 @@ the test suite for fast, database-independent tests.
 
 ### Run it
 
-Requires a local Postgres reachable via `DATABASE_URL` (defaults to
-`postgresql://pta:pta_dev_password@127.0.0.1:5432/paper_trading_agent`).
+Requires a local Postgres reachable via `DATABASE_URL` (defaults to a local
+development database; see `.env.example`).
 
 ```bash
 python db/migrate.py                              # apply schema

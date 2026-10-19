@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decision: Paper Trading Agent static demo</title>
+<meta name="description" content="One recorded decision: agent opinions, risk-gate outcome, explanation with citations and reasoning trace.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main class="wrap">
+  <p><a href="decisions.html">← All decisions</a></p>
+  <div id="out"><p class="muted">Loading…</p></div>
+</main>
+<script src="assets/app.js"></script>
+<script>
+nav("decisions.html");
+const out = document.getElementById("out");
+const num = (x, d = 4) => (x === null || x === undefined ? "not recorded" : Number(x).toFixed(d));
+const pretty = (v) => typeof v === "string" ? v : JSON.stringify(v, null, 2);
+const facts = (rows) => el("dl", { class: "facts" }, rows.flatMap(([k, v]) => [el("dt", { text: k }), el("dd", {}, v === null || v === undefined || v === "" ? el("span", { class: "muted", text: "not recorded" }) : v)]));
+
+function opinionBlock(o) {
+  const raw = o.raw || {};
+  const rawKeys = Object.keys(raw).filter((k) => k !== "var_tail" && k !== "correlations");
+  return el("details", {}, el("summary", {}, o.agent_name.replace("_", " ") + ": ", el("strong", { text: o.opinion }), o.confidence !== null ? " (confidence " + Number(o.confidence).toFixed(2) + ")" : ""),
+    el("p", { text: o.reasoning }),
+    rawKeys.length ? el("details", {}, el("summary", { text: "Structured output" }), el("pre", { text: pretty(Object.fromEntries(rawKeys.map((k) => [k, raw[k]]))) })) : null);
+}
+
+function traceBlock(trace) {
+  return el("div", {}, el("p", { class: "small muted", text: trace.step_count + " steps, stored in the same transaction as the decision. Prompts and replies are shown as recorded." }),
+    trace.steps.map((s) => {
+      const head = "[" + s.step + "] " + s.node + " · " + s.kind + (s.model ? " · " + s.model : "") +
+        (s.duration_ms !== null ? " · " + Math.round(s.duration_ms) + " ms" : "") +
+        (s.input_tokens !== null ? " · " + s.input_tokens + " in / " + s.output_tokens + " out tokens" : "");
+      let inner;
+      if (s.kind === "llm") {
+        inner = [...(s.input.messages || []).map((m) => el("div", {}, el("strong", { text: m.role }), el("pre", { text: m.content }))),
+                 el("div", {}, el("strong", { text: "reply" }), el("pre", { text: s.output.content || pretty(s.output) }))];
+      } else if (s.kind === "retrieval") {
+        const rs = (s.output.results || []);
+        inner = [el("p", { class: "small", text: "Window " + (s.input.dates || []).join(" to ") + ", limit " + s.input.limit + ", cutoff " + s.input.as_of }),
+                 el("div", { class: "tablewrap" }, el("table", {}, el("tbody", {}, rs.map((r) => el("tr", {}, el("td", { text: String(r.rank) }), el("td", { text: "#" + r.id }), el("td", { text: cut(r.headline) }), el("td", { class: "num", text: r.score === null || r.score === undefined ? "" : String(r.score) }))))))];
+      } else {
+        inner = [el("strong", { text: "input" }), el("pre", { text: pretty(s.input) }), el("strong", { text: "output" }), el("pre", { text: pretty(s.output) })];
+      }
+      return el("details", {}, el("summary", { text: head }), s.error ? el("p", { class: "tag bad", text: s.error }) : null, inner);
+    }));
+}
+
+(async () => {
+  const id = new URLSearchParams(location.search).get("id");
+  if (!/^\d+$/.test(id || "")) { out.replaceChildren(el("p", {}, "No decision selected. ", el("a", { href: "decisions.html", text: "Pick one from the list." }))); return; }
+  try {
+    const d = await getJSON("data/decisions/" + id + ".json");
+    document.title = "Decision #" + d.id + ": Paper Trading Agent static demo";
+    const g = d.risk_gate, v = d.var_forecast, e = d.explanation;
+    const kids = [
+      el("h1", { text: "Decision #" + d.id }),
+      el("p", { class: "lede" }, d.symbol + " on " + d.as_of.slice(0, 10) + ", backtest #" + d.backtest_id + ". Final action: ", actionTag(d.action), "."),
+      el("div", { class: "banner" }, el("strong", { text: "A recorded decision, not a recommendation. " }), "Paper trading only. This page replays what the system stored when it made this decision."),
+
+      el("h2", { text: "Risk-gate outcome" }),
+      facts([
+        ["Proposed by the Portfolio Manager", g.proposed_action ? g.proposed_action + (g.proposed_quantity !== null && g.proposed_quantity !== undefined ? " " + g.proposed_quantity + " shares" : "") : null],
+        ["Risk Manager verdict", g.risk_opinion],
+        ["Final action", d.action],
+        ["VaR budget effect", g.var_effect ? effectTag(g.var_effect) : "none: the budget did not change this decision"],
+        ["Shares held before", g.position_before], ["Position cap", g.max_position],
+        ["95% one-day VaR", g.var_95 !== null && g.var_95 !== undefined ? fmt.pct(g.var_95, 2) + " against a " + fmt.pct(g.var_budget, 0) + " budget" : null],
+        ["Most shares the budget allows", g.var_max_qty],
+        ["Flags", (g.risk_flags || []).join(", ")],
+      ]),
+      g.reasoning ? el("blockquote", { text: g.reasoning }) : null,
+      v ? el("p", { class: "small muted", text: "Realised next-day return " + (v.realized_return === null ? "not recorded" : fmt.pct(v.realized_return, 2)) + (v.breach === null ? "" : (v.breach ? "; the VaR forecast was breached." : "; no VaR breach.")) }) : null,
+
+      el("h2", { text: "What each agent said" }),
+      d.agent_opinions.map(opinionBlock),
+
+      el("h2", { text: "Explanation" }),
+    ];
+    if (e) {
+      kids.push(
+        el("p", { text: e.summary }),
+        el("p", { class: "small" }, "Generated by ", el("code", { text: e.model }), ", prompt ", el("code", { text: e.prompt_version }), ", retrieval ", el("code", { text: e.retrieval_method }), ". Citation check: ",
+          el("span", { class: "tag " + (e.citations_valid ? "ok" : "bad"), text: e.citations_valid ? "every cited headline was among those shown" : "invalid citations" }),
+          e.validation_problems.length ? el("pre", { text: e.validation_problems.join("\n") }) : null),
+        el("h3", { text: "Loss days it is built on" }),
+        el("div", { class: "tablewrap" }, el("table", {}, el("thead", {}, el("tr", {}, ["Date", "Return", "Cause given", "Cited headline ids"].map((h) => el("th", { text: h })))),
+          el("tbody", {}, e.drivers.map((x) => el("tr", {}, el("td", { text: x.date }), el("td", { class: "num", text: fmt.pct(x.return, 2) }), el("td", { text: x.cause }), el("td", { text: (x.headline_ids || []).join(", ") })))))),
+        el("h3", { text: "Headlines cited" }),
+        el("div", { class: "tablewrap" }, el("table", {}, el("tbody", {}, e.cited_headlines.map((h) => el("tr", {}, el("td", { text: "#" + h.id }), el("td", { text: h.date }), el("td", { text: cut(h.headline) })))))),
+        el("h3", { text: "No-news baseline the explanation has to beat" }),
+        el("blockquote", { text: e.template_baseline }));
+    } else {
+      kids.push(el("p", { class: "muted", text: "No explanation is stored for this decision. Explanations were generated for a sample of the VaR-cut or blocked decisions only (a budget limit), so most decisions have none." }));
+    }
+    kids.push(el("h2", { text: "Reasoning trace" }));
+    kids.push(d.trace ? traceBlock(d.trace) : el("p", { class: "muted", text: "No trace is stored: this decision was made before tracing existed, or tracing was off for the run." }));
+    out.replaceChildren(...kids.flat().filter(Boolean));
+  } catch (err) { showError(out, err); }
+})();
+footer();
+</script>
+</body>
+</html>

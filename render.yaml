@@ -1,0 +1,18 @@
+# Optional second layer: the read-only snapshot API on Render's free plan.
+# The static site on GitHub Pages does not depend on this.
+#
+# Free web services sleep after about 15 minutes without traffic, and the
+# first request afterwards takes tens of seconds while it wakes. That is
+# expected, not a fault.
+#
+# No environment variables, secrets or database: the snapshot is baked into
+# the image (see public_api/Dockerfile). GET routes only.
+services:
+  - type: web
+    name: paper-trading-agent-public-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./public_api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeploy: false

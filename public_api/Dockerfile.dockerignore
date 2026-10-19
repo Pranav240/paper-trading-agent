@@ -1,0 +1,6 @@
+# Allowlist: nothing but the API code and the committed snapshot enters the image.
+*
+!public_api/main.py
+!public_api/__init__.py
+!public_api/requirements.txt
+!docs/data

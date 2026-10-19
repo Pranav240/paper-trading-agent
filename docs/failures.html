@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Known failures: Paper Trading Agent static demo</title>
+<meta name="description" content="Two look-ahead leaks in the backtests, how they were found and fixed, and two fine-tuned adapters that scored at or below their majority-class baselines.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main class="wrap">
+  <h1>Known failures</h1>
+  <p class="lede">What went wrong, how it was found, and what changed. Everything below is taken from the repository's own notes and commits; each item names its source.</p>
+
+  <h2>1. Every backtest could see that day's closing price</h2>
+  <p>Decisions run at 12:00 UTC (8 a.m. in New York) and asked the price source for bars "up to now". The source stamps each daily bar at midnight New York, which is earlier than 12:00 UTC, so the decision day's own bar came back, including its close. The written backtesting plan required prior-day prices only; nothing checked it.</p>
+  <ul>
+    <li><strong>Found:</strong> 28 September 2026 by <code>scripts/check_bar_timing.py</code>, which asks the real price source what a decision would see. Both check days leaked. Comparing with real closes confirmed it for 938 of 938 stored decisions in three V1 runs.</li>
+    <li><strong>Fixed:</strong> bars whose 16:00 New York session had not closed before the decision are now dropped (<a href="https://github.com/Pranav240/paper-trading-agent/commit/588adef">588adef</a>), trading days come from the market calendar, and fills use the decision day's open.</li>
+    <li><strong>Sources:</strong> <code>scripts/check_bar_timing.py</code> docstring, <code>docs/engineering-log.md</code>, <code>PROJECT.md</code> defect 8.</li>
+  </ul>
+
+  <h2>2. …and every backtest read that day's news before it happened</h2>
+  <p>The news data carries dates, not times: 99.7% of the timestamps are exactly midnight UTC. The rule "published before the decision" therefore treated a headline dated the same day as already published, even when it was an after-the-close report. At 8 a.m. on Friday 2022-06-03 the sentiment analyst was reading a headline about Apple being the worst stock in the Dow that Friday.</p>
+  <ul>
+    <li><strong>Found:</strong> 5 to 6 October 2026, while building the phase 09 test set, after the first "corrected" reruns had already been published as corrected. A re-check of the stored headlines gives 99.66% of the AAPL timestamps at midnight UTC.</li>
+    <li><strong>Fixed:</strong> a date-only headline is now available only once its date has ended in New York (<a href="https://github.com/Pranav240/paper-trading-agent/commit/6bebc48">6bebc48</a>). The reruns' published numbers were relabelled as superseded (<a href="https://github.com/Pranav240/paper-trading-agent/commit/fd99811">fd99811</a>); only backtest 136 has both leaks fixed.</li>
+    <li><strong>Consequence:</strong> every originally published result had at least one leak. The in-sample runs have not been redone. Backtests 45 and 71 on this site are marked <em>superseded</em> for that reason.</li>
+    <li><strong>Why it survived:</strong> a written requirement never became a test, and this one survived the fix for the first.</li>
+    <li><strong>Sources:</strong> <code>PROJECT.md</code> defect 9 and the corrections section, <code>docs/engineering-log.md</code>.</li>
+  </ul>
+
+  <h2>3. Two fine-tuned adapters that did not beat a do-nothing guess</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Adapter</th><th class="num">Reported accuracy</th><th class="num">Majority-class baseline</th><th>Reading</th></tr></thead>
+    <tbody>
+      <tr><td>QLoRA on Financial PhraseBank</td><td class="num">84.0%</td><td class="num">96.8%</td><td>below baseline on this project's own headlines</td></tr>
+      <tr><td>Distilled from the GPT-4o-mini teacher</td><td class="num">90.9%</td><td class="num">90.9%</td><td>exactly the baseline: it predicted HOLD on all 44 held-out rows</td></tr>
+    </tbody>
+  </table></div>
+  <p>One database query explained both: across every backtest the teacher had produced 17 BUY, 3 SELL and 537 HOLD. Distilling a near-constant teacher yields a constant student. A rerun in October 2026 tracked in MLflow showed the PhraseBank adapter does learn its own dataset (91.3% on held-out PhraseBank against 59.3% for always-HOLD); the 84.0% that failed was the transfer to this project's headlines, and that test was not rerun.</p>
+  <p class="small muted">Sources: <code>PROJECT.md</code> "Phase 04 — the fine-tuning work"; <code>eval/mlflow/</code>.</p>
+
+  <h2>4. Other findings of the same kind</h2>
+  <ul>
+    <li><strong>An abstaining component made things worse.</strong> The sentiment node voted HOLD about 96% of the time; ablating it improved results by about 60 on one window, at roughly twice the measured run-to-run spread. One window, two replicates per configuration: directional, not conclusive.</li>
+    <li><strong>The pre-registered threshold was below its own test's resolving power.</strong> The return-prediction bar (IC at least 0.03) sat at about one standard error (0.029) of the 1,221-row split chosen to judge it. The conclusion survives through a larger split, which is reported rather than quietly substituted.</li>
+    <li><strong>Six database tests silently skipped for two phases.</strong> CI now fails if any test is skipped.</li>
+  </ul>
+  <p class="small muted">Sources: <code>PROJECT.md</code> "The ablation", "A flaw in the pre-registration itself", and the defects table.</p>
+
+  <h2>What these have in common</h2>
+  <p>None was visible to type checks, linting or re-reading. Each was found by checking a number that looked wrong against the data it came from, and each is now a test or a written practice. The full list is in the <a href="https://github.com/Pranav240/paper-trading-agent/blob/master/PROJECT.md">project record</a>.</p>
+</main>
+<script src="assets/app.js"></script>
+<script>nav("failures.html"); footer();</script>
+</body>
+</html>
